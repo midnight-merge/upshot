@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Export Chat</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&display=swap">
+  <style>
+    :root {
+      --bg: #f5f4f1;
+      --surface: #ffffff;
+      --surface-2: #edecea;
+      --text: #1c1b18;
+      --text-muted: #7a756f;
+      --accent: #1d4ed8;
+      --accent-subtle: #dbeafe;
+      --accent-text: #1e3a8a;
+      --border: #e6e2db;
+      --success: #16a34a;
+      --radius: 6px;
+      --font-display: 'Newsreader', Georgia, serif;
+      --font-ui: 'DM Sans', system-ui, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #111110;
+        --surface: #1a1918;
+        --surface-2: #232220;
+        --text: #f0ece5;
+        --text-muted: #8a847e;
+        --accent: #5b8df7;
+        --accent-subtle: #1e3058;
+        --accent-text: #93b4fb;
+        --border: #2c2a27;
+        --success: #4ade80;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #111110;
+      --surface: #1a1918;
+      --surface-2: #232220;
+      --text: #f0ece5;
+      --text-muted: #8a847e;
+      --accent: #5b8df7;
+      --accent-subtle: #1e3058;
+      --accent-text: #93b4fb;
+      --border: #2c2a27;
+      --success: #4ade80;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* NAV */
+    .nav {
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 52px;
+    }
+
+    .nav-brand {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .nav-link {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .nav-link:hover { color: var(--text); }
+
+    /* HERO */
+    .hero {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 72px 24px 56px;
+    }
+
+    .hero-eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(32px, 6vw, 52px);
+      font-weight: 400;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin: 0 0 20px;
+      color: var(--text);
+      text-wrap: balance;
+    }
+
+    .hero-desc {
+      font-size: 16px;
+      color: var(--text-muted);
+      line-height: 1.65;
+      max-width: 52ch;
+      margin: 0 0 36px;
+    }
+
+    .hero-demo-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      transition: opacity 0.15s;
+    }
+
+    .hero-demo-link:hover { opacity: 0.75; }
+
+    /* SUPPORTED TOOLS */
+    .tools-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 0;
+    }
+
+    .tools-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .tool-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      background: var(--surface);
+    }
+
+    .tool-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* DIVIDER */
+    .section-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0;
+    }
+
+    /* SETUP SECTION */
+    .setup {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 64px 24px;
+    }
+
+    .setup-title {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 400;
+      margin: 0 0 40px;
+      color: var(--text);
+    }
+
+    /* STEP CARD */
+    .step {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 0 20px;
+      margin-bottom: 40px;
+      align-items: start;
+    }
+
+    .step:last-child { margin-bottom: 0; }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .step-num.done {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+    }
+
+    .step-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .step-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    /* API KEY INPUT */
+    .key-field {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .key-input {
+      flex: 1;
+      padding: 9px 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'DM Mono', 'JetBrains Mono', monospace;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .key-input::placeholder { color: var(--text-muted); opacity: 0.6; }
+    .key-input:focus { border-color: var(--accent); }
+
+    .key-submit {
+      padding: 9px 18px;
+      border-radius: var(--radius);
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+
+    .key-submit:hover { opacity: 0.85; }
+
+    .key-privacy {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* BOOKMARKLET */
+    .bookmarklet-area { display: none; }
+    .bookmarklet-area.visible { display: block; }
+
+    .drag-instruction {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .drag-instruction strong { color: var(--text); }
+
+    .bookmarklet-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius);
+      background: var(--surface);
+      border: 2px dashed var(--border);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+      cursor: grab;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+
+    .bookmarklet-link:hover { border-color: var(--accent); }
+    .bookmarklet-link:active { cursor: grabbing; }
+
+    .drag-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* HOW TO USE */
+    .how-to {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 64px 24px;
+    }
+
+    .how-title {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 400;
+      margin: 0 0 32px;
+      color: var(--text);
+    }
+
+    .instruction-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .instruction-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .instr-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent-subtle);
+      color: var(--accent-text);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* FAQ */
+    .faq {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 64px 24px 100px;
+    }
+
+    .faq-title {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 400;
+      margin: 0 0 32px;
+      color: var(--text);
+    }
+
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+    }
+
+    .faq-item:first-of-type { border-top: 1px solid var(--border); }
+
+    .faq-q {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0 0 8px;
+    }
+
+    .faq-a {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    /* FOOTER */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .footer a { color: var(--text-muted); }
+
+    @media (max-width: 560px) {
+      .hero, .setup, .how-to, .faq { padding-left: 16px; padding-right: 16px; }
+      .nav { padding: 0 16px; }
+      .key-field { flex-direction: column; }
+      .key-submit { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav-brand">Export Chat</span>
+  <a class="nav-link" href="view.html">View demo →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-eyebrow">Bookmarklet tool</p>
+  <h1 class="hero-title">Save any AI conversation as a link</h1>
+  <p class="hero-desc">
+    One click exports your ChatGPT, Claude, or Gemini conversation to a shareable URL.
+    No account, no server — the summary lives entirely in the link itself.
+  </p>
+  <div class="tools-row">
+    <span class="tools-label">Works with</span>
+    <span class="tool-badge"><span class="tool-dot" style="background:#10a37f"></span>ChatGPT</span>
+    <span class="tool-badge"><span class="tool-dot" style="background:#d97449"></span>Claude</span>
+    <span class="tool-badge"><span class="tool-dot" style="background:#4285f4"></span>Gemini</span>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SETUP -->
+<section class="setup">
+  <h2 class="setup-title">Get set up in two steps</h2>
+
+  <!-- Step 1: API Key -->
+  <div class="step">
+    <div class="step-num" id="step1num">1</div>
+    <div>
+      <p class="step-label">Enter your OpenAI API key</p>
+      <p class="step-desc">
+        Used only in your browser to generate summaries via gpt-4o-mini.
+        Your key is never sent to our servers — it travels only to api.openai.com.
+      </p>
+      <div class="key-field">
+        <input
+          class="key-input"
+          id="apiKeyInput"
+          type="password"
+          placeholder="sk-..."
+          autocomplete="off"
+          spellcheck="false"
+          oninput="onKeyInput()"
+        >
+        <button class="key-submit" onclick="generateBookmarklet()">Generate bookmarklet</button>
+      </div>
+      <div class="key-privacy">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 1L2 4v5c0 3.3 2.5 5.7 6 7 3.5-1.3 6-3.7 6-7V4L8 1z"/>
+        </svg>
+        Key never leaves your browser — <a href="view.html" style="color:inherit">open-source, inspect the code</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Drag bookmarklet -->
+  <div class="step">
+    <div class="step-num" id="step2num">2</div>
+    <div>
+      <p class="step-label">Drag the bookmarklet to your bookmarks bar</p>
+      <p class="step-desc">
+        Enter your key above to generate the button. Then drag it to the bookmarks bar at the top of your browser.
+        <strong>Don't have a bookmarks bar?</strong> Press <kbd style="font-family:monospace;background:var(--surface-2);padding:1px 5px;border-radius:3px;border:1px solid var(--border)">Ctrl+Shift+B</kbd> (Windows) or <kbd style="font-family:monospace;background:var(--surface-2);padding:1px 5px;border-radius:3px;border:1px solid var(--border)">⌘+Shift+B</kbd> (Mac).
+      </p>
+
+      <div class="bookmarklet-area" id="bookmarkletArea">
+        <p class="drag-instruction">Drag the button below to your bookmarks bar:</p>
+        <a id="bookmarkletLink" href="#" class="bookmarklet-link" onclick="return false;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 3h10v10l-5-3-5 3V3z"/>
+          </svg>
+          Export Chat
+        </a>
+        <div class="drag-hint">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="8" cy="8" r="6.5"/><line x1="8" y1="5" x2="8" y2="9"/><circle cx="8" cy="11" r="0.5" fill="currentColor"/>
+          </svg>
+          Click won't work here — drag it to the bookmarks bar
+        </div>
+      </div>
+
+      <div id="noBookmarkletNote" style="font-size:13px;color:var(--text-muted)">Enter your API key above to generate the bookmarklet.</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- HOW TO USE -->
+<section class="how-to">
+  <h2 class="how-title">How to use it</h2>
+  <ol class="instruction-list">
+    <li class="instruction-item">
+      <span class="instr-num">1</span>
+      <span>Go to ChatGPT, Claude, or Gemini and have a conversation.</span>
+    </li>
+    <li class="instruction-item">
+      <span class="instr-num">2</span>
+      <span>When you're ready to save it, click the <strong>Export Chat</strong> bookmarklet in your bookmarks bar.</span>
+    </li>
+    <li class="instruction-item">
+      <span class="instr-num">3</span>
+      <span>A new tab opens with a summary, topic timeline, key takeaways, and the full conversation.</span>
+    </li>
+    <li class="instruction-item">
+      <span class="instr-num">4</span>
+      <span>Copy the URL from that page to share — the link is permanent and works for anyone.</span>
+    </li>
+  </ol>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- FAQ -->
+<section class="faq">
+  <h2 class="faq-title">Questions</h2>
+
+  <div class="faq-item">
+    <p class="faq-q">Will the URL ever expire?</p>
+    <p class="faq-a">No. There's no server storing your data — it's all encoded directly in the URL itself. The link will work as long as this page exists at its address (for example, on GitHub Pages).</p>
+  </div>
+
+  <div class="faq-item">
+    <p class="faq-q">Is my API key safe?</p>
+    <p class="faq-a">Your key is entered into a field in your browser and used only to generate the bookmarklet. It's never sent to any server we control — only to api.openai.com when the bookmarklet runs. You can open DevTools → Network and verify this yourself. The key is stored in the bookmark, so treat the bookmark like a password.</p>
+  </div>
+
+  <div class="faq-item">
+    <p class="faq-q">What if the URL is too long to share?</p>
+    <p class="faq-a">Short and medium conversations compress well. Very long conversations may produce long URLs that some apps truncate when pasted. If that happens, use your browser's Print → Save as PDF to share a file instead.</p>
+  </div>
+
+  <div class="faq-item">
+    <p class="faq-q">Can I see the full conversation, not just the summary?</p>
+    <p class="faq-a">Yes — the viewer page has a "View full conversation" section that shows every message. It's collapsed by default to keep the summary front and centre.</p>
+  </div>
+
+  <div class="faq-item">
+    <p class="faq-q">Which AI tools are supported?</p>
+    <p class="faq-a">ChatGPT, Claude.ai, and Gemini are supported with dedicated extractors. Any other page will fall back to a generic text extraction, which may be less accurate.</p>
+  </div>
+</section>
+
+<footer class="footer">
+  Open source · MIT licence · Your data never touches our servers
+</footer>
+
+<!-- BOOKMARKLET TEMPLATE — not executed by the browser -->
+<script type="text/bookmarklet-template" id="bookmarkletTemplate">
+(function () {
+  'use strict';
+
+  var VIEWER_URL = '__VIEWER_URL__';
+  var OPENAI_API_KEY = '__API_KEY__';
+  var MAX_WORDS = 12000;
+
+  var SITES = {
+    'chat.openai.com': function () {
+      var nodes = document.querySelectorAll('[data-message-author-role]');
+      var msgs = [];
+      nodes.forEach(function (n) {
+        var role = n.getAttribute('data-message-author-role');
+        var text = n.innerText.trim();
+        if (text) msgs.push({ role: role === 'user' ? 'user' : 'assistant', content: text });
+      });
+      return msgs;
+    },
+    'claude.ai': function () {
+      var all = [];
+      document.querySelectorAll('[data-testid="user-message"], .font-claude-message').forEach(function (n) {
+        var isUser = n.getAttribute('data-testid') === 'user-message';
+        var text = n.innerText.trim();
+        if (text) all.push({ role: isUser ? 'user' : 'assistant', content: text });
+      });
+      return all;
+    },
+    'gemini.google.com': function () {
+      var msgs = [];
+      document.querySelectorAll('.user-query-bubble-with-background, .model-response-text').forEach(function (n) {
+        var isUser = n.classList.contains('user-query-bubble-with-background');
+        var text = n.innerText.trim();
+        if (text) msgs.push({ role: isUser ? 'user' : 'assistant', content: text });
+      });
+      return msgs;
+    }
+  };
+
+  function extractMessages() {
+    var host = location.hostname;
+    for (var site in SITES) {
+      if (host.indexOf(site) !== -1) {
+        var msgs = SITES[site]();
+        if (msgs.length) return msgs;
+      }
+    }
+    var container = document.querySelector('main') || document.body;
+    return [{ role: 'assistant', content: container.innerText.trim() }];
+  }
+
+  function trimMessages(msgs) {
+    var wordCount = 0;
+    var trimmed = [];
+    for (var i = msgs.length - 1; i >= 0; i--) {
+      var words = msgs[i].content.split(/\s+/).length;
+      if (wordCount + words > MAX_WORDS) break;
+      wordCount += words;
+      trimmed.unshift(msgs[i]);
+    }
+    return { messages: trimmed, truncated: trimmed.length < msgs.length };
+  }
+
+  function detectSource() {
+    var host = location.hostname;
+    if (host.indexOf('chat.openai.com') !== -1) return 'chatgpt';
+    if (host.indexOf('claude.ai') !== -1) return 'claude';
+    if (host.indexOf('gemini.google.com') !== -1) return 'gemini';
+    return 'unknown';
+  }
+
+  function showToast(msg, isError) {
+    var el = document.createElement('div');
+    el.textContent = msg;
+    el.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;padding:12px 20px;border-radius:8px;font-size:14px;font-family:system-ui,sans-serif;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,0.2);' + (isError ? 'background:#ef4444;color:#fff' : 'background:#18181b;color:#fff');
+    document.body.appendChild(el);
+    setTimeout(function () { el.remove(); }, isError ? 5000 : 3000);
+  }
+
+  function showLoader() {
+    var style = document.createElement('style');
+    style.textContent = '@keyframes __spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(style);
+    var el = document.createElement('div');
+    el.id = '__export_chat_loader';
+    el.innerHTML = '<div style="display:flex;align-items:center;gap:10px"><div style="width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:__spin 0.7s linear infinite"></div><span>Exporting conversation…</span></div>';
+    el.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;font-size:14px;font-family:system-ui,sans-serif;box-shadow:0 4px 24px rgba(0,0,0,0.25)';
+    document.body.appendChild(el);
+    return function () { el.remove(); style.remove(); };
+  }
+
+  function encode(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+  }
+
+  async function summarise(messages, truncated) {
+    var conversation = messages.map(function (m) {
+      return (m.role === 'user' ? 'User: ' : 'Assistant: ') + m.content;
+    }).join('\n\n');
+
+    var prompt = 'Analyse this AI conversation and respond with valid JSON only, no markdown:\n{\n  "title": "concise title max 10 words",\n  "topics": [{"name": "topic", "description": "one sentence"}],\n  "lastTopic": "name of last distinct topic",\n  "summary": "3-5 paragraph prose summary",\n  "keyTakeaways": ["takeaway 1", "takeaway 2", "takeaway 3"]\n}\n\n' + (truncated ? '[Conversation trimmed to fit limits]\n\n' : '') + 'Conversation:\n' + conversation;
+
+    var resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + OPENAI_API_KEY },
+      body: JSON.stringify({ model: 'gpt-4o-mini', response_format: { type: 'json_object' }, messages: [{ role: 'user', content: prompt }], max_tokens: 1500 })
+    });
+
+    if (!resp.ok) {
+      var err = await resp.json().catch(function () { return {}; });
+      throw new Error((err.error && err.error.message) || 'OpenAI API error ' + resp.status);
+    }
+
+    var data = await resp.json();
+    return JSON.parse(data.choices[0].message.content);
+  }
+
+  async function run() {
+    var msgs = extractMessages();
+    if (!msgs.length || (msgs.length === 1 && !msgs[0].content)) {
+      showToast('No conversation found on this page.', true);
+      return;
+    }
+    var removeLoader = showLoader();
+    try {
+      var result = trimMessages(msgs);
+      var summary = await summarise(result.messages, result.truncated);
+      var payload = Object.assign({}, summary, {
+        source: detectSource(),
+        timestamp: new Date().toISOString(),
+        messages: result.messages,
+        truncated: result.truncated
+      });
+      var url = VIEWER_URL + '#data=' + encode(JSON.stringify(payload));
+      removeLoader();
+      window.open(url, '_blank');
+    } catch (err) {
+      removeLoader();
+      showToast('Export failed: ' + err.message, true);
+    }
+  }
+
+  run();
+})();
+</script>
+
+<script>
+  function computeViewerUrl() {
+    var href = location.href;
+    var base = href.replace(/\/[^\/]*$/, '');
+    return base + '/view.html';
+  }
+
+  function minify(src) {
+    return src
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/[^\n]*/g, '')
+      .replace(/\n\s*/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  }
+
+  function generateBookmarklet() {
+    var key = document.getElementById('apiKeyInput').value.trim();
+    if (!key) {
+      document.getElementById('apiKeyInput').focus();
+      return;
+    }
+
+    var template = document.getElementById('bookmarkletTemplate').textContent;
+    var viewerUrl = computeViewerUrl();
+
+    var code = template
+      .replace('__API_KEY__', key.replace(/\\/g, '\\\\').replace(/'/g, "\\'"))
+      .replace('__VIEWER_URL__', viewerUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+
+    var minified = minify(code);
+    var href = 'javascript:' + encodeURIComponent(minified);
+
+    var link = document.getElementById('bookmarkletLink');
+    link.href = href;
+
+    document.getElementById('bookmarkletArea').classList.add('visible');
+    document.getElementById('noBookmarkletNote').style.display = 'none';
+    document.getElementById('step1num').className = 'step-num done';
+    document.getElementById('step1num').textContent = '✓';
+  }
+
+  function onKeyInput() {
+    var key = document.getElementById('apiKeyInput').value.trim();
+    if (!key) {
+      document.getElementById('bookmarkletArea').classList.remove('visible');
+      document.getElementById('noBookmarkletNote').style.display = '';
+      document.getElementById('step1num').className = 'step-num';
+      document.getElementById('step1num').textContent = '1';
+    }
+  }
+
+  // Allow Enter key to generate
+  document.getElementById('apiKeyInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') generateBookmarklet();
+  });
+</script>
+
+</body>
+</html>
