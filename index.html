@@ -751,8 +751,9 @@
   }
 
   function generateBookmarklet() {
-    var key = document.getElementById('apiKeyInput').value.trim();
-    if (!key) {
+    var key = document.getElementById('apiKeyInput').value.trim().replace(/[^\x20-\x7E]/g, '');
+    if (!key || !key.startsWith('sk-')) {
+      alert('Please enter a valid OpenAI API key starting with sk-');
       document.getElementById('apiKeyInput').focus();
       return;
     }
