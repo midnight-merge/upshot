@@ -35,33 +35,40 @@ The API call happens on `view.html` (your hosted page), not on the AI tool's pag
 
 ## Testing the tool locally
 
+The bookmarklet runs on AI tool pages (`https://`). Browsers block those pages from opening `file://` or `http://` URLs, so you cannot test the full flow by simply opening `index.html` as a file. You need to serve the project over **https** locally.
+
 ### Prerequisites
 
 - A modern browser (Chrome or Firefox recommended)
 - An OpenAI API key — get one at platform.openai.com
+- Node.js installed (comes with `npx`)
 
-### Steps
+### 1. Start a local https server
 
-1. **Open the landing page.** Navigate to the project folder and open `index.html` in your browser (drag the file into a browser tab, or open it with File → Open).
+Open a terminal, navigate to the project folder, and run:
 
-2. **Show your bookmarks bar** if it is not visible. Press `Ctrl+Shift+B` on Windows or `⌘+Shift+B` on Mac.
+```bash
+cd /path/to/export-ai-chat
+npx serve .
+```
 
-3. **Drag the bookmarklet to your bookmarks bar.** Click and hold the "Export Chat" button on the landing page, drag it up to the bookmarks bar, and release.
+`npx serve` starts a local server at `http://localhost:3000`. Open that URL in your browser — you should see the landing page.
 
-4. **Go to an AI tool and have a conversation.** Open ChatGPT (`chat.openai.com`), Claude (`claude.ai`), or Gemini (`gemini.google.com`) and send a few messages.
+> **Why not just open the file directly?** ChatGPT, Claude, and Gemini run on `https://`. When the bookmarklet clicks on one of those pages and tries to open a `file://` or `http://` URL, Chrome blocks it as a security measure. The local server (or GitHub Pages) gives the viewer an `https`-compatible address that Chrome will allow.
 
-5. **Click the bookmarklet.** Click the "Export Chat" bookmark in your bookmarks bar. A new tab opens showing a loading screen.
+### 2. Drag the bookmarklet
 
-6. **Enter your OpenAI API key (first time only).** If this is your first export, you will be prompted for your API key (`sk-...`). Enter it and click **Generate summary** — it is saved in your browser's localStorage so you will not be asked again.
+1. Go to `http://localhost:3000` in your browser.
+2. Show your bookmarks bar if hidden — press `Ctrl+Shift+B` (Windows) or `⌘+Shift+B` (Mac).
+3. Drag the **Export Chat** button to your bookmarks bar.
 
-7. **Review the export.** The viewer renders:
-   - The conversation title and source
-   - A topic timeline with the last topic highlighted
-   - A prose summary
-   - Key takeaways
-   - A collapsible full transcript
+### 3. Export a conversation
 
-8. **Copy the link.** Click **Copy link** in the top-right corner. The link is self-contained and works for anyone — they do not need an API key to view it.
+1. Go to ChatGPT (`chat.openai.com`), Claude (`claude.ai`), or Gemini (`gemini.google.com`) and send a few messages.
+2. Click the **Export Chat** bookmark in your bookmarks bar. A new tab opens.
+3. **First time only:** enter your OpenAI API key (`sk-...`) and click **Generate summary**. It is saved in your browser so you will not be asked again.
+4. The viewer renders the summary, topics, and transcript.
+5. Click **Copy link** — the link is self-contained and works for anyone without an API key.
 
 ---
 
@@ -87,6 +94,6 @@ Once deployed, users visit your URL instead of opening `index.html` locally. Eve
 
 ## Notes
 
-- Your OpenAI API key is baked into the bookmarklet at generation time. It is only ever sent to `api.openai.com` — never to any other server.
+- Your OpenAI API key is entered once on the viewer page and saved in your browser's localStorage. It is only ever sent to `api.openai.com` — never to any other server. The bookmarklet itself contains no API key.
 - Very long conversations are trimmed to the most recent ~12,000 words before being sent to the API. The summary covers the full conversation; only the transcript in the viewer may be incomplete.
 - The URL can become long for lengthy conversations. If a link gets truncated when pasting into a messaging app, use the browser's **Print → Save as PDF** option on the viewer page instead.
