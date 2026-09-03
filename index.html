@@ -745,8 +745,6 @@
 
   function minify(src) {
     return src
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .replace(/\/\/[^\n]*/g, '')
       .replace(/\n\s*/g, ' ')
       .replace(/\s{2,}/g, ' ')
       .trim();
