@@ -72,14 +72,69 @@ npx serve .
 
 ---
 
-## Deploying for other users
+## Deploying with GitHub Pages
+
+### Why GitHub Pages?
+
+The viewer page (`view.html`) must be served over `https://` — not `file://` or `http://` — because the bookmarklet runs inside ChatGPT, Claude, or Gemini, and those pages enforce a security rule (Content Security Policy) that blocks any link opening to a non-https address.
+
+GitHub Pages solves this for free:
+- It serves your static HTML files over `https://` automatically
+- There is no server to manage or pay for — it just hosts the files
+- Every `git push` updates the live site instantly
+- The URL is permanent and shareable with anyone
+
+### How the full workflow works once deployed
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  1. USER SETUP (one time)                                       │
+│                                                                 │
+│     User visits https://midnight-merge.github.io/export-ai-chat │
+│     └─▶ Drags the "Export Chat" bookmarklet to their bar        │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  2. EXPORTING A CONVERSATION                                    │
+│                                                                 │
+│     User is on chat.openai.com (or Claude / Gemini)            │
+│     └─▶ Clicks the "Export Chat" bookmark                       │
+│         └─▶ Bookmarklet reads messages from the page DOM        │
+│             └─▶ Encodes them into a URL fragment (#raw=...)     │
+│                 └─▶ Opens view.html#raw=... in a new tab        │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  3. SUMMARISATION (on view.html — our page, no CSP)            │
+│                                                                 │
+│     view.html loads in the new tab                              │
+│     └─▶ First time: prompts for OpenAI API key (saved locally)  │
+│         └─▶ Calls api.openai.com with the conversation text     │
+│             └─▶ Receives: title, topics, summary, takeaways     │
+│                 └─▶ Renders the summary on screen               │
+│                     └─▶ Updates URL to #data=... (shareable)    │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  4. SHARING                                                     │
+│                                                                 │
+│     User clicks "Copy link"                                     │
+│     └─▶ Shares the #data= URL with a colleague                  │
+│         └─▶ Colleague opens it — sees the summary instantly     │
+│             (no API key needed, no server involved)             │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Setup steps
 
 1. Push this repository to GitHub.
 2. Go to **Settings → Pages** in the repo and set the source to the `main` branch.
-3. Your site will be live at `https://yourusername.github.io/export-ai-chat`.
-4. Optionally, add a custom domain under the same Pages settings.
+3. Wait ~60 seconds. Your site will be live at `https://yourusername.github.io/export-ai-chat`.
+4. Optionally, connect a custom domain under the same Pages settings.
 
-Once deployed, users visit your URL instead of opening `index.html` locally. Everything else works the same way.
+From this point, share the GitHub Pages URL with colleagues — they visit it, drag the bookmarklet once, and the tool works for them immediately.
 
 ---
 
