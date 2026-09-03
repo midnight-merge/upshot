@@ -85,7 +85,6 @@
     }
 
     .nav-brand {
-      font-family: var(--font-ui);
       font-size: 13px;
       font-weight: 600;
       letter-spacing: 0.06em;
@@ -121,6 +120,100 @@
       padding: 56px 24px 120px;
     }
 
+    /* KEY SETUP SCREEN */
+    .key-setup {
+      max-width: 480px;
+      margin: 80px auto;
+      padding: 0 24px;
+    }
+
+    .key-setup-title {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 400;
+      margin: 0 0 10px;
+      color: var(--text);
+    }
+
+    .key-setup-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin: 0 0 28px;
+      line-height: 1.6;
+    }
+
+    .key-field {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .key-input {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-family: monospace;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .key-input:focus { border-color: var(--accent); }
+    .key-input::placeholder { color: var(--text-muted); opacity: 0.6; }
+
+    .key-submit {
+      padding: 10px 18px;
+      border-radius: var(--radius);
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+
+    .key-submit:hover { opacity: 0.85; }
+
+    .key-privacy {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* LOADING STATE */
+    .loading-state {
+      text-align: center;
+      padding: 100px 24px;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 2.5px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .loading-desc { font-size: 13px; color: var(--text-muted); }
+
+    /* SUMMARY */
     .meta {
       display: flex;
       align-items: center;
@@ -200,12 +293,7 @@
       font-weight: 600;
     }
 
-    .topic-arrow {
-      color: var(--border);
-      font-size: 14px;
-      flex-shrink: 0;
-      user-select: none;
-    }
+    .topic-arrow { color: var(--border); font-size: 14px; flex-shrink: 0; user-select: none; }
 
     .summary-section { margin-bottom: 44px; }
 
@@ -249,11 +337,7 @@
       margin-top: 6px;
     }
 
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 48px 0;
-    }
+    .divider { height: 1px; background: var(--border); margin: 48px 0; }
 
     .transcript-toggle {
       display: flex;
@@ -285,12 +369,7 @@
 
     .transcript-toggle[aria-expanded="true"] .toggle-icon { transform: rotate(180deg); }
 
-    .transcript-body {
-      margin-top: 28px;
-      display: flex;
-      flex-direction: column;
-    }
-
+    .transcript-body { margin-top: 28px; display: flex; flex-direction: column; }
     .transcript-body[hidden] { display: none; }
 
     .message {
@@ -336,11 +415,7 @@
       margin-bottom: 28px;
     }
 
-    .error-state {
-      text-align: center;
-      padding: 80px 24px;
-    }
-
+    .error-state { text-align: center; padding: 80px 24px; }
     .error-icon { font-size: 40px; margin-bottom: 20px; opacity: 0.4; }
 
     .error-title {
@@ -369,28 +444,32 @@
 
     .copy-feedback.show { opacity: 1; }
 
-    .demo-notice {
-      padding: 8px 14px;
-      background: var(--accent-subtle);
-      color: var(--accent-text);
-      border-radius: var(--radius);
-      font-size: 13px;
-      margin-bottom: 40px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .change-key-btn {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      font-family: var(--font-ui);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      transition: color 0.15s;
     }
 
-    .demo-notice a { color: inherit; font-weight: 600; }
+    .change-key-btn:hover { color: var(--text); }
 
     @media (max-width: 560px) {
       .main { padding: 36px 16px 80px; }
       .nav { padding: 0 16px; }
       .message { grid-template-columns: 56px 1fr; }
+      .key-setup { margin: 40px auto; }
+      .key-field { flex-direction: column; }
+      .key-submit { width: 100%; }
     }
 
     @media print {
-      .nav, .transcript-toggle { display: none; }
+      .nav { display: none; }
       .transcript-body[hidden] { display: flex !important; }
       .main { padding: 20px 0; }
     }
@@ -402,98 +481,183 @@
   <a class="nav-brand" href="index.html">Export Chat</a>
   <div class="nav-actions">
     <span class="copy-feedback" id="copyFeedback">Copied!</span>
-    <button class="btn" onclick="copyUrl()">
+    <button class="btn" onclick="copyUrl()" id="copyBtn" style="display:none">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <rect x="5" y="5" width="9" height="9" rx="1.5"/>
         <path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5"/>
       </svg>
       Copy link
     </button>
-    <button class="btn" onclick="window.print()">
+    <button class="btn" onclick="window.print()" id="printBtn" style="display:none">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M4 6V2h8v4M4 12H2.5A1.5 1.5 0 011 10.5v-3A1.5 1.5 0 012.5 6h11A1.5 1.5 0 0115 7.5v3A1.5 1.5 0 0113.5 12H12M4 10h8v4H4v-4z"/>
       </svg>
       Print
     </button>
+    <button class="change-key-btn" id="changeKeyBtn" style="display:none" onclick="changeKey()">Change API key</button>
   </div>
 </nav>
 
-<main class="main" id="app">
-  <p style="color:var(--text-muted);font-size:13px">Loading…</p>
-</main>
+<div id="app"></div>
 
 <script>
-  var DEMO = {
-    title: "Building a bookmarklet to export AI conversations",
-    source: "chatgpt",
-    timestamp: "2026-09-03T14:22:00Z",
-    summary: "The conversation explored the design and implementation of a browser bookmarklet that lets users export and summarise conversations from AI tools like ChatGPT, Claude, and Gemini. The central idea was to avoid any backend: all exported data is compressed and embedded directly in the URL fragment, making each export link self-contained and permanent.\n\nA key architectural decision was storing only the AI-generated summary in the URL by default, keeping link lengths manageable. LZ-string compression was discussed as a way to fit larger payloads while remaining well within browser URL limits.\n\nThe conversation concluded with a phased delivery plan: starting with ChatGPT support in an MVP, then adding Claude.ai and Gemini selectors, and finally handling very long conversations through graceful truncation.",
-    topics: [
-      { name: "Tool concept", description: "Establishing the core idea of a URL-encoded conversation exporter." },
-      { name: "Bookmarklet UX", description: "How users install and trigger the bookmarklet on any AI tool page." },
-      { name: "URL encoding", description: "Encoding conversation data into the URL hash with compression." },
-      { name: "DOM extraction", description: "Site-specific selectors for reading messages from ChatGPT, Claude, and Gemini." }
-    ],
-    lastTopic: "DOM extraction",
-    keyTakeaways: [
-      "No backend needed — all data lives in the URL fragment, which never expires.",
-      "LZ-string compression lets you fit a full summary and short transcripts into shareable URLs.",
-      "Site-specific DOM selectors are the most maintenance-intensive part of the implementation.",
-      "The OpenAI API call returns structured JSON with topics, summary, and takeaways in one pass."
-    ],
-    messages: [
-      { role: "user", content: "I want to build a tool that helps users summarise and export a conversation they have had with an AI tool. The summary will be handled as a web page where the URL stores the data." },
-      { role: "assistant", content: "Great idea. The URL-hash approach means no backend is needed — the data lives in the fragment and is never sent to a server. Here's how it works: the bookmarklet extracts your conversation, calls an LLM to summarise it, then compresses and base64-encodes the result into the URL fragment of a static viewer page." },
-      { role: "user", content: "How does the user trigger the bookmarklet while on ChatGPT?" },
-      { role: "assistant", content: "They click a bookmark in their browser's bookmarks bar. A bookmarklet is a bookmark whose href is JavaScript instead of a URL — when clicked, it runs that code in the context of the current page, giving it access to the DOM to read the conversation." }
-    ],
-    truncated: false
-  };
+  var KEY_STORAGE = 'export_chat_openai_key';
+
+  function getStoredKey() {
+    try { return localStorage.getItem(KEY_STORAGE) || ''; } catch (e) { return ''; }
+  }
+
+  function saveKey(key) {
+    try { localStorage.setItem(KEY_STORAGE, key); } catch (e) {}
+  }
+
+  function clearKey() {
+    try { localStorage.removeItem(KEY_STORAGE); } catch (e) {}
+  }
+
+  function encode(str) { return btoa(unescape(encodeURIComponent(str))); }
+  function decode(str) { return decodeURIComponent(escape(atob(str))); }
+
+  function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 
   function formatDate(iso) {
-    try {
-      return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-    } catch (e) { return ''; }
+    try { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); }
+    catch (e) { return ''; }
   }
 
   function sourceName(src) {
     return { chatgpt: 'ChatGPT', claude: 'Claude', gemini: 'Gemini' }[src] || 'AI';
   }
 
-  function decode(str) {
-    return decodeURIComponent(escape(atob(str)));
-  }
-
-  function loadData() {
+  function parseHash() {
     var hash = location.hash;
-    if (!hash || hash.indexOf('#data=') !== 0) return DEMO;
-    try {
-      return JSON.parse(decode(hash.slice(6)));
-    } catch (e) { return null; }
+    if (!hash) return null;
+    if (hash.indexOf('#data=') === 0) return { type: 'data', value: hash.slice(6) };
+    if (hash.indexOf('#raw=') === 0) return { type: 'raw', value: hash.slice(5) };
+    return null;
   }
 
-  function esc(str) {
-    if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+  function showKeySetup(rawPayload) {
+    document.getElementById('app').innerHTML =
+      '<div class="key-setup">' +
+        '<h1 class="key-setup-title">One more step</h1>' +
+        '<p class="key-setup-desc">Enter your OpenAI API key to generate the summary. It\'s saved in your browser — you only need to do this once.</p>' +
+        '<div class="key-field">' +
+          '<input class="key-input" id="keyInput" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false">' +
+          '<button class="key-submit" onclick="submitKey()">Generate summary</button>' +
+        '</div>' +
+        '<div class="key-privacy">🔒 Saved only in your browser — sent only to api.openai.com</div>' +
+      '</div>';
+
+    document.getElementById('keyInput').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') submitKey();
+    });
+    document.getElementById('keyInput').focus();
+
+    window.__pendingRawPayload = rawPayload;
   }
 
-  function render(data) {
-    if (!data) {
-      document.getElementById('app').innerHTML =
-        '<div class="error-state">' +
-        '<div class="error-icon">⚠️</div>' +
-        '<p class="error-title">Couldn\'t decode this link</p>' +
-        '<p class="error-desc">The URL may be incomplete or corrupted. Ask for the original link to be shared again.</p>' +
-        '</div>';
+  function submitKey() {
+    var key = document.getElementById('keyInput').value.trim().replace(/[^\x20-\x7E]/g, '');
+    if (!key.startsWith('sk-')) {
+      alert('Please enter a valid OpenAI API key starting with sk-');
       return;
     }
+    saveKey(key);
+    summariseAndRender(window.__pendingRawPayload, key);
+  }
 
-    var isDemo = data === DEMO;
+  function changeKey() {
+    clearKey();
+    location.reload();
+  }
 
+  function showLoading() {
+    document.getElementById('app').innerHTML =
+      '<div class="loading-state">' +
+        '<div class="spinner"></div>' +
+        '<p class="loading-title">Summarising your conversation…</p>' +
+        '<p class="loading-desc">This usually takes 5–10 seconds.</p>' +
+      '</div>';
+  }
+
+  function showError(title, desc) {
+    document.getElementById('app').innerHTML =
+      '<div class="main"><div class="error-state">' +
+        '<div class="error-icon">⚠️</div>' +
+        '<p class="error-title">' + esc(title) + '</p>' +
+        '<p class="error-desc">' + esc(desc) + '</p>' +
+      '</div></div>';
+  }
+
+  async function summariseAndRender(rawPayload, apiKey) {
+    showLoading();
+
+    var conversation = rawPayload.messages.map(function (m) {
+      return (m.role === 'user' ? 'User: ' : 'Assistant: ') + m.content;
+    }).join('\n\n');
+
+    var prompt = 'Analyse this AI conversation and respond with valid JSON only, no markdown:\n' +
+      '{\n' +
+      '  "title": "concise title max 10 words",\n' +
+      '  "topics": [{"name": "topic", "description": "one sentence"}],\n' +
+      '  "lastTopic": "name of last distinct topic",\n' +
+      '  "summary": "3-5 paragraph prose summary",\n' +
+      '  "keyTakeaways": ["takeaway 1", "takeaway 2", "takeaway 3"]\n' +
+      '}\n\n' +
+      (rawPayload.truncated ? '[Conversation trimmed to fit limits]\n\n' : '') +
+      'Conversation:\n' + conversation;
+
+    try {
+      var resp = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          response_format: { type: 'json_object' },
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 1500
+        })
+      });
+
+      if (!resp.ok) {
+        var errData = await resp.json().catch(function () { return {}; });
+        var msg = (errData.error && errData.error.message) || ('OpenAI API error ' + resp.status);
+        if (resp.status === 401) {
+          clearKey();
+          msg = 'Invalid API key. Please reload the page and try again with a valid key.';
+        }
+        showError('Summarisation failed', msg);
+        return;
+      }
+
+      var data = await resp.json();
+      var summary = JSON.parse(data.choices[0].message.content);
+
+      var fullPayload = Object.assign({}, summary, {
+        source: rawPayload.source,
+        timestamp: rawPayload.timestamp,
+        messages: rawPayload.messages,
+        truncated: rawPayload.truncated
+      });
+
+      // Upgrade URL from #raw= to #data= so sharing the link skips the API call
+      history.replaceState(null, '', '#data=' + encode(JSON.stringify(fullPayload)));
+
+      renderSummary(fullPayload);
+
+    } catch (e) {
+      showError('Summarisation failed', e.message || 'Unknown error. Check your internet connection and try again.');
+    }
+  }
+
+  function renderSummary(data) {
     var topicHtml = (data.topics || []).map(function (t, i) {
       var isLast = t.name === data.lastTopic;
       var chip = '<span class="topic-chip' + (isLast ? ' last' : '') + '" title="' + esc(t.description) + '">' + esc(t.name) + (isLast ? ' ★' : '') + '</span>';
@@ -520,38 +684,40 @@
       ? '<div class="truncation-note">ℹ️ Conversation was trimmed to fit URL limits — earlier messages may be missing.</div>'
       : '';
 
-    var demoNotice = isDemo
-      ? '<div class="demo-notice">ℹ️ This is a demo. <a href="index.html">Get the bookmarklet</a> to export a real conversation.</div>'
-      : '';
-
     document.getElementById('app').innerHTML =
-      demoNotice +
-      '<div class="meta">' +
-        '<span class="source-badge ' + esc(data.source) + '">' + esc(sourceName(data.source)) + '</span>' +
-        '<span class="meta-dot">·</span>' +
-        '<span>' + esc(formatDate(data.timestamp)) + '</span>' +
-      '</div>' +
-      '<h1 class="title">' + esc(data.title || 'Untitled conversation') + '</h1>' +
-      '<section class="topics-section">' +
-        '<p class="section-label">Topics covered</p>' +
-        '<div class="topic-timeline">' + topicHtml + '</div>' +
-      '</section>' +
-      '<section class="summary-section">' +
-        '<p class="section-label">Summary</p>' +
-        '<div class="summary-text">' + summaryHtml + '</div>' +
-      '</section>' +
-      '<section class="takeaways-section">' +
-        '<p class="section-label">Key takeaways</p>' +
-        '<ul class="takeaways-list">' + takeawaysHtml + '</ul>' +
-      '</section>' +
-      '<div class="divider"></div>' +
-      '<div>' + truncNote +
-        '<button class="transcript-toggle" id="transcriptToggle" aria-expanded="false" onclick="toggleTranscript()">' +
-          '<span class="toggle-icon"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polyline points="2,3 5,7 8,3"/></svg></span>' +
-          'View full conversation (' + (data.messages || []).length + ' messages)' +
-        '</button>' +
-        '<div class="transcript-body" id="transcriptBody" hidden>' + msgsHtml + '</div>' +
-      '</div>';
+      '<main class="main">' +
+        '<div class="meta">' +
+          '<span class="source-badge ' + esc(data.source) + '">' + esc(sourceName(data.source)) + '</span>' +
+          '<span class="meta-dot">·</span>' +
+          '<span>' + esc(formatDate(data.timestamp)) + '</span>' +
+        '</div>' +
+        '<h1 class="title">' + esc(data.title || 'Untitled conversation') + '</h1>' +
+        '<section class="topics-section">' +
+          '<p class="section-label">Topics covered</p>' +
+          '<div class="topic-timeline">' + topicHtml + '</div>' +
+        '</section>' +
+        '<section class="summary-section">' +
+          '<p class="section-label">Summary</p>' +
+          '<div class="summary-text">' + summaryHtml + '</div>' +
+        '</section>' +
+        '<section class="takeaways-section">' +
+          '<p class="section-label">Key takeaways</p>' +
+          '<ul class="takeaways-list">' + takeawaysHtml + '</ul>' +
+        '</section>' +
+        '<div class="divider"></div>' +
+        '<div>' + truncNote +
+          '<button class="transcript-toggle" id="transcriptToggle" aria-expanded="false" onclick="toggleTranscript()">' +
+            '<span class="toggle-icon"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polyline points="2,3 5,7 8,3"/></svg></span>' +
+            'View full conversation (' + (data.messages || []).length + ' messages)' +
+          '</button>' +
+          '<div class="transcript-body" id="transcriptBody" hidden>' + msgsHtml + '</div>' +
+        '</div>' +
+      '</main>';
+
+    document.getElementById('copyBtn').style.display = '';
+    document.getElementById('printBtn').style.display = '';
+    document.getElementById('changeKeyBtn').style.display = '';
+    document.title = data.title || 'Export Chat';
   }
 
   function toggleTranscript() {
@@ -570,7 +736,39 @@
     });
   }
 
-  render(loadData());
+  function init() {
+    var parsed = parseHash();
+
+    if (!parsed) {
+      showError('No conversation data', 'Open this page via the Export Chat bookmarklet to export a conversation.');
+      return;
+    }
+
+    try {
+      var payload = JSON.parse(decode(parsed.value));
+
+      if (parsed.type === 'data') {
+        renderSummary(payload);
+        document.getElementById('copyBtn').style.display = '';
+        document.getElementById('printBtn').style.display = '';
+        document.getElementById('changeKeyBtn').style.display = '';
+        return;
+      }
+
+      // type === 'raw'
+      var key = getStoredKey();
+      if (key) {
+        summariseAndRender(payload, key);
+      } else {
+        showKeySetup(payload);
+      }
+
+    } catch (e) {
+      showError('Couldn\'t decode this link', 'The URL may be incomplete or corrupted. Ask for the original link to be shared again.');
+    }
+  }
+
+  init();
 </script>
 
 </body>

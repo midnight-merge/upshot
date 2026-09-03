@@ -465,50 +465,19 @@
 
 <!-- SETUP -->
 <section class="setup">
-  <h2 class="setup-title">Get set up in two steps</h2>
+  <h2 class="setup-title">Get set up in one step</h2>
 
-  <!-- Step 1: API Key -->
   <div class="step">
-    <div class="step-num" id="step1num">1</div>
-    <div>
-      <p class="step-label">Enter your OpenAI API key</p>
-      <p class="step-desc">
-        Used only in your browser to generate summaries via gpt-4o-mini.
-        Your key is never sent to our servers — it travels only to api.openai.com.
-      </p>
-      <div class="key-field">
-        <input
-          class="key-input"
-          id="apiKeyInput"
-          type="password"
-          placeholder="sk-..."
-          autocomplete="off"
-          spellcheck="false"
-          oninput="onKeyInput()"
-        >
-        <button class="key-submit" onclick="generateBookmarklet()">Generate bookmarklet</button>
-      </div>
-      <div class="key-privacy">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8 1L2 4v5c0 3.3 2.5 5.7 6 7 3.5-1.3 6-3.7 6-7V4L8 1z"/>
-        </svg>
-        Key never leaves your browser — <a href="view.html" style="color:inherit">open-source, inspect the code</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Step 2: Drag bookmarklet -->
-  <div class="step">
-    <div class="step-num" id="step2num">2</div>
+    <div class="step-num">1</div>
     <div>
       <p class="step-label">Drag the bookmarklet to your bookmarks bar</p>
       <p class="step-desc">
-        Enter your key above to generate the button. Then drag it to the bookmarks bar at the top of your browser.
-        <strong>Don't have a bookmarks bar?</strong> Press <kbd style="font-family:monospace;background:var(--surface-2);padding:1px 5px;border-radius:3px;border:1px solid var(--border)">Ctrl+Shift+B</kbd> (Windows) or <kbd style="font-family:monospace;background:var(--surface-2);padding:1px 5px;border-radius:3px;border:1px solid var(--border)">⌘+Shift+B</kbd> (Mac).
+        Drag the button below up to your bookmarks bar — that's it.
+        <strong>Don't have a bookmarks bar?</strong> Press <kbd style="font-family:monospace;background:var(--surface-2);padding:1px 5px;border-radius:3px;border:1px solid var(--border)">Ctrl+Shift+B</kbd> (Windows) or <kbd style="font-family:monospace;background:var(--surface-2);padding:1px 5px;border-radius:3px;border:1px solid var(--border)">⌘+Shift+B</kbd> (Mac) to show it.
       </p>
 
-      <div class="bookmarklet-area" id="bookmarkletArea">
-        <p class="drag-instruction">Drag the button below to your bookmarks bar:</p>
+      <div class="bookmarklet-area visible">
+        <p class="drag-instruction">Drag this button to your bookmarks bar:</p>
         <a id="bookmarkletLink" href="#" class="bookmarklet-link" onclick="return false;">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 3h10v10l-5-3-5 3V3z"/>
@@ -519,11 +488,9 @@
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="8" cy="8" r="6.5"/><line x1="8" y1="5" x2="8" y2="9"/><circle cx="8" cy="11" r="0.5" fill="currentColor"/>
           </svg>
-          Click won't work here — drag it to the bookmarks bar
+          Click won't work here — drag it up to the bookmarks bar
         </div>
       </div>
-
-      <div id="noBookmarkletNote" style="font-size:13px;color:var(--text-muted)">Enter your API key above to generate the bookmarklet.</div>
     </div>
   </div>
 </section>
@@ -540,15 +507,15 @@
     </li>
     <li class="instruction-item">
       <span class="instr-num">2</span>
-      <span>When you're ready to save it, click the <strong>Export Chat</strong> bookmarklet in your bookmarks bar.</span>
+      <span>Click the <strong>Export Chat</strong> bookmark in your bookmarks bar. A new tab opens.</span>
     </li>
     <li class="instruction-item">
       <span class="instr-num">3</span>
-      <span>A new tab opens with a summary, topic timeline, key takeaways, and the full conversation.</span>
+      <span>The first time, you'll be asked for your OpenAI API key. Enter it — it's saved in your browser so you won't need to enter it again.</span>
     </li>
     <li class="instruction-item">
       <span class="instr-num">4</span>
-      <span>Copy the URL from that page to share — the link is permanent and works for anyone.</span>
+      <span>Your conversation is summarised and a shareable link is generated. Copy it and send it to anyone.</span>
     </li>
   </ol>
 </section>
@@ -566,7 +533,7 @@
 
   <div class="faq-item">
     <p class="faq-q">Is my API key safe?</p>
-    <p class="faq-a">Your key is entered into a field in your browser and used only to generate the bookmarklet. It's never sent to any server we control — only to api.openai.com when the bookmarklet runs. You can open DevTools → Network and verify this yourself. The key is stored in the bookmark, so treat the bookmark like a password.</p>
+    <p class="faq-a">Your key is entered on the export page and saved only in your browser's localStorage. It's never sent to any server we control — only to api.openai.com to generate the summary. You can open DevTools → Network and verify this yourself.</p>
   </div>
 
   <div class="faq-item">
@@ -589,153 +556,6 @@
   Open source · MIT licence · Your data never touches our servers
 </footer>
 
-<!-- BOOKMARKLET TEMPLATE — not executed by the browser -->
-<script type="text/bookmarklet-template" id="bookmarkletTemplate">
-(function () {
-  'use strict';
-
-  var VIEWER_URL = '__VIEWER_URL__';
-  var OPENAI_API_KEY = '__API_KEY__';
-  var MAX_WORDS = 12000;
-
-  var SITES = {
-    'chat.openai.com': function () {
-      var nodes = document.querySelectorAll('[data-message-author-role]');
-      var msgs = [];
-      nodes.forEach(function (n) {
-        var role = n.getAttribute('data-message-author-role');
-        var text = n.innerText.trim();
-        if (text) msgs.push({ role: role === 'user' ? 'user' : 'assistant', content: text });
-      });
-      return msgs;
-    },
-    'claude.ai': function () {
-      var all = [];
-      document.querySelectorAll('[data-testid="user-message"], .font-claude-message').forEach(function (n) {
-        var isUser = n.getAttribute('data-testid') === 'user-message';
-        var text = n.innerText.trim();
-        if (text) all.push({ role: isUser ? 'user' : 'assistant', content: text });
-      });
-      return all;
-    },
-    'gemini.google.com': function () {
-      var msgs = [];
-      document.querySelectorAll('.user-query-bubble-with-background, .model-response-text').forEach(function (n) {
-        var isUser = n.classList.contains('user-query-bubble-with-background');
-        var text = n.innerText.trim();
-        if (text) msgs.push({ role: isUser ? 'user' : 'assistant', content: text });
-      });
-      return msgs;
-    }
-  };
-
-  function extractMessages() {
-    var host = location.hostname;
-    for (var site in SITES) {
-      if (host.indexOf(site) !== -1) {
-        var msgs = SITES[site]();
-        if (msgs.length) return msgs;
-      }
-    }
-    var container = document.querySelector('main') || document.body;
-    return [{ role: 'assistant', content: container.innerText.trim() }];
-  }
-
-  function trimMessages(msgs) {
-    var wordCount = 0;
-    var trimmed = [];
-    for (var i = msgs.length - 1; i >= 0; i--) {
-      var words = msgs[i].content.split(/\s+/).length;
-      if (wordCount + words > MAX_WORDS) break;
-      wordCount += words;
-      trimmed.unshift(msgs[i]);
-    }
-    return { messages: trimmed, truncated: trimmed.length < msgs.length };
-  }
-
-  function detectSource() {
-    var host = location.hostname;
-    if (host.indexOf('chat.openai.com') !== -1) return 'chatgpt';
-    if (host.indexOf('claude.ai') !== -1) return 'claude';
-    if (host.indexOf('gemini.google.com') !== -1) return 'gemini';
-    return 'unknown';
-  }
-
-  function showToast(msg, isError) {
-    var el = document.createElement('div');
-    el.textContent = msg;
-    el.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;padding:12px 20px;border-radius:8px;font-size:14px;font-family:system-ui,sans-serif;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,0.2);' + (isError ? 'background:#ef4444;color:#fff' : 'background:#18181b;color:#fff');
-    document.body.appendChild(el);
-    setTimeout(function () { el.remove(); }, isError ? 5000 : 3000);
-  }
-
-  function showLoader() {
-    var style = document.createElement('style');
-    style.textContent = '@keyframes __spin{to{transform:rotate(360deg)}}';
-    document.head.appendChild(style);
-    var el = document.createElement('div');
-    el.id = '__export_chat_loader';
-    el.innerHTML = '<div style="display:flex;align-items:center;gap:10px"><div style="width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:__spin 0.7s linear infinite"></div><span>Exporting conversation…</span></div>';
-    el.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;font-size:14px;font-family:system-ui,sans-serif;box-shadow:0 4px 24px rgba(0,0,0,0.25)';
-    document.body.appendChild(el);
-    return function () { el.remove(); style.remove(); };
-  }
-
-  function encode(str) {
-    return btoa(unescape(encodeURIComponent(str)));
-  }
-
-  async function summarise(messages, truncated) {
-    var conversation = messages.map(function (m) {
-      return (m.role === 'user' ? 'User: ' : 'Assistant: ') + m.content;
-    }).join('\n\n');
-
-    var prompt = 'Analyse this AI conversation and respond with valid JSON only, no markdown:\n{\n  "title": "concise title max 10 words",\n  "topics": [{"name": "topic", "description": "one sentence"}],\n  "lastTopic": "name of last distinct topic",\n  "summary": "3-5 paragraph prose summary",\n  "keyTakeaways": ["takeaway 1", "takeaway 2", "takeaway 3"]\n}\n\n' + (truncated ? '[Conversation trimmed to fit limits]\n\n' : '') + 'Conversation:\n' + conversation;
-
-    var resp = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + OPENAI_API_KEY },
-      body: JSON.stringify({ model: 'gpt-4o-mini', response_format: { type: 'json_object' }, messages: [{ role: 'user', content: prompt }], max_tokens: 1500 })
-    });
-
-    if (!resp.ok) {
-      var err = await resp.json().catch(function () { return {}; });
-      throw new Error((err.error && err.error.message) || 'OpenAI API error ' + resp.status);
-    }
-
-    var data = await resp.json();
-    return JSON.parse(data.choices[0].message.content);
-  }
-
-  async function run() {
-    var msgs = extractMessages();
-    if (!msgs.length || (msgs.length === 1 && !msgs[0].content)) {
-      showToast('No conversation found on this page.', true);
-      return;
-    }
-    var removeLoader = showLoader();
-    try {
-      var result = trimMessages(msgs);
-      var summary = await summarise(result.messages, result.truncated);
-      var payload = Object.assign({}, summary, {
-        source: detectSource(),
-        timestamp: new Date().toISOString(),
-        messages: result.messages,
-        truncated: result.truncated
-      });
-      var url = VIEWER_URL + '#data=' + encode(JSON.stringify(payload));
-      removeLoader();
-      window.open(url, '_blank');
-    } catch (err) {
-      removeLoader();
-      showToast('Export failed: ' + err.message, true);
-    }
-  }
-
-  run();
-})();
-</script>
-
 <script>
   function computeViewerUrl() {
     var href = location.href;
@@ -750,47 +570,16 @@
       .trim();
   }
 
-  function generateBookmarklet() {
-    var key = document.getElementById('apiKeyInput').value.trim().replace(/[^\x20-\x7E]/g, '');
-    if (!key || !key.startsWith('sk-')) {
-      alert('Please enter a valid OpenAI API key starting with sk-');
-      document.getElementById('apiKeyInput').focus();
-      return;
-    }
+  // Bookmarklet source — no API key needed, just extracts and passes raw conversation to view.html
+  var BOOKMARKLET_SRC = "(function(){var VIEWER_URL='__VIEWER_URL__';var MAX_WORDS=12000;var SITES={'chat.openai.com':function(){var nodes=document.querySelectorAll('[data-message-author-role]');var msgs=[];nodes.forEach(function(n){var role=n.getAttribute('data-message-author-role');var text=n.innerText.trim();if(text)msgs.push({role:role==='user'?'user':'assistant',content:text});});return msgs;},'claude.ai':function(){var all=[];document.querySelectorAll('[data-testid=\"user-message\"],.font-claude-message').forEach(function(n){var isUser=n.getAttribute('data-testid')==='user-message';var text=n.innerText.trim();if(text)all.push({role:isUser?'user':'assistant',content:text});});return all;},'gemini.google.com':function(){var msgs=[];document.querySelectorAll('.user-query-bubble-with-background,.model-response-text').forEach(function(n){var isUser=n.classList.contains('user-query-bubble-with-background');var text=n.innerText.trim();if(text)msgs.push({role:isUser?'user':'assistant',content:text});});return msgs;}};function extractMessages(){var host=location.hostname;for(var site in SITES){if(host.indexOf(site)!==-1){var msgs=SITES[site]();if(msgs.length)return msgs;}}var container=document.querySelector('main')||document.body;return[{role:'assistant',content:container.innerText.trim()}];}function trimMessages(msgs){var wordCount=0;var trimmed=[];for(var i=msgs.length-1;i>=0;i--){var words=msgs[i].content.split(/\\s+/).length;if(wordCount+words>MAX_WORDS)break;wordCount+=words;trimmed.unshift(msgs[i]);}return{messages:trimmed,truncated:trimmed.length<msgs.length};}function detectSource(){var host=location.hostname;if(host.indexOf('chat.openai.com')!==-1)return 'chatgpt';if(host.indexOf('claude.ai')!==-1)return 'claude';if(host.indexOf('gemini.google.com')!==-1)return 'gemini';return 'unknown';}function showToast(msg,isError){var el=document.createElement('div');el.textContent=msg;el.style.cssText='position:fixed;bottom:24px;right:24px;z-index:99999;padding:12px 20px;border-radius:8px;font-size:14px;font-family:system-ui,sans-serif;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,0.2);'+(isError?'background:#ef4444;color:#fff':'background:#18181b;color:#fff');document.body.appendChild(el);setTimeout(function(){el.remove();},isError?5000:3000);}function encode(str){return btoa(unescape(encodeURIComponent(str)));}var msgs=extractMessages();if(!msgs.length||(msgs.length===1&&!msgs[0].content)){showToast('No conversation found on this page.',true);return;}var result=trimMessages(msgs);var payload={source:detectSource(),timestamp:new Date().toISOString(),messages:result.messages,truncated:result.truncated};var url=VIEWER_URL+'#raw='+encode(JSON.stringify(payload));window.open(url,'_blank');})();";
 
-    var template = document.getElementById('bookmarkletTemplate').textContent;
+  function init() {
     var viewerUrl = computeViewerUrl();
-
-    var code = template
-      .replace('__API_KEY__', key.replace(/\\/g, '\\\\').replace(/'/g, "\\'"))
-      .replace('__VIEWER_URL__', viewerUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
-
-    var minified = minify(code);
-    var href = 'javascript:' + encodeURIComponent(minified);
-
-    var link = document.getElementById('bookmarkletLink');
-    link.href = href;
-
-    document.getElementById('bookmarkletArea').classList.add('visible');
-    document.getElementById('noBookmarkletNote').style.display = 'none';
-    document.getElementById('step1num').className = 'step-num done';
-    document.getElementById('step1num').textContent = '✓';
+    var code = BOOKMARKLET_SRC.replace('__VIEWER_URL__', viewerUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+    document.getElementById('bookmarkletLink').href = 'javascript:' + encodeURIComponent(code);
   }
 
-  function onKeyInput() {
-    var key = document.getElementById('apiKeyInput').value.trim();
-    if (!key) {
-      document.getElementById('bookmarkletArea').classList.remove('visible');
-      document.getElementById('noBookmarkletNote').style.display = '';
-      document.getElementById('step1num').className = 'step-num';
-      document.getElementById('step1num').textContent = '1';
-    }
-  }
-
-  // Allow Enter key to generate
-  document.getElementById('apiKeyInput').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') generateBookmarklet();
-  });
+  init();
 </script>
 
 </body>

@@ -9,22 +9,27 @@ You have a conversation on ChatGPT, Claude, or Gemini. You click a bookmark in y
 ## Architecture
 
 ```
-index.html          Landing page — users enter their OpenAI API key and
-                    generate a personalised bookmarklet
+index.html          Landing page — explains the tool and provides the
+                    draggable bookmarklet (no API key needed here)
 
 bookmarklet.src.js  The bookmarklet source. When clicked on an AI tool page it:
                       1. Reads the conversation from the DOM
-                      2. Calls gpt-4o-mini to produce a structured summary
-                      3. Encodes the result into a URL fragment
-                      4. Opens view.html with the data in the URL hash
+                      2. Encodes the raw messages into a URL fragment
+                      3. Opens view.html#raw=... — no API call made here
 
-view.html           The viewer page. Reads the URL hash, decodes it, and
-                    renders the summary — no server request needed
+view.html           The viewer page. On first use it asks for an OpenAI API
+                    key (saved in localStorage). It then calls gpt-4o-mini
+                    to summarise the conversation and renders the result.
+                    The URL is upgraded from #raw= to #data= after summarising,
+                    so anyone you share the link with sees the summary directly
+                    without needing their own API key.
 ```
 
-Data flow: conversation text → OpenAI API → JSON summary → base64 encoded → `view.html#data=...`
+Data flow: DOM extraction → base64 encoded raw messages → `view.html#raw=...` → OpenAI API → summary rendered → URL updated to `view.html#data=...`
 
 The `#data=` fragment never leaves the browser. Anyone with the link can open it directly; there is nothing stored on a server.
+
+The API call happens on `view.html` (your hosted page), not on the AI tool's page. This avoids being blocked by the Content Security Policy that ChatGPT, Claude, and Gemini enforce on their own pages.
 
 ---
 
@@ -37,26 +42,26 @@ The `#data=` fragment never leaves the browser. Anyone with the link can open it
 
 ### Steps
 
-1. **Open the landing page.** In your file explorer, navigate to the project folder and open `index.html` in your browser. You can also drag the file directly into a browser tab.
+1. **Open the landing page.** Navigate to the project folder and open `index.html` in your browser (drag the file into a browser tab, or open it with File → Open).
 
-2. **Enter your OpenAI API key.** Paste your key (starting with `sk-`) into the field and click **Generate bookmarklet**. A draggable button labelled "Export Chat" will appear.
+2. **Show your bookmarks bar** if it is not visible. Press `Ctrl+Shift+B` on Windows or `⌘+Shift+B` on Mac.
 
-3. **Show your bookmarks bar.** If it is not visible, press `Ctrl+Shift+B` on Windows or `⌘+Shift+B` on Mac.
+3. **Drag the bookmarklet to your bookmarks bar.** Click and hold the "Export Chat" button on the landing page, drag it up to the bookmarks bar, and release.
 
-4. **Drag the bookmarklet to your bookmarks bar.** Click and hold the "Export Chat" button, drag it up to the bookmarks bar, and release. It will appear there as a bookmark.
+4. **Go to an AI tool and have a conversation.** Open ChatGPT (`chat.openai.com`), Claude (`claude.ai`), or Gemini (`gemini.google.com`) and send a few messages.
 
-5. **Go to an AI tool and have a conversation.** Open ChatGPT (`chat.openai.com`), Claude (`claude.ai`), or Gemini (`gemini.google.com`) and send a few messages to create a conversation worth exporting.
+5. **Click the bookmarklet.** Click the "Export Chat" bookmark in your bookmarks bar. A new tab opens showing a loading screen.
 
-6. **Click the bookmarklet.** While on the AI tool page, click the "Export Chat" bookmark you added in step 4. A small loading indicator will appear in the corner of the page.
+6. **Enter your OpenAI API key (first time only).** If this is your first export, you will be prompted for your API key (`sk-...`). Enter it and click **Generate summary** — it is saved in your browser's localStorage so you will not be asked again.
 
-7. **Review the export.** A new tab opens with `view.html` showing:
+7. **Review the export.** The viewer renders:
    - The conversation title and source
    - A topic timeline with the last topic highlighted
    - A prose summary
    - Key takeaways
    - A collapsible full transcript
 
-8. **Copy the link.** Click **Copy link** in the top-right corner of the viewer page. Paste it anywhere — the link is self-contained and works for anyone who opens it.
+8. **Copy the link.** Click **Copy link** in the top-right corner. The link is self-contained and works for anyone — they do not need an API key to view it.
 
 ---
 
