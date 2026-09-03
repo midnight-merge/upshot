@@ -56,13 +56,50 @@ Open `http://localhost:3000`, drag the **Export Chat** button to your bookmarks 
 
 ### Sharing with colleagues — GitHub Pages
 
-`localhost` is only accessible on your machine. To share the tool, deploy it:
+`localhost` is only accessible on your own machine. To share the tool with others it needs to be publicly hosted over `https://`. GitHub Pages does this for free — it serves the static HTML files in this repo at a public URL with no server, no database, and no running costs. Every `git push` updates the live site automatically.
+
+**Deploy steps:**
 
 1. Push this repo to GitHub
 2. Go to **Settings → Pages** → set source to `main`
-3. Share `https://yourusername.github.io/export-ai-chat` with colleagues
+3. Wait ~60 seconds — your site is live at `https://yourusername.github.io/export-ai-chat`
+4. Share that URL with colleagues
 
-GitHub Pages is free, requires no server, and updates automatically on every `git push`.
+**Full workflow once deployed:**
+
+```
+  Colleague visits
+  https://yourusername.github.io/export-ai-chat
+          │
+          ▼
+  Drags "Export Chat" bookmark to their bookmarks bar  (one-time setup)
+          │
+          ▼
+  Goes to ChatGPT / Claude / Gemini and has a conversation
+          │
+          ▼
+  Clicks the "Export Chat" bookmark
+          │
+          ▼
+  Bookmarklet reads the conversation from the page
+  and opens view.html#raw=... in a new tab
+          │
+          ▼
+  view.html loads — first time: asks for OpenAI API key (saved in browser)
+          │
+          ▼
+  Calls OpenAI API → generates title, topics, summary, takeaways
+          │
+          ▼
+  Summary is rendered — URL updates to view.html#data=...
+          │
+          ▼
+  Colleague copies the link and shares it with anyone
+          │
+          ▼
+  Recipient opens the link → sees the summary instantly
+  (no API key needed, no server involved)
+```
 
 ---
 
