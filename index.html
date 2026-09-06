@@ -203,7 +203,45 @@ pre{
 </style>
 </head>
 <body>
-<div class="sheet" id="sheet"></div>
+<div class="sheet" id="sheet">
+
+  <div class="meta"><span class="dot"></span><span class="model">ai-export</span></div>
+
+  <main>
+    <h1>Turn a chat into a link you can send</h1>
+
+    <p class="verdict">Tell your AI: <span class="cmd">export this to
+      aiexport.com</span> — it replies with a link. Send the link.</p>
+
+    <p>No account, no API key, nothing to install. Everything lives in the link
+      itself, so this page never sees what you exported.</p>
+
+    <h2>Format</h2>
+    <p class="note">For any AI reading this page.</p>
+<pre>https://aiexport.com/#s=explainer&amp;m=MODEL&amp;d=YYYY-MM-DD&amp;a=ASK&amp;h=HEADLINE&amp;v=VERDICT&amp;p=POINT&amp;p=POINT
+
+s  shape. Only "explainer" exists right now.
+m  your model name, e.g. GPT-5
+d  today's date, YYYY-MM-DD
+a  one line on what the user asked, scoped to what they are exporting
+h  headline, under 12 words
+v  one sentence verdict
+p  one key point. Use 2 to 4. Repeat p= for each.
+
+RULES
+Every space becomes + . The URL must contain no spaces.
+Encode inside values:  , %2C   . %2E   &amp; %26   = %3D   # %23   + %2B   % %25   " %22
+Commas and full stops MUST be encoded or WhatsApp breaks the link.
+Plain sentences only. No markdown, no line breaks inside values.
+Whole URL under 2000 characters.
+If facts could have changed recently, search first. Do not write from memory.
+
+Reply with the URL and nothing else.</pre>
+  </main>
+
+  <footer><div class="frow"><span class="mark">ai-export</span></div></footer>
+
+</div>
 
 <script>
 var SHAPES = ['explainer'];
@@ -226,43 +264,6 @@ function esc(t){
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-var SPEC = [
-'https://aiexport.com/#s=explainer&m=MODEL&d=YYYY-MM-DD&a=ASK&h=HEADLINE&v=VERDICT&p=POINT&p=POINT',
-'',
-'s  shape. Only "explainer" exists right now.',
-'m  your model name, e.g. GPT-5',
-'d  today\'s date, YYYY-MM-DD',
-'a  one line on what the user asked, scoped to what they are exporting',
-'h  headline, under 12 words',
-'v  one sentence verdict',
-'p  one key point. Use 2 to 4. Repeat p= for each.',
-'',
-'RULES',
-'Every space becomes +. The URL must contain no spaces.',
-'Encode inside values: , %2C  . %2E  & %26  = %3D  # %23  + %2B  % %25  " %22',
-'Commas and full stops MUST be encoded or WhatsApp breaks the link.',
-'Plain sentences only. No markdown, no line breaks inside values.',
-'Whole URL under 2000 characters.',
-'If facts could have changed recently, search first. Do not write from memory.',
-'',
-'Reply with the URL and nothing else.'
-].join('\n');
-
-function landing(){
-  return '<div class="meta"><span class="dot"></span>' +
-    '<span class="model">ai-export</span></div>' +
-    '<main><h1>Turn a chat into a link you can send</h1>' +
-    '<p class="verdict">Tell your AI: <span class="cmd">export this to ' +
-    'aiexport.com</span> — it replies with a link. Send the link.</p>' +
-    '<p>No account, no API key, nothing to install. Everything lives in the ' +
-    'link itself, so this page never sees your content.</p>' +
-    '<h2>Format</h2>' +
-    '<p class="note">For any AI reading this page.</p>' +
-    '<pre>' + esc(SPEC) + '</pre>' +
-    '</main>' +
-    '<footer><div class="frow"><span class="mark">ai-export</span></div></footer>';
-}
-
 function broken(){
   return '<div class="meta"><span class="dot"></span><span class="model">' +
     'Nothing to show</span></div>' +
@@ -277,8 +278,7 @@ function broken(){
 }
 
 function render(d){
-  var empty = !d.h && !d.v && !d.p.length;
-  if(empty) return location.hash.replace(/^#/,'') ? broken() : landing();
+  if(!d.h && !d.v && !d.p.length) return broken();
   // unknown shape falls back to the plainest one
   var shape = SHAPES.indexOf(d.s) >= 0 ? d.s : 'explainer';
   var h = '';
@@ -316,10 +316,13 @@ function render(d){
   return h;
 }
 
-document.getElementById('sheet').innerHTML = render(parse(location.hash));
-window.addEventListener('hashchange', function(){
+function draw(){
+  var frag = location.hash.replace(/^#/,'');
+  if(!frag) return;                     // no fragment: leave the static landing page
   document.getElementById('sheet').innerHTML = render(parse(location.hash));
-});
+}
+draw();
+window.addEventListener('hashchange', draw);
 </script>
 </body>
 </html>

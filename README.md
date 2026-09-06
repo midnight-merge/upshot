@@ -1,113 +1,61 @@
-# Export AI Chat
+# ai-export
 
-Export any AI conversation to a permanent, shareable link — no account, no backend required.
+Turn a chat conversation into a link you can send.
 
----
+You're talking to an AI, it says something worth sharing, you say **"export this
+to aiexport.com"**. It replies with a link. You send the link.
+
+No account, no API key, nothing to install.
 
 ## How it works
 
+The whole export lives in the URL, after the `#`. Everything after `#` stays in
+the browser and is never sent to the server, so this site never sees your content
+and there is nothing to store.
+
+That means one static page can render unlimited exports for free. It also means
+the URL length caps how long an export can be, which keeps them short.
+
 ```
-┌──────────────┐     ┌─────────────────────┐     ┌──────────────────────┐
-│  AI tool     │     │  Bookmarklet        │     │  view.html           │
-│  (ChatGPT,   │     │  (runs on the       │     │  (hosted on GitHub   │
-│  Claude,     │     │   AI tool page)     │     │   Pages)             │
-│  Gemini)     │     │                     │     │                      │
-│              │     │ 1. Reads messages   │     │ 3. Asks for OpenAI   │
-│  User has    │────▶│    from the page    │────▶│    key (first time)  │
-│  conversation│     │ 2. Encodes them     │     │ 4. Calls OpenAI API  │
-│              │     │    into a URL       │     │ 5. Renders summary   │
-│              │     │    (#raw=...)       │     │ 6. Updates URL to    │
-│              │     │    and opens        │     │    #data=... so the  │
-│              │     │    view.html        │     │    link is shareable │
-└──────────────┘     └─────────────────────┘     └──────────────────────┘
+https://aiexport.com/#s=explainer&m=GPT-5&d=2026-09-06&a=...&h=...&v=...&p=...
 ```
 
-The bookmarklet never calls any API — it only reads the page. The API call happens on `view.html` (your page), so it is never blocked by the AI tool's security policy. The final `#data=` URL is self-contained: anyone can open it without an API key.
+`index.html` reads those fields and draws the page. That's the entire system.
 
----
+## The site teaches the AI
 
-## Architecture
+`index.html` with no fragment is a landing page that spells out the format in
+plain text, and `/llms.txt` says the same thing. So when you name the domain, a
+browsing AI fetches it and learns the format on the spot. Nothing to paste, and
+no saved prompt to go stale.
 
-| File | Purpose |
+The spec is static HTML on purpose — fetchers don't run JavaScript.
+
+## Gotcha: WhatsApp and punctuation
+
+A raw comma or full stop inside a value stops WhatsApp turning the text into a
+link, and the rest arrives as plain text. Encode them as `%2C` and `%2E`.
+
+Length, `&`, `%22`, hyphens, digits and capitals are all fine — tested to 800
+characters. See `VISION.md` for the full results.
+
+## Files
+
+| | |
 |---|---|
-| `index.html` | Landing page — provides the draggable bookmarklet |
-| `view.html` | Viewer — summarises the conversation and renders the result |
-| `bookmarklet.src.js` | Readable source for the bookmarklet embedded in `index.html` |
+| `index.html` | the whole thing: landing page, spec, and renderer |
+| `llms.txt` | the format, for AIs that look there |
+| `VISION.md` | product direction, decisions, and test findings |
 
----
-
-## Setup
-
-### Prerequisites
-- A modern browser (Chrome or Firefox)
-- An OpenAI API key — [get one here](https://platform.openai.com/api-keys)
-- Node.js (for local testing)
-
-### Local testing
-
-```bash
-cd /path/to/export-ai-chat
-npx serve .
-```
-
-Open `http://localhost:3000`, drag the **Export Chat** button to your bookmarks bar, then go to ChatGPT and click it.
-
-> You cannot open `index.html` as a plain file — browsers block bookmarklets from opening `file://` URLs when running on `https://` pages like ChatGPT.
-
-### Sharing with colleagues — GitHub Pages
-
-`localhost` is only accessible on your own machine. To share the tool with others it needs to be publicly hosted over `https://`. GitHub Pages does this for free — it serves the static HTML files in this repo at a public URL with no server, no database, and no running costs. Every `git push` updates the live site automatically.
-
-**Deploy steps:**
-
-1. Push this repo to GitHub
-2. Go to **Settings → Pages** → set source to `main`
-3. Wait ~60 seconds — your site is live at `https://yourusername.github.io/export-ai-chat`
-4. Share that URL with colleagues
-
-**Full workflow once deployed:**
+## Running it
 
 ```
-  Colleague visits
-  https://yourusername.github.io/export-ai-chat
-          │
-          ▼
-  Drags "Export Chat" bookmark to their bookmarks bar  (one-time setup)
-          │
-          ▼
-  Goes to ChatGPT / Claude / Gemini and has a conversation
-          │
-          ▼
-  Clicks the "Export Chat" bookmark
-          │
-          ▼
-  Bookmarklet reads the conversation from the page
-  and opens view.html#raw=... in a new tab
-          │
-          ▼
-  view.html loads — first time: asks for OpenAI API key (saved in browser)
-          │
-          ▼
-  Calls OpenAI API → generates title, topics, summary, takeaways
-          │
-          ▼
-  Summary is rendered — URL updates to view.html#data=...
-          │
-          ▼
-  Colleague copies the link and shares it with anyone
-          │
-          ▼
-  Recipient opens the link → sees the summary instantly
-  (no API key needed, no server involved)
+python3 -m http.server 8787
 ```
 
----
+Then open `http://localhost:8787/`. Add a fragment to see an export.
 
-## Supported AI tools
+## Status
 
-| Tool | Status |
-|---|---|
-| ChatGPT (`chat.openai.com`) | Supported |
-| Claude (`claude.ai`) | Supported |
-| Gemini (`gemini.google.com`) | Supported |
-| Other pages | Generic fallback |
+Works end to end by hand. The untested part is whether a chat AI reliably gets
+the encoding right on its own — see the open question in `VISION.md`.
