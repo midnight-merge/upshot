@@ -34,19 +34,19 @@ body{
   /* export content is arbitrary AI text with no length guarantee - never let
      one long unbroken token overflow the card and trigger mobile auto-zoom */
   overflow-wrap:anywhere;
-  /* pin to the REAL, live visible viewport - fixed+inset tracks address-bar
-     animation natively, unlike any vh unit or JS measurement, which can be
-     stale by the time they're read */
-  position:fixed;
-  inset:0;
+  /* svh is the viewport at its SMALLEST - address bar showing. sizing to it
+     means the card always fits the visible area, so nothing can ever end up
+     behind the browser chrome. dvh changes as the bar animates (janky) and
+     lvh/position:fixed measure the layout viewport, which sits BEHIND it. */
+  height:100vh;  /* fallback for pre-2022 browsers */
+  height:100svh;
   overflow:hidden;
   overscroll-behavior:none;
 }
 /* the landing page is an ordinary document, so let the page itself scroll */
 body:has(.sheet.landing){
-  position:static;
-  inset:auto;
-  min-height:100dvh;
+  height:auto;
+  min-height:100svh;
   overflow-y:auto;
   overscroll-behavior:auto;
 }
@@ -63,13 +63,15 @@ body:has(.sheet.landing){
 }
 @media (min-width:470px){
   body{
-    position:static;
-    inset:auto;
-    background:var(--page);padding:30px 0;align-items:center;min-height:100vh;
+    background:var(--page);padding:30px 0;align-items:center;
+    height:auto;min-height:100vh;
     overflow-y:auto;overscroll-behavior:auto;
   }
-  .sheet{height:min(880px, calc(100dvh - 60px));border-radius:20px;padding:44px 32px 30px}
+  .sheet{height:min(880px, calc(100svh - 60px));border-radius:20px;padding:44px 32px 30px}
 }
+
+/* pinned head - the quiet scope line only, never scrolls */
+.head{flex:none}
 
 /* quiet scope line, no label, no box */
 .ask{margin:0 0 22px;flex:none}
@@ -198,7 +200,7 @@ p{margin:0 0 15px;font-size:15px;color:var(--dim)}
 
 /* metadata sits at the bottom like a signature, not a footer bar */
 .meta{
-  order:2;
+  flex:none;
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
@@ -221,7 +223,7 @@ p{margin:0 0 15px;font-size:15px;color:var(--dim)}
 .meta .by{color:var(--faint)}
 
 footer{
-  order:3;
+  flex:none;
   margin-top:18px;
   font-family:"DM Mono",ui-monospace,monospace;
   font-size:10px;
@@ -345,13 +347,13 @@ function esc(t){
 }
 
 function broken(){
-  return '<div class="meta"><span class="dot"></span><span class="model">' +
-    'Nothing to show</span></div>' +
-    '<div class="scroller"><main><h1>This link looks incomplete</h1>' +
+  return '<div class="scroller"><main><h1>This link looks incomplete</h1>' +
     '<p>The export is missing its content. This usually means the link got cut ' +
     'short when it was copied, or the AI that wrote it slipped on the format.</p>' +
     '<p>Ask the AI to export it again, and send the whole link this time.</p>' +
     '</main></div><div class="more" aria-hidden="true"></div>' +
+    '<div class="meta"><span class="dot"></span>' +
+    '<span class="model">Nothing to show</span></div>' +
     '<footer><div class="frow"><span class="mark">upshot.fyi</span></div>' +
     '<div class="how">Make your own. Tell your AI to ' +
     '<span class="cmd">read upshot.fyi</span> and export this</div></footer>';
@@ -374,10 +376,13 @@ function render(d){
     '<button type="button" class="shareBtn" id="shareBtn">Share image</button>' +
     '</div>';
 
+  // pinned head: just the quiet scope line, never scrolls
+  h += '<div class="head">';
   if(d.a){
     h += '<div class="ask"><div class="ask-label">What this covers</div>' +
          '<div class="ask-text">' + esc(d.a) + '</div></div>';
   }
+  h += '</div>';
 
   // shape
   h += '<div class="scroller"><main>';
