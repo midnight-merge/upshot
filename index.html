@@ -42,65 +42,60 @@ body{
   /* export content is arbitrary AI text with no length guarantee - never let
      one long unbroken token overflow the card and trigger mobile auto-zoom */
   overflow-wrap:anywhere;
-  /* the card owns the viewport constraint (see .sheet) - body just needs to
-     not be shorter than it, so there is no percentage-height chain to
-     resolve through */
+  /* An ORDINARY scrolling document. No viewport lock, no overflow trap.
+     Pinning is done with position:sticky below, so the browser handles the
+     address bar natively instead of us trying to out-guess it - which is
+     what made this fragile: a locked, exactly-viewport-tall card is laid out
+     against the LAYOUT viewport, whose top sits behind the browser chrome
+     when a link is opened from another app. */
   min-height:100vh;  /* fallback for pre-2022 browsers */
-  min-height:100svh;
-  overflow:hidden;
-  overscroll-behavior:none;
-}
-/* the landing page is an ordinary document, so let the page itself scroll -
-   but only when there is no hash, i.e. we are really staying on the landing
-   page rather than about to swap in the card */
-html:not(.card) body:has(.sheet.landing){
-  overflow-y:auto;
-  overscroll-behavior:auto;
-}
-/* hash present: lock the root too. body's overflow propagates to the viewport
-   only while html is `visible`, and body then computes to visible itself -
-   setting it here explicitly removes that indirection. */
-html.card{
-  overflow:hidden;
-  height:100vh;
-  height:100svh;
-}
-/* hash present: constrain the placeholder markup to one viewport straight
-   away, so the document is never tall enough to earn a scroll offset */
-html.card .sheet{
-  height:100vh;
-  height:100svh;
-  overflow:hidden;
+  min-height:100dvh;
 }
 
 .sheet{
   width:100%;
   max-width:430px;
-  /* svh is the viewport at its SMALLEST - address bar showing. sizing to it
-     means the card always fits the visible area, so nothing can end up
-     behind the browser chrome. dvh changes as the bar animates (janky) and
-     lvh/position:fixed measure the layout viewport, which sits BEHIND it. */
-  height:100vh;  /* fallback for pre-2022 browsers */
-  height:100svh;
+  min-height:100vh;  /* fallback for pre-2022 browsers */
+  min-height:100dvh;
   background:var(--card);
-  padding:40px 26px 30px;
+  /* vertical padding lives on .head/.foot so they can sit flush when stuck */
+  padding:0 26px;
   display:flex;
   flex-direction:column;
-  overflow:hidden;
 }
 @media (min-width:470px){
-  body{
-    background:var(--page);padding:30px 0;align-items:center;
-    min-height:100vh;
-    overflow-y:auto;overscroll-behavior:auto;
+  body{background:var(--page);padding:30px 0;align-items:center}
+  .sheet{
+    min-height:min(880px, calc(100dvh - 60px));
+    border-radius:20px;
+    padding:0 32px;
   }
-  .sheet{height:min(880px, calc(100svh - 60px));border-radius:20px;padding:44px 32px 30px}
-  /* must restate: html.card .sheet outspecifies a bare .sheet rule */
-  html.card .sheet{height:min(880px, calc(100svh - 60px))}
 }
 
-/* pinned head - the quiet scope line only, never scrolls */
-.head{flex:none}
+/* pinned head - the quiet scope line only. sticky, not a locked flex row, so
+   it pins to the VISIBLE viewport the browser reports, whatever the chrome
+   is doing */
+.head{
+  position:sticky;
+  top:0;
+  z-index:2;
+  flex:none;
+  background:var(--card);
+  padding:40px 0 14px;
+}
+/* pinned foot - signature and credit, same deal */
+.foot{
+  position:sticky;
+  bottom:0;
+  z-index:2;
+  flex:none;
+  margin-top:auto;
+  background:var(--card);
+  padding-bottom:30px;
+}
+@media (min-width:470px){
+  .head{padding-top:44px}
+}
 
 /* quiet scope line, no label, no box */
 .ask{margin:0 0 22px;flex:none}
@@ -113,43 +108,13 @@ html.card .sheet{
   color:var(--faint);
 }
 
+/* main is ordinary flow now - the PAGE scrolls, not a nested scroller, so
+   there is no inner scrollport to keep in sync with the viewport */
 main{
-  padding:0;
+  padding:0 0 24px;
   flex:1 1 auto;
-  min-height:0;
-  overflow-y:auto;
-  overscroll-behavior:contain;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:thin;
-  /* fade only the bottom edge, so it reads as a window onto more text */
-  mask-image:linear-gradient(to bottom, #000 calc(100% - 22px), transparent 100%);
 }
-main::-webkit-scrollbar{width:0}
 
-.scroller{position:relative;flex:1 1 auto;min-height:0;display:flex}
-.scroller > main{flex:1 1 auto}
-
-/* small chevron over the bottom edge, hidden once you reach the end */
-.more{
-  position:relative;
-  flex:none;
-  height:13px;
-  margin-top:6px;
-  pointer-events:none;
-  opacity:0;
-  transition:opacity .22s ease;
-}
-.more::before,.more::after{
-  content:"";
-  position:absolute;
-  top:5px;
-  width:9px;
-  height:1.5px;
-  border-radius:1px;
-  background:var(--faint);
-}
-.more::before{left:50%;margin-left:-9px;transform:rotate(28deg)}
-.more::after{left:50%;transform:rotate(-28deg)}
 .brand{
   display:flex;
   align-items:center;
@@ -164,19 +129,12 @@ main::-webkit-scrollbar{width:0}
 }
 .brand .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex:none}
 
-/* the homepage is an ordinary scrolling page, not a fixed card */
-.sheet.landing{height:auto;overflow:visible}
-.sheet.landing .scroller{display:block;flex:none;min-height:0}
-.sheet.landing main{overflow:visible;mask-image:none;min-height:0}
-.sheet.landing .more{display:none}
+/* the homepage keeps its own top padding, since it has no sticky .head */
+.sheet.landing{padding-top:40px;padding-bottom:30px}
+.sheet.landing .scroller{display:block}
 @media (min-width:470px){
-  .sheet.landing{height:auto}
-  body:has(.sheet.landing){align-items:flex-start}
+  .sheet.landing{padding-top:44px}
 }
-
-.sheet.overflowing .more{opacity:1}
-.sheet.at-end .more{opacity:0}
-@media (prefers-reduced-motion:reduce){ .more{transition:none} }
 
 h1{
   font-weight:700;
@@ -376,16 +334,18 @@ function esc(t){
 }
 
 function broken(){
-  return '<div class="scroller"><main><h1>This link looks incomplete</h1>' +
+  return '<div class="head"></div>' +
+    '<main><h1>This link looks incomplete</h1>' +
     '<p>The export is missing its content. This usually means the link got cut ' +
     'short when it was copied, or the AI that wrote it slipped on the format.</p>' +
     '<p>Ask the AI to export it again, and send the whole link this time.</p>' +
-    '</main></div><div class="more" aria-hidden="true"></div>' +
+    '</main>' +
+    '<div class="foot">' +
     '<div class="meta"><span class="dot"></span>' +
     '<span class="model">Nothing to show</span></div>' +
     '<footer><div class="frow"><span class="mark">upshot.fyi</span></div>' +
     '<div class="how">Make your own. Tell your AI to ' +
-    '<span class="cmd">read upshot.fyi</span> and export this</div></footer>';
+    '<span class="cmd">read upshot.fyi</span> and export this</div></footer></div>';
 }
 
 function render(d){
@@ -414,7 +374,7 @@ function render(d){
   h += '</div>';
 
   // shape
-  h += '<div class="scroller"><main>';
+  h += '<main>';
   if(d.h) h += '<h1>' + esc(d.h) + '</h1>';
   if(d.v) h += '<p class="verdict">' + esc(d.v) + '</p>';
   if(d.b) h += '<p>' + esc(d.b) + '</p>';
@@ -425,12 +385,15 @@ function render(d){
     });
     h += '</ul>';
   }
-  h += '</main></div><div class="more" aria-hidden="true"></div>';
-  h += metaHtml;
-  h += '<footer><div class="frow"><span class="mark">upshot.fyi</span>' +
+  h += '</main>';
+
+  // pinned foot
+  h += '<div class="foot">' + metaHtml +
+       '<footer><div class="frow"><span class="mark">upshot.fyi</span>' +
        '<span>AI summary</span></div>' +
        '<div class="how">Make your own. Tell your AI to ' +
-       '<span class="cmd">read upshot.fyi</span> and export this</div></footer>';
+       '<span class="cmd">read upshot.fyi</span> and export this</div></footer>' +
+       '</div>';
   return h;
 }
 
@@ -444,62 +407,11 @@ function draw(){
   sheet.classList.remove('landing');
   sheet.innerHTML = render(d);
   bindShare();
-  // reset immediately: any offset the browser committed before this point
-  // gets frozen by the card's overflow:hidden if we wait
   window.scrollTo(0, 0);
-  bindScroller();
 }
-
-function bindScroller(){
-  var sheet = document.getElementById('sheet');
-  var m = sheet && sheet.querySelector('main');
-  if(!m) return;
-  function update(){
-    var over = m.scrollHeight - m.clientHeight > 4;
-    sheet.classList.toggle('overflowing', over);
-    sheet.classList.toggle('at-end', m.scrollTop + m.clientHeight >= m.scrollHeight - 6);
-  }
-  m.addEventListener('scroll', update, {passive:true});
-  window.addEventListener('resize', update);
-  if(document.fonts) document.fonts.ready.then(update);
-  update();
-}
-bindScroller();
-
 
 draw();
 window.addEventListener('hashchange', draw);
-
-/* Opening the link from another app (WhatsApp) gives Chrome an extra "back to
-   app" row above its own chrome, so the viewport is shorter than in the
-   typed-URL case - and the browser can commit a scroll offset that
-   overflow:hidden then traps, leaving the top of the card scrolled out of
-   view with no way to get it back. CSS cannot undo an offset that is already
-   committed, so clamp it: on load, whenever the chrome changes, and for a
-   short window afterwards while the banner settles. Landing page is exempt -
-   it is meant to scroll. */
-(function(){
-  if(document.documentElement.className.indexOf('card') < 0) return;
-  function clamp(){
-    if(window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop){
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    }
-  }
-  clamp();
-  ['load','pageshow','resize','orientationchange','scroll'].forEach(function(ev){
-    window.addEventListener(ev, clamp, {passive:true});
-  });
-  document.addEventListener('visibilitychange', clamp);
-  if(window.visualViewport){
-    visualViewport.addEventListener('resize', clamp);
-    visualViewport.addEventListener('scroll', clamp);
-  }
-  // the banner animates in after load; keep clamping briefly, then stop
-  var t = setInterval(clamp, 100);
-  setTimeout(function(){ clearInterval(t); }, 2000);
-})();
 
 /* ---- share as image ---- */
 function slug(){
