@@ -2,8 +2,9 @@
 
 Turn a chat conversation into a link you can send.
 
-You're talking to an AI, it says something worth sharing, you say **"export this
-to upshot.fyi"**. It replies with a link. You send the link.
+You're talking to an AI, it says something worth sharing, you say **"read
+upshot.fyi/llms.txt and export this"**. It replies with a link. You send the
+link.
 
 No account, no API key, nothing to install.
 
@@ -25,9 +26,13 @@ https://upshot.fyi/#s=explainer&m=GPT-5&d=2026-09-06&a=...&h=...&v=...&p=...
 ## The site teaches the AI
 
 `index.html` with no fragment is a landing page that spells out the format in
-plain text, and `/llms.txt` says the same thing. So when you name the domain, a
-browsing AI fetches it and learns the format on the spot. Nothing to paste, and
-no saved prompt to go stale.
+plain text, and `/llms.txt` says the same thing. So when you point an AI at the
+domain, it fetches it and learns the format on the spot. Nothing to paste, and no
+saved prompt to go stale.
+
+Phrasing matters. "Export this to upshot.fyi" reads to a model as a request to
+submit content to a site, which it will refuse. Asking it to *read* the URL
+works.
 
 The spec is static HTML on purpose — fetchers don't run JavaScript.
 

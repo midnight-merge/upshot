@@ -37,7 +37,7 @@ body{
 .sheet{
   width:100%;
   max-width:430px;
-  min-height:100vh;
+  min-height:100dvh;
   background:var(--card);
   padding:44px 30px 30px;
   display:flex;
@@ -183,8 +183,8 @@ pre{
   <main>
     <h1>Turn a chat into a link you can send</h1>
 
-    <p class="verdict">Tell your AI: <span class="cmd">export this to
-      upshot.fyi</span>. It replies with a link. Send the link.</p>
+    <p class="verdict">Tell your AI: <span class="cmd">read upshot.fyi/llms.txt
+      and export this</span>. It replies with a link. Send the link.</p>
 
     <p>No account, no API key, nothing to install. Everything lives in the link
       itself, so this page never sees what you exported.</p>
@@ -248,8 +248,8 @@ function broken(){
     '<p>Ask the AI to export it again, and send the whole link this time.</p>' +
     '</main>' +
     '<footer><div class="frow"><span class="mark">upshot.fyi</span></div>' +
-    '<div class="how">Make your own: tell your AI ' +
-    '<span class="cmd">export this to upshot.fyi</span></div></footer>';
+    '<div class="how">Make your own. Tell your AI to ' +
+    '<span class="cmd">read upshot.fyi/llms.txt</span> and export this</div></footer>';
 }
 
 function render(d){
@@ -286,10 +286,12 @@ function render(d){
   h += metaHtml;
   h += '<footer><div class="frow"><span class="mark">upshot.fyi</span>' +
        '<span>AI summary</span></div>' +
-       '<div class="how">Make your own: tell your AI ' +
-       '<span class="cmd">export this to upshot.fyi</span></div></footer>';
+       '<div class="how">Make your own. Tell your AI to ' +
+       '<span class="cmd">read upshot.fyi/llms.txt</span> and export this</div></footer>';
   return h;
 }
+
+if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 function draw(){
   var frag = location.hash.replace(/^#/,'');
@@ -297,7 +299,38 @@ function draw(){
   var d = parse(location.hash);
   document.getElementById('sheet').innerHTML = render(d);
   bindShare();
+  window.scrollTo(0, 0);
+  fit();
 }
+
+/* Shrink the card until it fits one screen. Floors at 0.72 so text stays
+   readable; anything that still overflows is allowed to scroll. */
+var MIN_SCALE = 0.72;
+
+function fit(){
+  var card = document.getElementById('sheet');
+  if(!card) return;
+  card.style.transform = '';
+  card.style.marginBottom = '';
+
+  var avail = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+  var pad = window.innerWidth >= 470 ? 64 : 0;
+  var h = card.offsetHeight;
+  if(!h) return;
+
+  var k = Math.min(1, (avail - pad) / h);
+  if(k >= 1) return;
+  k = Math.max(MIN_SCALE, k);
+
+  card.style.transformOrigin = 'top center';
+  card.style.transform = 'scale(' + k.toFixed(4) + ')';
+  // a scaled element still reserves its unscaled height, so claw the gap back
+  card.style.marginBottom = (-(h * (1 - k))) + 'px';
+}
+
+window.addEventListener('resize', fit);
+if(window.visualViewport){ window.visualViewport.addEventListener('resize', fit); }
+document.fonts && document.fonts.ready.then(fit);
 draw();
 window.addEventListener('hashchange', draw);
 
@@ -309,6 +342,9 @@ function slug(){
 
 function shot(){
   var card = document.getElementById('sheet');
+  var t = card.style.transform, m = card.style.marginBottom;
+  card.style.transform = ''; card.style.marginBottom = '';
+  var restore = function(){ card.style.transform = t; card.style.marginBottom = m; };
   return html2canvas(card, {
     backgroundColor: getComputedStyle(document.documentElement)
       .getPropertyValue('--card').trim() || '#12131A',
@@ -316,7 +352,7 @@ function shot(){
     useCORS: true,
     logging: false,
     ignoreElements: function(el){ return el.classList && el.classList.contains('shareBtn'); }
-  });
+  }).then(function(c){ restore(); return c; }, function(e){ restore(); throw e; });
 }
 
 function toBlob(canvas){

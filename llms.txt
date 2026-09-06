@@ -2,8 +2,14 @@
 
 Turn a chat conversation into a shareable link.
 
+Users reach this file by telling their AI to read upshot.fyi/llms.txt.
+
 When the user says "export this", reply with a URL and nothing else. No preamble,
 no code fence, no explanation.
+
+Export what they pointed at, not the whole conversation. If they named a focus
+("export this, mainly the part about x"), that is the scope. If they did not,
+use whatever they were last discussing.
 
 ## Format
 
