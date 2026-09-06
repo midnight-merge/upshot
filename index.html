@@ -4,6 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>upshot</title>
+<script>
+/* mobile browsers can report a stale/wrong 100dvh at initial layout and only
+   fix it on the next resize/visibility event - drive it ourselves instead */
+(function(){
+  function setVH(){ document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px'); }
+  setVH();
+  addEventListener('resize', setVH);
+  addEventListener('orientationchange', setVH);
+  addEventListener('pageshow', setVH);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) setVH(); });
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap">
@@ -36,14 +48,14 @@ body{
   overflow-wrap:anywhere;
   /* lock the viewport so nothing outside the sheet can scroll or reflow -
      on mobile that's what causes the address-bar-collapse jank/zoom */
-  height:100dvh;
+  height:calc(var(--vh, 1vh) * 100);
   overflow:hidden;
   overscroll-behavior:none;
 }
 /* the landing page is an ordinary document, so let the page itself scroll */
 body:has(.sheet.landing){
   height:auto;
-  min-height:100dvh;
+  min-height:calc(var(--vh, 1vh) * 100);
   overflow-y:auto;
   overscroll-behavior:auto;
 }
@@ -51,7 +63,7 @@ body:has(.sheet.landing){
 .sheet{
   width:100%;
   max-width:430px;
-  height:100dvh;
+  height:calc(var(--vh, 1vh) * 100);
   background:var(--card);
   padding:40px 26px 30px;
   display:flex;
@@ -63,7 +75,7 @@ body:has(.sheet.landing){
     background:var(--page);padding:30px 0;align-items:center;min-height:100vh;
     height:auto;overflow-y:auto;overscroll-behavior:auto;
   }
-  .sheet{height:min(880px, calc(100dvh - 60px));border-radius:20px;padding:44px 32px 30px}
+  .sheet{height:min(880px, calc(var(--vh, 1vh) * 100 - 60px));border-radius:20px;padding:44px 32px 30px}
 }
 
 /* quiet scope line, no label, no box */
