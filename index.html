@@ -23,10 +23,7 @@
 :root[data-theme="dark"]{ --page:#050506 }
 
 *{box-sizing:border-box}
-/* lock the document explicitly - relying on body's overflow propagating to
-   the viewport is subtle (it only propagates while html is `visible`, and
-   body then computes to visible itself) */
-html,body{margin:0;overflow:hidden}
+html,body{margin:0}
 body{
   background:var(--card);
   color:var(--ink);
@@ -34,87 +31,47 @@ body{
   -webkit-font-smoothing:antialiased;
   display:flex;
   justify-content:center;
-  /* The visible window is the BOTTOM of the layout viewport: the browser
-     lays out against lvh, and the top (lvh - dvh) of that box sits behind
-     the address bar. Anchoring the card to the flex-end puts it in the part
-     you can actually see. Measured on an iPhone opening a link from another
-     app: lvh 792, dvh 684, so 108px of the card was behind the chrome and
-     108px of dead space sat below it. */
-  align-items:flex-end;
+  align-items:flex-start;
   /* export content is arbitrary AI text with no length guarantee - never let
      one long unbroken token overflow the card and trigger mobile auto-zoom */
   overflow-wrap:anywhere;
-  /* body spans the full LAYOUT viewport (lvh), which is the box the browser
-     positions against; the card inside is dvh, i.e. what is actually
-     visible. The page itself never scrolls - only main does. */
-  height:100vh;  /* fallback for pre-2022 browsers */
-  height:100lvh;
-  overflow:hidden;
+  /* an ordinary scrolling document - no viewport lock, no nested scrollport.
+     The browser owns the address-bar behaviour, which is the whole point:
+     nothing here depends on measuring the viewport correctly. */
+  min-height:100vh;
 }
 
 .sheet{
   width:100%;
   max-width:430px;
-  height:100vh;  /* fallback for pre-2022 browsers */
-  height:100dvh;
   background:var(--card);
   padding:40px 26px 30px;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
 }
 @media (min-width:470px){
-  /* desktop has no collapsing chrome, so lvh == dvh and the card just centres */
-  body{
-    background:var(--page);padding:30px 0;
-    align-items:center;
-    height:auto;min-height:100vh;
-  }
-  .sheet{
-    height:min(880px, calc(100dvh - 60px));
-    border-radius:20px;
-    padding:44px 32px 30px;
-  }
+  body{background:var(--page);padding:30px 0;min-height:100vh}
+  .sheet{border-radius:20px;padding:44px 32px 30px}
 }
 
-/* static head - brand on the homepage, the scope line on a card */
-.head{
-  flex:none;
-  padding-bottom:22px;
-}
+/* head - brand on the homepage, the scope line on a card */
+.head{padding-bottom:22px}
 /* a card with no scope line has nothing up top - take the gap with it */
 .head:empty{padding-bottom:0}
-/* static foot - the hairline and spacing live HERE, not on .meta, so the
-   homepage (credit only) and a card (signature + credit) open the same way */
+/* foot - the hairline and spacing live HERE, not on .meta, so the homepage
+   (credit only) and a card (signature + credit) open the same way */
 .foot{
-  flex:none;
+  margin-top:34px;
   padding-top:18px;
   border-top:1px solid var(--hair);
 }
 .foot > :first-child{margin-top:0}
 
-/* the ONLY scrolling region on the page */
-main{
-  flex:1 1 auto;
-  min-height:0;
-  /* clear the 22px mask fade, so the last line is never under it */
-  padding-bottom:24px;
-  overflow-y:auto;
-  overscroll-behavior:contain;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:thin;
-  /* fade the bottom edge, so it reads as a window onto more text */
-  mask-image:linear-gradient(to bottom, #000 calc(100% - 22px), transparent 100%);
-}
-main::-webkit-scrollbar{width:0}
-/* the gap above the foot is main's padding alone, whatever ends the page */
+/* the page scrolls, not this - ordinary flow */
 main > :last-child{margin-bottom:0}
 
 /* ONE header line, used by both the homepage and a card. Only the text
    inside it ever differs - so the header does not change size, weight or
    colour when you go from one to the other. */
 .brand{
-  flex:none;
   font-family:var(--mono);
   font-size:12.5px;
   line-height:1.5;
@@ -185,7 +142,6 @@ p{margin:0 0 15px;font-size:15px;color:var(--dim)}
 
 /* metadata sits at the bottom like a signature, not a footer bar */
 .meta{
-  flex:none;
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
@@ -207,7 +163,6 @@ p{margin:0 0 15px;font-size:15px;color:var(--dim)}
 .meta .by{color:var(--faint)}
 
 footer{
-  flex:none;
   margin-top:14px;
   font-family:var(--mono);
   font-size:10px;
@@ -222,16 +177,6 @@ a:hover{color:var(--accent);border-bottom-color:var(--accent)}
 a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;text-wrap:pretty}
 .cmd{color:var(--accent)}
-/* TEMPORARY debug readout - see startDebug() */
-.dbg{
-  margin-top:10px;
-  font-size:9px;
-  line-height:1.45;
-  letter-spacing:0;
-  text-transform:none;
-  color:var(--accent);
-  word-break:break-word;
-}
 
 /* share control, on the signature line so it reads as part of the card */
 .wrap{display:flex;flex-direction:column;align-items:center;width:100%}
@@ -451,54 +396,10 @@ function draw(){
   // layout does not change shape mid-load
   document.getElementById('head').innerHTML = r.head;
   document.getElementById('main').innerHTML = r.main;
-  document.getElementById('foot').innerHTML = r.foot + debugSlot();
+  document.getElementById('foot').innerHTML = r.foot;
   bindShare();
   window.scrollTo(0, 0);
-  startDebug();
 }
-
-/* ---- TEMPORARY: add ?d=1 to a card link to print viewport numbers into
-   the foot, which stays visible even when the top is clipped. Remove once
-   the clipping is diagnosed. ---- */
-function debugOn(){ return location.search.indexOf('d=1') >= 0; }
-function debugSlot(){ return debugOn() ? '<div class="dbg" id="dbg">measuring</div>' : ''; }
-
-function startDebug(){
-  var el = document.getElementById('dbg');
-  if(!el) return;
-  function unit(u){
-    var d = document.createElement('div');
-    d.style.cssText = 'position:absolute;visibility:hidden;top:0;height:100' + u;
-    document.body.appendChild(d);
-    var h = d.getBoundingClientRect().height;
-    d.parentNode.removeChild(d);
-    return Math.round(h);
-  }
-  function tick(){
-    var vv = window.visualViewport;
-    var r = document.getElementById('sheet').getBoundingClientRect();
-    el.textContent =
-      'inner ' + window.innerHeight +
-      ' / client ' + document.documentElement.clientHeight +
-      ' / vv ' + (vv ? Math.round(vv.height) : '-') +
-        ' off ' + (vv ? Math.round(vv.offsetTop) : '-') +
-        ' pg ' + (vv ? Math.round(vv.pageTop) : '-') +
-        ' sc ' + (vv ? vv.scale : '-') +
-      ' / scrollY ' + Math.round(window.pageYOffset) +
-      ' / SHEET top ' + Math.round(r.top) + ' h ' + Math.round(r.height) +
-      ' / dvh ' + unit('dvh') + ' svh ' + unit('svh') + ' lvh ' + unit('lvh');
-  }
-  tick();
-  setInterval(tick, 400);
-  if(window.visualViewport){
-    visualViewport.addEventListener('resize', tick);
-    visualViewport.addEventListener('scroll', tick);
-  }
-  addEventListener('resize', tick);
-}
-
-draw();
-window.addEventListener('hashchange', draw);
 
 /* ---- share as image ---- */
 function slug(){
