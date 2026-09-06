@@ -183,8 +183,8 @@ pre{
   <main>
     <h1>Turn a chat into a link you can send</h1>
 
-    <p class="verdict">Tell your AI: <span class="cmd">export this to
-      upshot.fyi</span>. It replies with a link. Send the link.</p>
+    <p class="verdict">Tell your AI: <span class="cmd">read upshot.fyi/llms.txt
+      and export this chat</span>. It replies with a link. Send the link.</p>
 
     <p>No account, no API key, nothing to install. Everything lives in the link
       itself, so this page never sees what you exported.</p>
@@ -248,8 +248,8 @@ function broken(){
     '<p>Ask the AI to export it again, and send the whole link this time.</p>' +
     '</main>' +
     '<footer><div class="frow"><span class="mark">upshot.fyi</span></div>' +
-    '<div class="how">Make your own: tell your AI ' +
-    '<span class="cmd">export this to upshot.fyi</span></div></footer>';
+    '<div class="how">Make your own. Tell your AI to ' +
+    '<span class="cmd">read upshot.fyi/llms.txt</span> and export this chat</div></footer>';
 }
 
 function render(d){
@@ -286,10 +286,12 @@ function render(d){
   h += metaHtml;
   h += '<footer><div class="frow"><span class="mark">upshot.fyi</span>' +
        '<span>AI summary</span></div>' +
-       '<div class="how">Make your own: tell your AI ' +
-       '<span class="cmd">export this to upshot.fyi</span></div></footer>';
+       '<div class="how">Make your own. Tell your AI to ' +
+       '<span class="cmd">read upshot.fyi/llms.txt</span> and export this chat</div></footer>';
   return h;
 }
+
+if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 function draw(){
   var frag = location.hash.replace(/^#/,'');
@@ -297,6 +299,7 @@ function draw(){
   var d = parse(location.hash);
   document.getElementById('sheet').innerHTML = render(d);
   bindShare();
+  window.scrollTo(0, 0);
 }
 draw();
 window.addEventListener('hashchange', draw);
