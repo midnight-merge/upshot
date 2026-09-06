@@ -37,7 +37,7 @@ body{
 .sheet{
   width:100%;
   max-width:430px;
-  min-height:100vh;
+  min-height:100dvh;
   background:var(--card);
   padding:44px 30px 30px;
   display:flex;
@@ -300,7 +300,37 @@ function draw(){
   document.getElementById('sheet').innerHTML = render(d);
   bindShare();
   window.scrollTo(0, 0);
+  fit();
 }
+
+/* Shrink the card until it fits one screen. Floors at 0.72 so text stays
+   readable; anything that still overflows is allowed to scroll. */
+var MIN_SCALE = 0.72;
+
+function fit(){
+  var card = document.getElementById('sheet');
+  if(!card) return;
+  card.style.transform = '';
+  card.style.marginBottom = '';
+
+  var avail = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+  var pad = window.innerWidth >= 470 ? 64 : 0;
+  var h = card.offsetHeight;
+  if(!h) return;
+
+  var k = Math.min(1, (avail - pad) / h);
+  if(k >= 1) return;
+  k = Math.max(MIN_SCALE, k);
+
+  card.style.transformOrigin = 'top center';
+  card.style.transform = 'scale(' + k.toFixed(4) + ')';
+  // a scaled element still reserves its unscaled height, so claw the gap back
+  card.style.marginBottom = (-(h * (1 - k))) + 'px';
+}
+
+window.addEventListener('resize', fit);
+if(window.visualViewport){ window.visualViewport.addEventListener('resize', fit); }
+document.fonts && document.fonts.ready.then(fit);
 draw();
 window.addEventListener('hashchange', draw);
 
@@ -312,6 +342,9 @@ function slug(){
 
 function shot(){
   var card = document.getElementById('sheet');
+  var t = card.style.transform, m = card.style.marginBottom;
+  card.style.transform = ''; card.style.marginBottom = '';
+  var restore = function(){ card.style.transform = t; card.style.marginBottom = m; };
   return html2canvas(card, {
     backgroundColor: getComputedStyle(document.documentElement)
       .getPropertyValue('--card').trim() || '#12131A',
@@ -319,7 +352,7 @@ function shot(){
     useCORS: true,
     logging: false,
     ignoreElements: function(el){ return el.classList && el.classList.contains('shareBtn'); }
-  });
+  }).then(function(c){ restore(); return c; }, function(e){ restore(); throw e; });
 }
 
 function toBlob(canvas){
