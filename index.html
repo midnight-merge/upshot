@@ -8,9 +8,21 @@
 /* mobile browsers can report a stale/wrong 100dvh at initial layout and only
    fix it on the next resize/visibility event - drive it ourselves instead */
 (function(){
-  function setVH(){ document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px'); }
+  function setVH(){
+    // visualViewport tracks what's ACTUALLY visible right now, live, as the
+    // address bar animates - window.innerHeight can report the post-collapse
+    // height before the bar has actually collapsed, which is the bug this
+    // whole thing exists to avoid
+    var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    document.documentElement.style.setProperty('--vh', h * 0.01 + 'px');
+  }
   setVH();
-  addEventListener('resize', setVH);
+  if(window.visualViewport){
+    visualViewport.addEventListener('resize', setVH);
+    visualViewport.addEventListener('scroll', setVH);
+  } else {
+    addEventListener('resize', setVH);
+  }
   addEventListener('orientationchange', setVH);
   addEventListener('pageshow', setVH);
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) setVH(); });
@@ -320,6 +332,19 @@ Reply with the URL and nothing else.</pre>
 <script>
 var SHAPES = ['explainer'];
 
+// AI-authored links sometimes get percent-encoded twice (once by hand per
+// our own instructions, once for real when the link is assembled) - decode
+// until it stops changing instead of trusting exactly one layer
+function decodeAll(v){
+  for(var i = 0; i < 4; i++){
+    var next;
+    try { next = decodeURIComponent(v); } catch(e){ break; }
+    if(next === v) break;
+    v = next;
+  }
+  return v;
+}
+
 function parse(hash){
   var out = {p:[]};
   hash.replace(/^#/,'').split('&').forEach(function(pair){
@@ -327,7 +352,7 @@ function parse(hash){
     var i = pair.indexOf('=');
     if(i < 0) return;
     var k = pair.slice(0,i);
-    var v = decodeURIComponent(pair.slice(i+1).replace(/\+/g,' '));
+    var v = decodeAll(pair.slice(i+1).replace(/\+/g,' '));
     if(k === 'p') out.p.push(v); else out[k] = v;
   });
   return out;
