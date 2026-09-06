@@ -4,9 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>upshot</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap">
 <style>
 /* the card commits to one look in both themes - it is an object, not a document */
 :root{
@@ -17,16 +14,23 @@
   --faint:#8E91A6;
   --accent:#C8FF3D;
   --hair:rgba(247,247,244,.12);
+  /* the platform's own faces - nothing to download, and none of the
+     Google-Fonts pairings that read as templated */
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
 }
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --page:#050506 } }
 :root[data-theme="dark"]{ --page:#050506 }
 
 *{box-sizing:border-box}
-html,body{margin:0}
+/* lock the document explicitly - relying on body's overflow propagating to
+   the viewport is subtle (it only propagates while html is `visible`, and
+   body then computes to visible itself) */
+html,body{margin:0;overflow:hidden}
 body{
   background:var(--card);
   color:var(--ink);
-  font-family:Archivo,-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+  font-family:var(--sans);
   -webkit-font-smoothing:antialiased;
   display:flex;
   justify-content:center;
@@ -34,97 +38,88 @@ body{
   /* export content is arbitrary AI text with no length guarantee - never let
      one long unbroken token overflow the card and trigger mobile auto-zoom */
   overflow-wrap:anywhere;
-  /* An ORDINARY scrolling document. No viewport lock, no overflow trap.
-     Pinning is done with position:sticky below, so the browser handles the
-     address bar natively instead of us trying to out-guess it - which is
-     what made this fragile: a locked, exactly-viewport-tall card is laid out
-     against the LAYOUT viewport, whose top sits behind the browser chrome
-     when a link is opened from another app. */
-  min-height:100vh;  /* fallback for pre-2022 browsers */
-  min-height:100dvh;
+  /* the page itself never scrolls - only main does */
+  height:100vh;  /* fallback for pre-2022 browsers */
+  height:100dvh;
+  overflow:hidden;
 }
 
 .sheet{
   width:100%;
   max-width:430px;
-  min-height:100vh;  /* fallback for pre-2022 browsers */
-  min-height:100dvh;
+  height:100vh;  /* fallback for pre-2022 browsers */
+  height:100dvh;
   background:var(--card);
-  /* vertical padding lives on .head/.foot so they can sit flush when stuck */
-  padding:0 26px;
+  padding:40px 26px 30px;
   display:flex;
   flex-direction:column;
+  overflow:hidden;
 }
 @media (min-width:470px){
   body{background:var(--page);padding:30px 0;align-items:center}
   .sheet{
-    min-height:min(880px, calc(100dvh - 60px));
+    height:min(880px, calc(100dvh - 60px));
     border-radius:20px;
-    padding:0 32px;
+    padding:44px 32px 30px;
   }
 }
 
-/* pinned head - the quiet scope line only. sticky, not a locked flex row, so
-   it pins to the VISIBLE viewport the browser reports, whatever the chrome
-   is doing */
+/* static head - brand on the homepage, the scope line on a card */
 .head{
-  position:sticky;
-  top:0;
-  z-index:2;
   flex:none;
-  background:var(--card);
-  padding:40px 0 14px;
+  padding-bottom:22px;
 }
-/* pinned foot - signature and credit, same deal */
+/* a card with no scope line has nothing up top - take the gap with it */
+.head:empty{padding-bottom:0}
+/* static foot - the hairline and spacing live HERE, not on .meta, so the
+   homepage (credit only) and a card (signature + credit) open the same way */
 .foot{
-  position:sticky;
-  bottom:0;
-  z-index:2;
   flex:none;
-  margin-top:auto;
-  background:var(--card);
-  padding-bottom:30px;
+  padding-top:18px;
+  border-top:1px solid var(--hair);
 }
-@media (min-width:470px){
-  .head{padding-top:44px}
-}
+.foot > :first-child{margin-top:0}
 
-/* quiet scope line, no label, no box */
-.ask{margin:0 0 22px;flex:none}
-.ask-label{display:none}
-.ask-text{
-  font-family:"DM Mono",ui-monospace,monospace;
+/* the ONLY scrolling region on the page */
+main{
+  flex:1 1 auto;
+  min-height:0;
+  /* clear the 22px mask fade, so the last line is never under it */
+  padding-bottom:24px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  /* fade the bottom edge, so it reads as a window onto more text */
+  mask-image:linear-gradient(to bottom, #000 calc(100% - 22px), transparent 100%);
+}
+main::-webkit-scrollbar{width:0}
+/* the gap above the foot is main's padding alone, whatever ends the page */
+main > :last-child{margin-bottom:0}
+
+/* ONE header line, used by both the homepage and a card. Only the text
+   inside it ever differs - so the header does not change size, weight or
+   colour when you go from one to the other. */
+.brand{
+  flex:none;
+  font-family:var(--mono);
   font-size:12.5px;
   line-height:1.5;
   letter-spacing:.01em;
   color:var(--faint);
 }
+.brand::after{content:"";display:block;clear:both}
 
-/* main is ordinary flow now - the PAGE scrolls, not a nested scroller, so
-   there is no inner scrollport to keep in sync with the viewport */
-main{
-  padding:0 0 24px;
-  flex:1 1 auto;
+/* the mark: lines of text distilling down to a single point - the upshot.
+   Floated, not a flex child, so only the FIRST line clears it - wrapped
+   lines run back to the full width instead of the whole block indenting. */
+.logo{
+  float:left;
+  width:12px;
+  height:10px;
+  margin:4px 8px 0 0;   /* top nudge sits it on the first line */
+  fill:var(--accent);
 }
-
-.brand{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex:none;
-  margin-bottom:26px;
-  font-family:"DM Mono",ui-monospace,monospace;
-  font-size:10.5px;
-  letter-spacing:.12em;
-  text-transform:uppercase;
-  color:var(--dim);
-}
-.brand .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex:none}
-
-/* the brand sits in the sticky head, so it needs no bottom margin of its own
-   when it is the only thing there */
-.head .brand{margin-bottom:0}
-.head .ask{margin:14px 0 0}
 
 h1{
   font-weight:700;
@@ -182,33 +177,36 @@ p{margin:0 0 15px;font-size:15px;color:var(--dim)}
   align-items:flex-start;
   justify-content:space-between;
   gap:16px;
-  margin-top:36px;
-  padding-top:18px;
-  border-top:1px solid var(--hair);
-  font-family:"DM Mono",ui-monospace,monospace;
+  font-family:var(--mono);
   font-size:10.5px;
   letter-spacing:.1em;
   text-transform:uppercase;
   color:var(--faint);
 }
 .meta .sig{display:flex;flex-direction:column;gap:5px;min-width:0}
-.meta .r1{display:flex;align-items:center;gap:8px}
-.meta .r2{color:var(--faint);padding-left:13px}
-.meta .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex:none}
+.meta .r1{line-height:1.5}
+.meta .r1::after{content:"";display:block;clear:both}
+.meta .r2{color:var(--faint)}
+/* same mark, scaled to the signature's smaller type */
+.meta .logo{width:10px;height:8px;margin:2px 7px 0 0}
 .meta .sep{opacity:.5}
-.meta .model{color:var(--dim)}
+.meta .model{color:var(--dim);margin-left:6px}
 .meta .by{color:var(--faint)}
 
 footer{
   flex:none;
-  margin-top:18px;
-  font-family:"DM Mono",ui-monospace,monospace;
+  margin-top:14px;
+  font-family:var(--mono);
   font-size:10px;
   letter-spacing:.1em;
   text-transform:uppercase;
   color:var(--faint);
 }
 footer .frow{display:none}
+/* same hairline-to-accent treatment as the share control */
+a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--hair)}
+a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;text-wrap:pretty}
 .cmd{color:var(--accent)}
 
@@ -216,7 +214,7 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
 .wrap{display:flex;flex-direction:column;align-items:center;width:100%}
 .meta .spacer{flex:1}
 .shareBtn{
-  font-family:"DM Mono",ui-monospace,monospace;
+  font-family:var(--mono);
   font-size:10.5px;
   letter-spacing:.1em;
   text-transform:uppercase;
@@ -237,8 +235,13 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
 /* landing page only */
 h2{font-weight:600;font-size:13px;margin:30px 0 3px;padding-top:20px;border-top:1px solid var(--hair)}
 .note{font-size:12px;color:var(--faint);margin-bottom:11px}
+/* fine print - sits in the same quiet register as .note and pre, so it
+   recedes instead of competing with the pitch above it */
+.fine{font-size:12px;line-height:1.6;color:var(--faint);margin:0 0 10px;text-wrap:pretty}
+/* :first-of-type would mean "first <p>", which is the verdict - not this */
+h2 + .fine{margin-top:11px}
 pre{
-  font-family:"DM Mono",ui-monospace,monospace;
+  font-family:var(--mono);
   font-size:11px;line-height:1.7;color:var(--faint);
   background:transparent;margin:0;padding:0;
   white-space:pre-wrap;word-break:break-word;
@@ -253,17 +256,23 @@ pre{
 <div class="wrap"><div class="sheet" id="sheet">
 
   <div class="head" id="head">
-    <div class="brand"><span class="dot"></span><span>upshot.fyi</span></div>
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 12 10" aria-hidden="true">
+        <rect x="0" y="0" width="12" height="2" rx="1"/>
+        <rect x="0" y="4" width="7" height="2" rx="1"/>
+        <circle cx="1.5" cy="8.5" r="1.5"/>
+      </svg>
+      <span>upshot.fyi</span>
+    </div>
   </div>
 
   <main id="main">
     <h1>Turn a chat into a link you can send</h1>
 
     <p class="verdict">Tell your AI: <span class="cmd">read upshot.fyi
-      and export this</span>. It replies with a link. Send the link.</p>
+      and export this</span></p>
 
-    <p>No account, no API key, nothing to install. Everything lives in the link
-      itself, so this page never sees what you exported.</p>
+    <p>No account, nothing to install. The whole export lives in the link.</p>
 
     <h2>Format</h2>
     <p class="note">For any AI reading this page.</p>
@@ -286,11 +295,30 @@ Keep it readable on one phone screen. The word limits above do this.
 If facts could have changed recently, search first. Do not write from memory.
 
 Reply with the URL and nothing else.</pre>
+
+    <h2>Privacy</h2>
+    <p class="fine">Everything after the <span class="cmd">#</span> stays in
+      your browser. Browsers never send it to a server, so this site receives no
+      part of an export. Nothing to store, nothing to delete.</p>
+    <p class="fine">GitHub Pages logs IPs to serve the page. Share image loads a
+      script from cdnjs.cloudflare.com, which sees your IP. No cookies, no
+      analytics.</p>
+    <p class="fine">The export rides inside the link, so anyone holding the link
+      can read it, as can your chat history. Private from us is not private in
+      general.</p>
+
+    <h2>Terms</h2>
+    <p class="fine">Exports are written by whichever AI you asked. They can be
+      wrong. Check anything that matters.</p>
+    <p class="fine">Anyone can put any text in a link, so text on this domain is
+      not published or endorsed by Midnight Merge, and never reaches us to
+      moderate or remove.</p>
+    <p class="fine">Provided as is, without warranty.</p>
   </main>
 
   <div class="foot" id="foot">
-    <footer><div class="how">The whole export lives in the link, so this page
-      never sees what you shared.</div></footer>
+    <footer><div class="how">Made by <a href="https://github.com/midnight-merge">Midnight
+      Merge</a></div></footer>
   </div>
 
 </div>
@@ -331,19 +359,26 @@ function esc(t){
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+// the mark, same geometry as the homepage's - see .logo
+var LOGO = '<svg class="logo" viewBox="0 0 12 10" aria-hidden="true">' +
+  '<rect x="0" y="0" width="12" height="2" rx="1"/>' +
+  '<rect x="0" y="4" width="7" height="2" rx="1"/>' +
+  '<circle cx="1.5" cy="8.5" r="1.5"/></svg>';
+
 var CREDIT = '<footer><div class="how">Make your own. Tell your AI to ' +
   '<span class="cmd">read upshot.fyi</span> and export this</div></footer>';
 
 function broken(){
   return {
-    head: '<div class="brand"><span class="dot"></span>' +
-          '<span>upshot.fyi</span></div>',
+    head: '',
     main: '<h1>This link looks incomplete</h1>' +
       '<p>The export is missing its content. This usually means the link got cut ' +
       'short when it was copied, or the AI that wrote it slipped on the format.</p>' +
       '<p>Ask the AI to export it again, and send the whole link this time.</p>',
-    foot: '<div class="meta"><span class="dot"></span>' +
-          '<span class="model">Nothing to show</span></div>' + CREDIT
+    // same sig/r1 nesting as a real card, so the floated mark behaves the
+    // same way here (a float is ignored on a flex item, and .meta is flex)
+    foot: '<div class="meta"><div class="sig"><div class="r1">' + LOGO +
+          '<span class="model">Nothing to show</span></div></div></div>' + CREDIT
   };
 }
 
@@ -351,12 +386,11 @@ function broken(){
 function render(d){
   if(!d.h && !d.v && !d.p.length) return broken();
 
-  // head: the small static title - brand, plus the scope line when given
-  var head = '<div class="brand"><span class="dot"></span>' +
-             '<span>upshot.fyi</span></div>';
+  // head: same component and type as the homepage's, minus the logo - the
+  // mark is our branding, and a card is the sender's content
+  var head = '';
   if(d.a){
-    head += '<div class="ask"><div class="ask-label">What this covers</div>' +
-            '<div class="ask-text">' + esc(d.a) + '</div></div>';
+    head = '<div class="brand"><span>' + esc(d.a) + '</span></div>';
   }
 
   var main = '';
@@ -373,7 +407,7 @@ function render(d){
 
   var foot = '<div class="meta">' +
     '<div class="sig">' +
-      '<div class="r1"><span class="dot"></span>' +
+      '<div class="r1">' + LOGO +
         '<span class="by">Generated by</span>' +
         '<span class="model">' + esc(d.m || 'Unknown model') + '</span></div>' +
       '<div class="r2">' + esc(d.d || '') + '</div>' +
