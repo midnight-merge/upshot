@@ -1,586 +1,362 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Export Chat</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&display=swap">
-  <style>
-    :root {
-      --bg: #f5f4f1;
-      --surface: #ffffff;
-      --surface-2: #edecea;
-      --text: #1c1b18;
-      --text-muted: #7a756f;
-      --accent: #1d4ed8;
-      --accent-subtle: #dbeafe;
-      --accent-text: #1e3a8a;
-      --border: #e6e2db;
-      --success: #16a34a;
-      --radius: 6px;
-      --font-display: 'Newsreader', Georgia, serif;
-      --font-ui: 'DM Sans', system-ui, sans-serif;
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>upshot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+/* the card commits to one look in both themes - it is an object, not a document */
+:root{
+  --page:#C9C9C4;
+  --card:#12131A;
+  --ink:#F7F7F4;
+  --dim:#B4B6C2;
+  --faint:#8E91A6;
+  --accent:#C8FF3D;
+  --hair:rgba(247,247,244,.12);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --page:#050506 } }
+:root[data-theme="dark"]{ --page:#050506 }
 
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) {
-        --bg: #111110;
-        --surface: #1a1918;
-        --surface-2: #232220;
-        --text: #f0ece5;
-        --text-muted: #8a847e;
-        --accent: #5b8df7;
-        --accent-subtle: #1e3058;
-        --accent-text: #93b4fb;
-        --border: #2c2a27;
-        --success: #4ade80;
-      }
-    }
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--page);
+  color:var(--ink);
+  font-family:Archivo,-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+}
 
-    :root[data-theme="dark"] {
-      --bg: #111110;
-      --surface: #1a1918;
-      --surface-2: #232220;
-      --text: #f0ece5;
-      --text-muted: #8a847e;
-      --accent: #5b8df7;
-      --accent-subtle: #1e3058;
-      --accent-text: #93b4fb;
-      --border: #2c2a27;
-      --success: #4ade80;
-    }
+.sheet{
+  width:100%;
+  max-width:430px;
+  min-height:100vh;
+  background:var(--card);
+  padding:44px 30px 30px;
+  display:flex;
+  flex-direction:column;
+  gap:0;
+}
+@media (min-width:470px){
+  body{padding:32px 0;min-height:100vh;align-items:center}
+  .sheet{min-height:auto;border-radius:20px;padding:48px 34px 34px}
+}
 
-    *, *::before, *::after { box-sizing: border-box; }
+/* quiet scope line, no label, no box */
+.ask{margin:0 0 26px}
+.ask-label{display:none}
+.ask-text{
+  font-family:"DM Mono",ui-monospace,monospace;
+  font-size:12.5px;
+  line-height:1.5;
+  letter-spacing:.01em;
+  color:var(--faint);
+}
 
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-ui);
-      font-size: 15px;
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-    }
+main{padding:0;flex:1;display:flex;flex-direction:column}
 
-    /* NAV */
-    .nav {
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-      height: 52px;
-    }
+h1{
+  font-weight:700;
+  font-size:40px;
+  line-height:1.0;
+  letter-spacing:-.038em;
+  text-wrap:balance;
+  margin:0 0 22px;
+}
 
-    .nav-brand {
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      text-decoration: none;
-    }
+.verdict{
+  font-size:19.5px;
+  font-weight:400;
+  line-height:1.42;
+  letter-spacing:-.008em;
+  color:var(--dim);
+  margin:0 0 34px;
+  padding-left:15px;
+  border-left:2px solid var(--accent);
+}
 
-    .nav-link {
-      font-size: 13px;
-      color: var(--text-muted);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
+p{margin:0 0 15px;font-size:15px;color:var(--dim)}
 
-    .nav-link:hover { color: var(--text); }
+.points{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+.points li{
+  display:flex;
+  gap:12px;
+  font-size:15.5px;
+  line-height:1.5;
+  color:var(--dim);
+}
+.points .n{
+  color:transparent;
+  flex:none;
+  width:5px;
+  height:5px;
+  margin-top:9px;
+  border-radius:50%;
+  background:var(--accent);
+  overflow:hidden;
+}
+.points strong{font-weight:600;color:var(--ink)}
 
-    /* HERO */
-    .hero {
-      max-width: 680px;
-      margin: 0 auto;
-      padding: 72px 24px 56px;
-    }
+/* metadata sits at the bottom like a signature, not a footer bar */
+.meta{
+  order:2;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:38px;
+  padding-top:16px;
+  border-top:1px solid var(--hair);
+  font-family:"DM Mono",ui-monospace,monospace;
+  font-size:10.5px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--faint);
+}
+.meta .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex:none}
+.meta .sep{opacity:.5}
+.meta .model{color:var(--dim)}
 
-    .hero-eyebrow {
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 20px;
-    }
+footer{
+  order:3;
+  margin-top:10px;
+  font-family:"DM Mono",ui-monospace,monospace;
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--faint);
+}
+footer .frow{display:none}
+footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;text-wrap:pretty}
+.cmd{color:var(--accent)}
 
-    .hero-title {
-      font-family: var(--font-display);
-      font-size: clamp(32px, 6vw, 52px);
-      font-weight: 400;
-      line-height: 1.1;
-      letter-spacing: -0.02em;
-      margin: 0 0 20px;
-      color: var(--text);
-      text-wrap: balance;
-    }
+/* share control, on the signature line so it reads as part of the card */
+.wrap{display:flex;flex-direction:column;align-items:center;width:100%}
+.meta .spacer{flex:1}
+.shareBtn{
+  font-family:"DM Mono",ui-monospace,monospace;
+  font-size:10.5px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--dim);
+  background:transparent;
+  border:0;
+  border-bottom:1px solid var(--hair);
+  padding:1px 0 2px;
+  margin:0;
+  cursor:pointer;
+  flex:none;
+}
+.shareBtn:hover{color:var(--accent);border-bottom-color:var(--accent)}
+.shareBtn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.shareBtn[disabled]{opacity:.55;cursor:default}
 
-    .hero-desc {
-      font-size: 16px;
-      color: var(--text-muted);
-      line-height: 1.65;
-      max-width: 52ch;
-      margin: 0 0 36px;
-    }
-
-    .hero-demo-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 14px;
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 500;
-      transition: opacity 0.15s;
-    }
-
-    .hero-demo-link:hover { opacity: 0.75; }
-
-    /* SUPPORTED TOOLS */
-    .tools-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 0;
-    }
-
-    .tools-label {
-      font-size: 12px;
-      color: var(--text-muted);
-      font-weight: 500;
-      white-space: nowrap;
-    }
-
-    .tool-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      background: var(--surface);
-    }
-
-    .tool-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    /* DIVIDER */
-    .section-divider {
-      height: 1px;
-      background: var(--border);
-      margin: 0;
-    }
-
-    /* SETUP SECTION */
-    .setup {
-      max-width: 680px;
-      margin: 0 auto;
-      padding: 64px 24px;
-    }
-
-    .setup-title {
-      font-family: var(--font-display);
-      font-size: 26px;
-      font-weight: 400;
-      margin: 0 0 40px;
-      color: var(--text);
-    }
-
-    /* STEP CARD */
-    .step {
-      display: grid;
-      grid-template-columns: 32px 1fr;
-      gap: 0 20px;
-      margin-bottom: 40px;
-      align-items: start;
-    }
-
-    .step:last-child { margin-bottom: 0; }
-
-    .step-num {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-muted);
-      flex-shrink: 0;
-      margin-top: 2px;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .step-num.done {
-      background: var(--success);
-      border-color: var(--success);
-      color: #fff;
-    }
-
-    .step-label {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 6px;
-    }
-
-    .step-desc {
-      font-size: 13px;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin-bottom: 14px;
-    }
-
-    /* API KEY INPUT */
-    .key-field {
-      display: flex;
-      gap: 8px;
-      align-items: stretch;
-    }
-
-    .key-input {
-      flex: 1;
-      padding: 9px 12px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      font-family: 'DM Mono', 'JetBrains Mono', monospace;
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    .key-input::placeholder { color: var(--text-muted); opacity: 0.6; }
-    .key-input:focus { border-color: var(--accent); }
-
-    .key-submit {
-      padding: 9px 18px;
-      border-radius: var(--radius);
-      border: none;
-      background: var(--accent);
-      color: #fff;
-      font-family: var(--font-ui);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: opacity 0.15s;
-    }
-
-    .key-submit:hover { opacity: 0.85; }
-
-    .key-privacy {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 8px;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    /* BOOKMARKLET */
-    .bookmarklet-area { display: none; }
-    .bookmarklet-area.visible { display: block; }
-
-    .drag-instruction {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-      line-height: 1.5;
-    }
-
-    .drag-instruction strong { color: var(--text); }
-
-    .bookmarklet-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 20px;
-      border-radius: var(--radius);
-      background: var(--surface);
-      border: 2px dashed var(--border);
-      font-family: var(--font-ui);
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text);
-      text-decoration: none;
-      cursor: grab;
-      transition: border-color 0.15s, background 0.15s;
-      user-select: none;
-    }
-
-    .bookmarklet-link:hover { border-color: var(--accent); }
-    .bookmarklet-link:active { cursor: grabbing; }
-
-    .drag-hint {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      margin-top: 8px;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    /* HOW TO USE */
-    .how-to {
-      max-width: 680px;
-      margin: 0 auto;
-      padding: 64px 24px;
-    }
-
-    .how-title {
-      font-family: var(--font-display);
-      font-size: 26px;
-      font-weight: 400;
-      margin: 0 0 32px;
-      color: var(--text);
-    }
-
-    .instruction-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .instruction-item {
-      display: flex;
-      gap: 14px;
-      align-items: flex-start;
-      font-size: 14px;
-      color: var(--text);
-      line-height: 1.6;
-    }
-
-    .instr-num {
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: var(--accent-subtle);
-      color: var(--accent-text);
-      font-size: 11px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-
-    /* FAQ */
-    .faq {
-      max-width: 680px;
-      margin: 0 auto;
-      padding: 64px 24px 100px;
-    }
-
-    .faq-title {
-      font-family: var(--font-display);
-      font-size: 26px;
-      font-weight: 400;
-      margin: 0 0 32px;
-      color: var(--text);
-    }
-
-    .faq-item {
-      border-bottom: 1px solid var(--border);
-      padding: 20px 0;
-    }
-
-    .faq-item:first-of-type { border-top: 1px solid var(--border); }
-
-    .faq-q {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-      margin: 0 0 8px;
-    }
-
-    .faq-a {
-      font-size: 14px;
-      color: var(--text-muted);
-      line-height: 1.65;
-      margin: 0;
-    }
-
-    /* FOOTER */
-    .footer {
-      border-top: 1px solid var(--border);
-      padding: 24px;
-      text-align: center;
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .footer a { color: var(--text-muted); }
-
-    @media (max-width: 560px) {
-      .hero, .setup, .how-to, .faq { padding-left: 16px; padding-right: 16px; }
-      .nav { padding: 0 16px; }
-      .key-field { flex-direction: column; }
-      .key-submit { width: 100%; }
-    }
-  </style>
+/* landing page only */
+h2{font-weight:600;font-size:13px;margin:30px 0 3px;padding-top:20px;border-top:1px solid var(--hair)}
+.note{font-size:12px;color:var(--faint);margin-bottom:11px}
+pre{
+  font-family:"DM Mono",ui-monospace,monospace;
+  font-size:11px;line-height:1.7;color:var(--faint);
+  background:transparent;margin:0;padding:0;
+  white-space:pre-wrap;word-break:break-word;
+}
+</style>
 </head>
 <body>
+<div class="wrap"><div class="sheet" id="sheet">
 
-<nav class="nav">
-  <span class="nav-brand">Export Chat</span>
-  <a class="nav-link" href="view.html">View demo →</a>
-</nav>
+  <div class="meta"><span class="dot"></span><span class="model">upshot</span></div>
 
-<!-- HERO -->
-<section class="hero">
-  <p class="hero-eyebrow">Bookmarklet tool</p>
-  <h1 class="hero-title">Save any AI conversation as a link</h1>
-  <p class="hero-desc">
-    One click exports your ChatGPT, Claude, or Gemini conversation to a shareable URL.
-    No account, no server — the summary lives entirely in the link itself.
-  </p>
-  <div class="tools-row">
-    <span class="tools-label">Works with</span>
-    <span class="tool-badge"><span class="tool-dot" style="background:#10a37f"></span>ChatGPT</span>
-    <span class="tool-badge"><span class="tool-dot" style="background:#d97449"></span>Claude</span>
-    <span class="tool-badge"><span class="tool-dot" style="background:#4285f4"></span>Gemini</span>
-  </div>
-</section>
+  <main>
+    <h1>Turn a chat into a link you can send</h1>
 
-<div class="section-divider"></div>
+    <p class="verdict">Tell your AI: <span class="cmd">export this to
+      upshot.fyi</span>. It replies with a link. Send the link.</p>
 
-<!-- SETUP -->
-<section class="setup">
-  <h2 class="setup-title">Get set up in one step</h2>
+    <p>No account, no API key, nothing to install. Everything lives in the link
+      itself, so this page never sees what you exported.</p>
 
-  <div class="step">
-    <div class="step-num">1</div>
-    <div>
-      <p class="step-label">Drag the bookmarklet to your bookmarks bar</p>
-      <p class="step-desc">
-        Drag the button below up to your bookmarks bar — that's it.
-        <strong>Don't have a bookmarks bar?</strong> Press <kbd style="font-family:monospace;background:var(--surface-2);padding:1px 5px;border-radius:3px;border:1px solid var(--border)">Ctrl+Shift+B</kbd> (Windows) or <kbd style="font-family:monospace;background:var(--surface-2);padding:1px 5px;border-radius:3px;border:1px solid var(--border)">⌘+Shift+B</kbd> (Mac) to show it.
-      </p>
+    <h2>Format</h2>
+    <p class="note">For any AI reading this page.</p>
+<pre>https://upshot.fyi/#s=explainer&amp;m=MODEL&amp;d=YYYY-MM-DD&amp;a=ASK&amp;h=HEADLINE&amp;v=VERDICT&amp;p=POINT&amp;p=POINT
 
-      <div class="bookmarklet-area visible">
-        <p class="drag-instruction">Drag this button to your bookmarks bar:</p>
-        <a id="bookmarkletLink" href="#" class="bookmarklet-link" onclick="return false;">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 3h10v10l-5-3-5 3V3z"/>
-          </svg>
-          Export Chat
-        </a>
-        <div class="drag-hint">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="8" cy="8" r="6.5"/><line x1="8" y1="5" x2="8" y2="9"/><circle cx="8" cy="11" r="0.5" fill="currentColor"/>
-          </svg>
-          Click won't work here — drag it up to the bookmarks bar
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+s  shape. Only "explainer" exists right now.
+m  your model name, e.g. GPT-5
+d  today's date, YYYY-MM-DD
+a  one line on what the user asked, scoped to what they are exporting
+h  headline, under 12 words
+v  one sentence verdict
+p  one key point. Use 2 to 4. Repeat p= for each.
 
-<div class="section-divider"></div>
+RULES
+Every space becomes + . The URL must contain no spaces.
+Encode inside values:  , %2C   . %2E   &amp; %26   = %3D   # %23   + %2B   % %25   " %22
+Commas and full stops MUST be encoded or WhatsApp breaks the link.
+Plain sentences only. No markdown, no line breaks inside values.
+Whole URL under 2000 characters.
+If facts could have changed recently, search first. Do not write from memory.
 
-<!-- HOW TO USE -->
-<section class="how-to">
-  <h2 class="how-title">How to use it</h2>
-  <ol class="instruction-list">
-    <li class="instruction-item">
-      <span class="instr-num">1</span>
-      <span>Go to ChatGPT, Claude, or Gemini and have a conversation.</span>
-    </li>
-    <li class="instruction-item">
-      <span class="instr-num">2</span>
-      <span>Click the <strong>Export Chat</strong> bookmark in your bookmarks bar. A new tab opens.</span>
-    </li>
-    <li class="instruction-item">
-      <span class="instr-num">3</span>
-      <span>The first time, you'll be asked for your OpenAI API key. Enter it — it's saved in your browser so you won't need to enter it again.</span>
-    </li>
-    <li class="instruction-item">
-      <span class="instr-num">4</span>
-      <span>Your conversation is summarised and a shareable link is generated. Copy it and send it to anyone.</span>
-    </li>
-  </ol>
-</section>
+Reply with the URL and nothing else.</pre>
+  </main>
 
-<div class="section-divider"></div>
+  <footer><div class="frow"><span class="mark">upshot.fyi</span></div></footer>
 
-<!-- FAQ -->
-<section class="faq">
-  <h2 class="faq-title">Questions</h2>
+</div>
 
-  <div class="faq-item">
-    <p class="faq-q">Will the URL ever expire?</p>
-    <p class="faq-a">No. There's no server storing your data — it's all encoded directly in the URL itself. The link will work as long as this page exists at its address (for example, on GitHub Pages).</p>
-  </div>
-
-  <div class="faq-item">
-    <p class="faq-q">Is my API key safe?</p>
-    <p class="faq-a">Your key is entered on the export page and saved only in your browser's localStorage. It's never sent to any server we control — only to api.openai.com to generate the summary. You can open DevTools → Network and verify this yourself.</p>
-  </div>
-
-  <div class="faq-item">
-    <p class="faq-q">What if the URL is too long to share?</p>
-    <p class="faq-a">Short and medium conversations compress well. Very long conversations may produce long URLs that some apps truncate when pasted. If that happens, use your browser's Print → Save as PDF to share a file instead.</p>
-  </div>
-
-  <div class="faq-item">
-    <p class="faq-q">Can I see the full conversation, not just the summary?</p>
-    <p class="faq-a">Yes — the viewer page has a "View full conversation" section that shows every message. It's collapsed by default to keep the summary front and centre.</p>
-  </div>
-
-  <div class="faq-item">
-    <p class="faq-q">Which AI tools are supported?</p>
-    <p class="faq-a">ChatGPT, Claude.ai, and Gemini are supported with dedicated extractors. Any other page will fall back to a generic text extraction, which may be less accurate.</p>
-  </div>
-</section>
-
-<footer class="footer">
-  Open source · MIT licence · Your data never touches our servers
-</footer>
+</div>
 
 <script>
-  function computeViewerUrl() {
-    var href = location.href;
-    var base = href.replace(/\/[^\/]*$/, '');
-    return base + '/view.html';
+var SHAPES = ['explainer'];
+
+function parse(hash){
+  var out = {p:[]};
+  hash.replace(/^#/,'').split('&').forEach(function(pair){
+    if(!pair) return;
+    var i = pair.indexOf('=');
+    if(i < 0) return;
+    var k = pair.slice(0,i);
+    var v = decodeURIComponent(pair.slice(i+1).replace(/\+/g,' '));
+    if(k === 'p') out.p.push(v); else out[k] = v;
+  });
+  return out;
+}
+
+function esc(t){
+  return String(t == null ? '' : t)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function broken(){
+  return '<div class="meta"><span class="dot"></span><span class="model">' +
+    'Nothing to show</span></div>' +
+    '<main><h1>This link looks incomplete</h1>' +
+    '<p>The export is missing its content. This usually means the link got cut ' +
+    'short when it was copied, or the AI that wrote it slipped on the format.</p>' +
+    '<p>Ask the AI to export it again, and send the whole link this time.</p>' +
+    '</main>' +
+    '<footer><div class="frow"><span class="mark">upshot.fyi</span></div>' +
+    '<div class="how">Make your own: tell your AI ' +
+    '<span class="cmd">export this to upshot.fyi</span></div></footer>';
+}
+
+function render(d){
+  if(!d.h && !d.v && !d.p.length) return broken();
+  // unknown shape falls back to the plainest one
+  var shape = SHAPES.indexOf(d.s) >= 0 ? d.s : 'explainer';
+  var h = '';
+
+  // container: always drawn
+  var metaHtml = '<div class="meta"><span class="dot"></span>' +
+    '<span class="model">' + esc(d.m || 'Unknown model') + '</span>' +
+    '<span class="sep">/</span><span>' + esc(d.d || '') + '</span>' +
+    '<span class="spacer"></span>' +
+    '<button type="button" class="shareBtn" id="shareBtn">Share image</button></div>';
+
+  if(d.a){
+    h += '<div class="ask"><div class="ask-label">What this covers</div>' +
+         '<div class="ask-text">' + esc(d.a) + '</div></div>';
   }
 
-  function minify(src) {
-    return src
-      .replace(/\n\s*/g, ' ')
-      .replace(/\s{2,}/g, ' ')
-      .trim();
+  // shape
+  h += '<main>';
+  if(d.h) h += '<h1>' + esc(d.h) + '</h1>';
+  if(d.v) h += '<p class="verdict">' + esc(d.v) + '</p>';
+  if(d.b) h += '<p>' + esc(d.b) + '</p>';
+  if(d.p.length){
+    h += '<ul class="points">';
+    d.p.forEach(function(pt, i){
+      h += '<li><span class="n">&bull;</span><span>' + esc(pt) + '</span></li>';
+    });
+    h += '</ul>';
   }
+  h += '</main>';
+  h += metaHtml;
+  h += '<footer><div class="frow"><span class="mark">upshot.fyi</span>' +
+       '<span>AI summary</span></div>' +
+       '<div class="how">Make your own: tell your AI ' +
+       '<span class="cmd">export this to upshot.fyi</span></div></footer>';
+  return h;
+}
 
-  // Bookmarklet source — no API key needed, just extracts and passes raw conversation to view.html
-  var BOOKMARKLET_SRC = "(function(){var VIEWER_URL='__VIEWER_URL__';var MAX_WORDS=12000;var SITES={'chat.openai.com':function(){var nodes=document.querySelectorAll('[data-message-author-role]');var msgs=[];nodes.forEach(function(n){var role=n.getAttribute('data-message-author-role');var text=n.innerText.trim();if(text)msgs.push({role:role==='user'?'user':'assistant',content:text});});return msgs;},'claude.ai':function(){var all=[];document.querySelectorAll('[data-testid=\"user-message\"],.font-claude-message').forEach(function(n){var isUser=n.getAttribute('data-testid')==='user-message';var text=n.innerText.trim();if(text)all.push({role:isUser?'user':'assistant',content:text});});return all;},'gemini.google.com':function(){var msgs=[];document.querySelectorAll('.user-query-bubble-with-background,.model-response-text').forEach(function(n){var isUser=n.classList.contains('user-query-bubble-with-background');var text=n.innerText.trim();if(text)msgs.push({role:isUser?'user':'assistant',content:text});});return msgs;}};function extractMessages(){var host=location.hostname;for(var site in SITES){if(host.indexOf(site)!==-1){var msgs=SITES[site]();if(msgs.length)return msgs;}}var container=document.querySelector('main')||document.body;return[{role:'assistant',content:container.innerText.trim()}];}function trimMessages(msgs){var wordCount=0;var trimmed=[];for(var i=msgs.length-1;i>=0;i--){var words=msgs[i].content.split(/\\s+/).length;if(wordCount+words>MAX_WORDS)break;wordCount+=words;trimmed.unshift(msgs[i]);}return{messages:trimmed,truncated:trimmed.length<msgs.length};}function detectSource(){var host=location.hostname;if(host.indexOf('chat.openai.com')!==-1)return 'chatgpt';if(host.indexOf('claude.ai')!==-1)return 'claude';if(host.indexOf('gemini.google.com')!==-1)return 'gemini';return 'unknown';}function showToast(msg,isError){var el=document.createElement('div');el.textContent=msg;el.style.cssText='position:fixed;bottom:24px;right:24px;z-index:99999;padding:12px 20px;border-radius:8px;font-size:14px;font-family:system-ui,sans-serif;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,0.2);'+(isError?'background:#ef4444;color:#fff':'background:#18181b;color:#fff');document.body.appendChild(el);setTimeout(function(){el.remove();},isError?5000:3000);}function encode(str){return btoa(unescape(encodeURIComponent(str)));}var msgs=extractMessages();if(!msgs.length||(msgs.length===1&&!msgs[0].content)){showToast('No conversation found on this page.',true);return;}var result=trimMessages(msgs);var payload={source:detectSource(),timestamp:new Date().toISOString(),messages:result.messages,truncated:result.truncated};var url=VIEWER_URL+'#raw='+encode(JSON.stringify(payload));window.open(url,'_blank');})();";
+function draw(){
+  var frag = location.hash.replace(/^#/,'');
+  if(!frag) return;                     // no fragment: leave the static landing page
+  var d = parse(location.hash);
+  document.getElementById('sheet').innerHTML = render(d);
+  bindShare();
+}
+draw();
+window.addEventListener('hashchange', draw);
 
-  function init() {
-    var viewerUrl = computeViewerUrl();
-    var code = BOOKMARKLET_SRC.replace('__VIEWER_URL__', viewerUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
-    document.getElementById('bookmarkletLink').href = 'javascript:' + encodeURIComponent(code);
-  }
+/* ---- share as image ---- */
+function slug(){
+  var h = (parse(location.hash).h || 'export').toLowerCase();
+  return h.replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,50) || 'export';
+}
 
-  init();
+function shot(){
+  var card = document.getElementById('sheet');
+  return html2canvas(card, {
+    backgroundColor: getComputedStyle(document.documentElement)
+      .getPropertyValue('--card').trim() || '#12131A',
+    scale: Math.min(3, (window.devicePixelRatio || 1) * 2),
+    useCORS: true,
+    logging: false,
+    ignoreElements: function(el){ return el.classList && el.classList.contains('shareBtn'); }
+  });
+}
+
+function toBlob(canvas){
+  return new Promise(function(res){ canvas.toBlob(res, 'image/png'); });
+}
+
+function bindShare(){
+  var btn = document.getElementById('shareBtn');
+  if(!btn) return;
+  btn.addEventListener('click', function(){
+    var label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Rendering';
+    document.fonts.ready
+      .then(shot)
+      .then(toBlob)
+      .then(function(blob){
+        if(!blob) throw new Error('no blob');
+        var file = new File([blob], slug() + '.png', {type:'image/png'});
+        // native share sheet on phones, so it can go straight to any app
+        if(navigator.canShare && navigator.canShare({files:[file]})){
+          return navigator.share({files:[file]});
+        }
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = file.name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+      })
+      .catch(function(e){
+        if(e && e.name === 'AbortError') return;   // user dismissed the share sheet
+        btn.textContent = 'Could not render';
+        setTimeout(function(){ btn.textContent = label; }, 2500);
+      })
+      .then(function(){
+        btn.disabled = false;
+        if(btn.textContent === 'Rendering') btn.textContent = label;
+      });
+  });
+}
 </script>
-
 </body>
 </html>
