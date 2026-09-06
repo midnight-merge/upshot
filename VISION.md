@@ -107,6 +107,11 @@ One honest note: most chats are many messages, so there's no single prompt to qu
 That one line is the AI describing its own brief. Weaker than a real quote, but fine
 as long as we call it a summary of the ask, not a quote.
 
+Also, the export is scoped to whatever you point at, not the whole conversation. You
+might talk to ChatGPT about five things and only want one of them exported — "export
+this, mainly the bit about x". So the one-liner describes the ask behind that bit. If
+you don't say what to focus on, the AI uses whatever you were last on.
+
 **Shapes go inside the container.** This isn't just for debates — recipes, trip
 plans, gym plans, explainers, book recs, code. So the body can't be shaped like a
 debate. Small set of layouts the AI picks from: explainer, list, steps, comparison.

@@ -14,7 +14,10 @@ https://aiexport.com/#s=explainer&m=MODEL&d=YYYY-MM-DD&a=ASK&h=HEADLINE&v=VERDIC
 - s  shape. Only `explainer` exists right now.
 - m  your model name, e.g. GPT-5
 - d  today's date, YYYY-MM-DD
-- a  one line describing what the user asked across the whole conversation
+- a  one line describing what the user asked, scoped to whatever they are
+     exporting. If they said what to focus on, that is the scope. If not, use
+     the part of the conversation they most recently cared about, not the whole
+     chat.
 - h  headline, under 12 words
 - v  one sentence verdict
 - p  one key point. Use 2 to 4. Repeat `p=` for each one.

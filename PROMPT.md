@@ -18,7 +18,8 @@ Rules:
 - Escape these characters: `&` as `%26`, `=` as `%3D`, `#` as `%23`, `+` as `%2B`,
   `%` as `%25`, `?` as `%3F`.
 - `m` is your model name. `d` is today's date.
-- `a` is one line describing what I asked across the whole chat.
+- `a` is one line describing what I asked, scoped to whatever I'm exporting. If
+  I said what to focus on, that's the scope — not the whole chat.
 - `h` is a headline, under 12 words. `v` is a single sentence verdict.
 - `p` is one key point. Use 2 to 4 of them. Repeat the `p=` for each.
 - Keep the whole URL under 2000 characters.
