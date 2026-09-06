@@ -97,6 +97,30 @@ main::-webkit-scrollbar{width:0}
 }
 .more::before{left:50%;margin-left:-9px;transform:rotate(28deg)}
 .more::after{left:50%;transform:rotate(-28deg)}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:none;
+  margin-bottom:26px;
+  font-family:"DM Mono",ui-monospace,monospace;
+  font-size:10.5px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--dim);
+}
+.brand .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex:none}
+
+/* the homepage is an ordinary scrolling page, not a fixed card */
+.sheet.landing{height:auto;overflow:visible}
+.sheet.landing .scroller{display:block;flex:none;min-height:0}
+.sheet.landing main{overflow:visible;mask-image:none;min-height:0}
+.sheet.landing .more{display:none}
+@media (min-width:470px){
+  .sheet.landing{height:auto}
+  body:has(.sheet.landing){align-items:flex-start}
+}
+
 .sheet.overflowing .more{opacity:1}
 .sheet.at-end .more{opacity:0}
 @media (prefers-reduced-motion:reduce){ .more{transition:none} }
@@ -221,9 +245,9 @@ pre{
 </style>
 </head>
 <body>
-<div class="wrap"><div class="sheet" id="sheet">
+<div class="wrap"><div class="sheet landing" id="sheet">
 
-  <div class="meta"><span class="dot"></span><span class="model">upshot</span></div>
+  <div class="brand"><span class="dot"></span><span>upshot.fyi</span></div>
 
   <div class="scroller"><main>
     <h1>Turn a chat into a link you can send</h1>
@@ -255,9 +279,10 @@ Keep it readable on one phone screen. The word limits above do this.
 If facts could have changed recently, search first. Do not write from memory.
 
 Reply with the URL and nothing else.</pre>
-  </main></div><div class="more" aria-hidden="true"></div>
+  </main></div>
 
-  <footer><div class="frow"><span class="mark">upshot.fyi</span></div></footer>
+  <footer><div class="how">The whole export lives in the link, so this page
+    never sees what you shared.</div></footer>
 
 </div>
 
@@ -346,7 +371,9 @@ function draw(){
   var frag = location.hash.replace(/^#/,'');
   if(!frag) return;                     // no fragment: leave the static landing page
   var d = parse(location.hash);
-  document.getElementById('sheet').innerHTML = render(d);
+  var sheet = document.getElementById('sheet');
+  sheet.classList.remove('landing');
+  sheet.innerHTML = render(d);
   bindShare();
   window.scrollTo(0, 0);
   bindScroller();
