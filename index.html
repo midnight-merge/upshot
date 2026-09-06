@@ -4,30 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>upshot</title>
-<script>
-/* mobile browsers can report a stale/wrong 100dvh at initial layout and only
-   fix it on the next resize/visibility event - drive it ourselves instead */
-(function(){
-  function setVH(){
-    // visualViewport tracks what's ACTUALLY visible right now, live, as the
-    // address bar animates - window.innerHeight can report the post-collapse
-    // height before the bar has actually collapsed, which is the bug this
-    // whole thing exists to avoid
-    var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-    document.documentElement.style.setProperty('--vh', h * 0.01 + 'px');
-  }
-  setVH();
-  if(window.visualViewport){
-    visualViewport.addEventListener('resize', setVH);
-    visualViewport.addEventListener('scroll', setVH);
-  } else {
-    addEventListener('resize', setVH);
-  }
-  addEventListener('orientationchange', setVH);
-  addEventListener('pageshow', setVH);
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden) setVH(); });
-})();
-</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap">
@@ -58,16 +34,19 @@ body{
   /* export content is arbitrary AI text with no length guarantee - never let
      one long unbroken token overflow the card and trigger mobile auto-zoom */
   overflow-wrap:anywhere;
-  /* lock the viewport so nothing outside the sheet can scroll or reflow -
-     on mobile that's what causes the address-bar-collapse jank/zoom */
-  height:calc(var(--vh, 1vh) * 100);
+  /* pin to the REAL, live visible viewport - fixed+inset tracks address-bar
+     animation natively, unlike any vh unit or JS measurement, which can be
+     stale by the time they're read */
+  position:fixed;
+  inset:0;
   overflow:hidden;
   overscroll-behavior:none;
 }
 /* the landing page is an ordinary document, so let the page itself scroll */
 body:has(.sheet.landing){
-  height:auto;
-  min-height:calc(var(--vh, 1vh) * 100);
+  position:static;
+  inset:auto;
+  min-height:100dvh;
   overflow-y:auto;
   overscroll-behavior:auto;
 }
@@ -75,7 +54,7 @@ body:has(.sheet.landing){
 .sheet{
   width:100%;
   max-width:430px;
-  height:calc(var(--vh, 1vh) * 100);
+  height:100%;
   background:var(--card);
   padding:40px 26px 30px;
   display:flex;
@@ -84,10 +63,12 @@ body:has(.sheet.landing){
 }
 @media (min-width:470px){
   body{
+    position:static;
+    inset:auto;
     background:var(--page);padding:30px 0;align-items:center;min-height:100vh;
-    height:auto;overflow-y:auto;overscroll-behavior:auto;
+    overflow-y:auto;overscroll-behavior:auto;
   }
-  .sheet{height:min(880px, calc(var(--vh, 1vh) * 100 - 60px));border-radius:20px;padding:44px 32px 30px}
+  .sheet{height:min(880px, calc(100dvh - 60px));border-radius:20px;padding:44px 32px 30px}
 }
 
 /* quiet scope line, no label, no box */
@@ -253,7 +234,7 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
 .cmd{color:var(--accent)}
 
 /* share control, on the signature line so it reads as part of the card */
-.wrap{display:flex;flex-direction:column;align-items:center;width:100%}
+.wrap{display:flex;flex-direction:column;align-items:center;width:100%;height:100%}
 .meta .spacer{flex:1}
 .shareBtn{
   font-family:"DM Mono",ui-monospace,monospace;
