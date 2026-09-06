@@ -73,6 +73,34 @@ main{
 }
 main::-webkit-scrollbar{width:0}
 
+.scroller{position:relative;flex:1 1 auto;min-height:0;display:flex}
+.scroller > main{flex:1 1 auto}
+
+/* small chevron over the bottom edge, hidden once you reach the end */
+.more{
+  position:relative;
+  flex:none;
+  height:13px;
+  margin-top:6px;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .22s ease;
+}
+.more::before,.more::after{
+  content:"";
+  position:absolute;
+  top:5px;
+  width:9px;
+  height:1.5px;
+  border-radius:1px;
+  background:var(--faint);
+}
+.more::before{left:50%;margin-left:-9px;transform:rotate(28deg)}
+.more::after{left:50%;transform:rotate(-28deg)}
+.sheet.overflowing .more{opacity:1}
+.sheet.at-end .more{opacity:0}
+@media (prefers-reduced-motion:reduce){ .more{transition:none} }
+
 h1{
   font-weight:700;
   font-size:40px;
@@ -197,7 +225,7 @@ pre{
 
   <div class="meta"><span class="dot"></span><span class="model">upshot</span></div>
 
-  <main>
+  <div class="scroller"><main>
     <h1>Turn a chat into a link you can send</h1>
 
     <p class="verdict">Tell your AI: <span class="cmd">read upshot.fyi
@@ -227,7 +255,7 @@ Keep it readable on one phone screen. The word limits above do this.
 If facts could have changed recently, search first. Do not write from memory.
 
 Reply with the URL and nothing else.</pre>
-  </main>
+  </main></div><div class="more" aria-hidden="true"></div>
 
   <footer><div class="frow"><span class="mark">upshot.fyi</span></div></footer>
 
@@ -259,11 +287,11 @@ function esc(t){
 function broken(){
   return '<div class="meta"><span class="dot"></span><span class="model">' +
     'Nothing to show</span></div>' +
-    '<main><h1>This link looks incomplete</h1>' +
+    '<div class="scroller"><main><h1>This link looks incomplete</h1>' +
     '<p>The export is missing its content. This usually means the link got cut ' +
     'short when it was copied, or the AI that wrote it slipped on the format.</p>' +
     '<p>Ask the AI to export it again, and send the whole link this time.</p>' +
-    '</main>' +
+    '</main></div><div class="more" aria-hidden="true"></div>' +
     '<footer><div class="frow"><span class="mark">upshot.fyi</span></div>' +
     '<div class="how">Make your own. Tell your AI to ' +
     '<span class="cmd">read upshot.fyi</span> and export this</div></footer>';
@@ -292,7 +320,7 @@ function render(d){
   }
 
   // shape
-  h += '<main>';
+  h += '<div class="scroller"><main>';
   if(d.h) h += '<h1>' + esc(d.h) + '</h1>';
   if(d.v) h += '<p class="verdict">' + esc(d.v) + '</p>';
   if(d.b) h += '<p>' + esc(d.b) + '</p>';
@@ -303,7 +331,7 @@ function render(d){
     });
     h += '</ul>';
   }
-  h += '</main>';
+  h += '</main></div><div class="more" aria-hidden="true"></div>';
   h += metaHtml;
   h += '<footer><div class="frow"><span class="mark">upshot.fyi</span>' +
        '<span>AI summary</span></div>' +
@@ -321,7 +349,24 @@ function draw(){
   document.getElementById('sheet').innerHTML = render(d);
   bindShare();
   window.scrollTo(0, 0);
+  bindScroller();
 }
+
+function bindScroller(){
+  var sheet = document.getElementById('sheet');
+  var m = sheet && sheet.querySelector('main');
+  if(!m) return;
+  function update(){
+    var over = m.scrollHeight - m.clientHeight > 4;
+    sheet.classList.toggle('overflowing', over);
+    sheet.classList.toggle('at-end', m.scrollTop + m.clientHeight >= m.scrollHeight - 6);
+  }
+  m.addEventListener('scroll', update, {passive:true});
+  window.addEventListener('resize', update);
+  if(document.fonts) document.fonts.ready.then(update);
+  update();
+}
+bindScroller();
 
 
 draw();
