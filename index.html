@@ -209,6 +209,16 @@ a:hover{color:var(--accent);border-bottom-color:var(--accent)}
 a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;text-wrap:pretty}
 .cmd{color:var(--accent)}
+/* TEMPORARY debug readout - see startDebug() */
+.dbg{
+  margin-top:10px;
+  font-size:9px;
+  line-height:1.45;
+  letter-spacing:0;
+  text-transform:none;
+  color:var(--accent);
+  word-break:break-word;
+}
 
 /* share control, on the signature line so it reads as part of the card */
 .wrap{display:flex;flex-direction:column;align-items:center;width:100%}
@@ -428,9 +438,50 @@ function draw(){
   // layout does not change shape mid-load
   document.getElementById('head').innerHTML = r.head;
   document.getElementById('main').innerHTML = r.main;
-  document.getElementById('foot').innerHTML = r.foot;
+  document.getElementById('foot').innerHTML = r.foot + debugSlot();
   bindShare();
   window.scrollTo(0, 0);
+  startDebug();
+}
+
+/* ---- TEMPORARY: add ?d=1 to a card link to print viewport numbers into
+   the foot, which stays visible even when the top is clipped. Remove once
+   the clipping is diagnosed. ---- */
+function debugOn(){ return location.search.indexOf('d=1') >= 0; }
+function debugSlot(){ return debugOn() ? '<div class="dbg" id="dbg">measuring</div>' : ''; }
+
+function startDebug(){
+  var el = document.getElementById('dbg');
+  if(!el) return;
+  function unit(u){
+    var d = document.createElement('div');
+    d.style.cssText = 'position:absolute;visibility:hidden;top:0;height:100' + u;
+    document.body.appendChild(d);
+    var h = d.getBoundingClientRect().height;
+    d.parentNode.removeChild(d);
+    return Math.round(h);
+  }
+  function tick(){
+    var vv = window.visualViewport;
+    var r = document.getElementById('sheet').getBoundingClientRect();
+    el.textContent =
+      'inner ' + window.innerHeight +
+      ' / client ' + document.documentElement.clientHeight +
+      ' / vv ' + (vv ? Math.round(vv.height) : '-') +
+        ' off ' + (vv ? Math.round(vv.offsetTop) : '-') +
+        ' pg ' + (vv ? Math.round(vv.pageTop) : '-') +
+        ' sc ' + (vv ? vv.scale : '-') +
+      ' / scrollY ' + Math.round(window.pageYOffset) +
+      ' / SHEET top ' + Math.round(r.top) + ' h ' + Math.round(r.height) +
+      ' / dvh ' + unit('dvh') + ' svh ' + unit('svh') + ' lvh ' + unit('lvh');
+  }
+  tick();
+  setInterval(tick, 400);
+  if(window.visualViewport){
+    visualViewport.addEventListener('resize', tick);
+    visualViewport.addEventListener('scroll', tick);
+  }
+  addEventListener('resize', tick);
 }
 
 draw();
