@@ -57,6 +57,14 @@ html:not(.card) body:has(.sheet.landing){
   overflow-y:auto;
   overscroll-behavior:auto;
 }
+/* hash present: lock the root too. body's overflow propagates to the viewport
+   only while html is `visible`, and body then computes to visible itself -
+   setting it here explicitly removes that indirection. */
+html.card{
+  overflow:hidden;
+  height:100vh;
+  height:100svh;
+}
 /* hash present: constrain the placeholder markup to one viewport straight
    away, so the document is never tall enough to earn a scroll offset */
 html.card .sheet{
@@ -461,6 +469,37 @@ bindScroller();
 
 draw();
 window.addEventListener('hashchange', draw);
+
+/* Opening the link from another app (WhatsApp) gives Chrome an extra "back to
+   app" row above its own chrome, so the viewport is shorter than in the
+   typed-URL case - and the browser can commit a scroll offset that
+   overflow:hidden then traps, leaving the top of the card scrolled out of
+   view with no way to get it back. CSS cannot undo an offset that is already
+   committed, so clamp it: on load, whenever the chrome changes, and for a
+   short window afterwards while the banner settles. Landing page is exempt -
+   it is meant to scroll. */
+(function(){
+  if(document.documentElement.className.indexOf('card') < 0) return;
+  function clamp(){
+    if(window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop){
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+  }
+  clamp();
+  ['load','pageshow','resize','orientationchange','scroll'].forEach(function(ev){
+    window.addEventListener(ev, clamp, {passive:true});
+  });
+  document.addEventListener('visibilitychange', clamp);
+  if(window.visualViewport){
+    visualViewport.addEventListener('resize', clamp);
+    visualViewport.addEventListener('scroll', clamp);
+  }
+  // the banner animates in after load; keep clamping briefly, then stop
+  var t = setInterval(clamp, 100);
+  setTimeout(function(){ clearInterval(t); }, 2000);
+})();
 
 /* ---- share as image ---- */
 function slug(){
