@@ -3,7 +3,7 @@
 Turn a chat conversation into a link you can send.
 
 You're talking to an AI, it says something worth sharing, you say **"read
-upshot.fyi/llms.txt and export this chat"**. It replies with a link. You send the
+upshot.fyi/llms.txt and export this"**. It replies with a link. You send the
 link.
 
 No account, no API key, nothing to install.
