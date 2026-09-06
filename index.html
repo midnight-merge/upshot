@@ -34,13 +34,21 @@ body{
   -webkit-font-smoothing:antialiased;
   display:flex;
   justify-content:center;
-  align-items:flex-start;
+  /* The visible window is the BOTTOM of the layout viewport: the browser
+     lays out against lvh, and the top (lvh - dvh) of that box sits behind
+     the address bar. Anchoring the card to the flex-end puts it in the part
+     you can actually see. Measured on an iPhone opening a link from another
+     app: lvh 792, dvh 684, so 108px of the card was behind the chrome and
+     108px of dead space sat below it. */
+  align-items:flex-end;
   /* export content is arbitrary AI text with no length guarantee - never let
      one long unbroken token overflow the card and trigger mobile auto-zoom */
   overflow-wrap:anywhere;
-  /* the page itself never scrolls - only main does */
+  /* body spans the full LAYOUT viewport (lvh), which is the box the browser
+     positions against; the card inside is dvh, i.e. what is actually
+     visible. The page itself never scrolls - only main does. */
   height:100vh;  /* fallback for pre-2022 browsers */
-  height:100dvh;
+  height:100lvh;
   overflow:hidden;
 }
 
@@ -56,7 +64,12 @@ body{
   overflow:hidden;
 }
 @media (min-width:470px){
-  body{background:var(--page);padding:30px 0;align-items:center}
+  /* desktop has no collapsing chrome, so lvh == dvh and the card just centres */
+  body{
+    background:var(--page);padding:30px 0;
+    align-items:center;
+    height:auto;min-height:100vh;
+  }
   .sheet{
     height:min(880px, calc(100dvh - 60px));
     border-radius:20px;
