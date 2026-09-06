@@ -401,6 +401,9 @@ function draw(){
   window.scrollTo(0, 0);
 }
 
+draw();
+window.addEventListener('hashchange', draw);
+
 /* ---- share as image ---- */
 function slug(){
   var h = (parse(location.hash).h || 'export').toLowerCase();
