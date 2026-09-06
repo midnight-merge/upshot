@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>upshot</title>
+<script>
+/* A hash means draw() is about to replace the landing markup with the card.
+   Mark that NOW, before the body is parsed, so the tall landing document
+   never lays out. If it does, the browser commits a scroll offset for a long
+   page, and the card's overflow:hidden then freezes us at that offset with
+   the top of the card scrolled out of view and no way to scroll back. */
+if(location.hash.replace(/^#/,'')) document.documentElement.className = 'card';
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap">
@@ -42,10 +50,19 @@ body{
   overflow:hidden;
   overscroll-behavior:none;
 }
-/* the landing page is an ordinary document, so let the page itself scroll */
-body:has(.sheet.landing){
+/* the landing page is an ordinary document, so let the page itself scroll -
+   but only when there is no hash, i.e. we are really staying on the landing
+   page rather than about to swap in the card */
+html:not(.card) body:has(.sheet.landing){
   overflow-y:auto;
   overscroll-behavior:auto;
+}
+/* hash present: constrain the placeholder markup to one viewport straight
+   away, so the document is never tall enough to earn a scroll offset */
+html.card .sheet{
+  height:100vh;
+  height:100svh;
+  overflow:hidden;
 }
 
 .sheet{
@@ -70,6 +87,8 @@ body:has(.sheet.landing){
     overflow-y:auto;overscroll-behavior:auto;
   }
   .sheet{height:min(880px, calc(100svh - 60px));border-radius:20px;padding:44px 32px 30px}
+  /* must restate: html.card .sheet outspecifies a bare .sheet rule */
+  html.card .sheet{height:min(880px, calc(100svh - 60px))}
 }
 
 /* pinned head - the quiet scope line only, never scrolls */
@@ -417,13 +436,10 @@ function draw(){
   sheet.classList.remove('landing');
   sheet.innerHTML = render(d);
   bindShare();
-  // let the browser settle one layout/viewport cycle before reading sizes
-  requestAnimationFrame(function(){
-    requestAnimationFrame(function(){
-      window.scrollTo(0, 0);
-      bindScroller();
-    });
-  });
+  // reset immediately: any offset the browser committed before this point
+  // gets frozen by the card's overflow:hidden if we wait
+  window.scrollTo(0, 0);
+  bindScroller();
 }
 
 function bindScroller(){
