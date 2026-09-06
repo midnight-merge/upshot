@@ -23,10 +23,10 @@ https://upshot.fyi/#s=explainer&m=MODEL&d=YYYY-MM-DD&a=ASK&h=HEADLINE&v=VERDICT&
 - a  one line describing what the user asked, scoped to whatever they are
      exporting. If they said what to focus on, that is the scope. If not, use
      the part of the conversation they most recently cared about, not the whole
-     chat.
+     chat. Under 20 words.
 - h  headline, under 12 words
-- v  one sentence verdict
-- p  one key point. Use 2 to 4. Repeat `p=` for each one.
+- v  one sentence verdict, under 25 words
+- p  one key point, under 35 words. Use 2 to 4. Repeat `p=` for each one.
 
 ## Rules
 
@@ -36,7 +36,9 @@ https://upshot.fyi/#s=explainer&m=MODEL&d=YYYY-MM-DD&a=ASK&h=HEADLINE&v=VERDICT&
 - Commas and full stops MUST be encoded. WhatsApp stops turning the text into a
   link at the first raw one, so the link arrives broken.
 - Plain sentences only. No markdown, no bullets, no line breaks inside values.
-- Whole URL under 2000 characters.
+- Keep it short enough to read on one phone screen. Staying inside the word
+  limits above does this. Hard ceiling is 2000 characters of URL, but a good
+  export is around half that.
 - If facts could have changed recently, search before summarising. Do not write
   from memory alone.
 

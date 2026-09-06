@@ -25,7 +25,7 @@
 *{box-sizing:border-box}
 html,body{margin:0}
 body{
-  background:var(--page);
+  background:var(--card);
   color:var(--ink);
   font-family:Archivo,-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
   -webkit-font-smoothing:antialiased;
@@ -37,20 +37,20 @@ body{
 .sheet{
   width:100%;
   max-width:430px;
-  min-height:100dvh;
+  height:100dvh;
   background:var(--card);
-  padding:44px 30px 30px;
+  padding:40px 26px 30px;
   display:flex;
   flex-direction:column;
-  gap:0;
+  overflow:hidden;
 }
 @media (min-width:470px){
-  body{padding:32px 0;min-height:100vh;align-items:center}
-  .sheet{min-height:auto;border-radius:20px;padding:48px 34px 34px}
+  body{background:var(--page);padding:30px 0;align-items:center;min-height:100vh}
+  .sheet{height:min(880px, calc(100dvh - 60px));border-radius:20px;padding:44px 32px 30px}
 }
 
 /* quiet scope line, no label, no box */
-.ask{margin:0 0 26px}
+.ask{margin:0 0 22px;flex:none}
 .ask-label{display:none}
 .ask-text{
   font-family:"DM Mono",ui-monospace,monospace;
@@ -60,7 +60,70 @@ body{
   color:var(--faint);
 }
 
-main{padding:0;flex:1;display:flex;flex-direction:column}
+main{
+  padding:0;
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  /* fade only the bottom edge, so it reads as a window onto more text */
+  mask-image:linear-gradient(to bottom, #000 calc(100% - 22px), transparent 100%);
+}
+main::-webkit-scrollbar{width:0}
+
+.scroller{position:relative;flex:1 1 auto;min-height:0;display:flex}
+.scroller > main{flex:1 1 auto}
+
+/* small chevron over the bottom edge, hidden once you reach the end */
+.more{
+  position:relative;
+  flex:none;
+  height:13px;
+  margin-top:6px;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .22s ease;
+}
+.more::before,.more::after{
+  content:"";
+  position:absolute;
+  top:5px;
+  width:9px;
+  height:1.5px;
+  border-radius:1px;
+  background:var(--faint);
+}
+.more::before{left:50%;margin-left:-9px;transform:rotate(28deg)}
+.more::after{left:50%;transform:rotate(-28deg)}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:none;
+  margin-bottom:26px;
+  font-family:"DM Mono",ui-monospace,monospace;
+  font-size:10.5px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--dim);
+}
+.brand .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex:none}
+
+/* the homepage is an ordinary scrolling page, not a fixed card */
+.sheet.landing{height:auto;overflow:visible}
+.sheet.landing .scroller{display:block;flex:none;min-height:0}
+.sheet.landing main{overflow:visible;mask-image:none;min-height:0}
+.sheet.landing .more{display:none}
+@media (min-width:470px){
+  .sheet.landing{height:auto}
+  body:has(.sheet.landing){align-items:flex-start}
+}
+
+.sheet.overflowing .more{opacity:1}
+.sheet.at-end .more{opacity:0}
+@media (prefers-reduced-motion:reduce){ .more{transition:none} }
 
 h1{
   font-weight:700;
@@ -115,10 +178,11 @@ p{margin:0 0 15px;font-size:15px;color:var(--dim)}
 .meta{
   order:2;
   display:flex;
-  align-items:center;
-  gap:8px;
-  margin-top:38px;
-  padding-top:16px;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-top:36px;
+  padding-top:18px;
   border-top:1px solid var(--hair);
   font-family:"DM Mono",ui-monospace,monospace;
   font-size:10.5px;
@@ -126,13 +190,17 @@ p{margin:0 0 15px;font-size:15px;color:var(--dim)}
   text-transform:uppercase;
   color:var(--faint);
 }
+.meta .sig{display:flex;flex-direction:column;gap:5px;min-width:0}
+.meta .r1{display:flex;align-items:center;gap:8px}
+.meta .r2{color:var(--faint);padding-left:13px}
 .meta .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex:none}
 .meta .sep{opacity:.5}
 .meta .model{color:var(--dim)}
+.meta .by{color:var(--faint)}
 
 footer{
   order:3;
-  margin-top:10px;
+  margin-top:18px;
   font-family:"DM Mono",ui-monospace,monospace;
   font-size:10px;
   letter-spacing:.1em;
@@ -160,6 +228,7 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
   cursor:pointer;
   flex:none;
 }
+.shareBtn{align-self:flex-start;margin-top:-1px}
 .shareBtn:hover{color:var(--accent);border-bottom-color:var(--accent)}
 .shareBtn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .shareBtn[disabled]{opacity:.55;cursor:default}
@@ -176,11 +245,11 @@ pre{
 </style>
 </head>
 <body>
-<div class="wrap"><div class="sheet" id="sheet">
+<div class="wrap"><div class="sheet landing" id="sheet">
 
-  <div class="meta"><span class="dot"></span><span class="model">upshot</span></div>
+  <div class="brand"><span class="dot"></span><span>upshot.fyi</span></div>
 
-  <main>
+  <div class="scroller"><main>
     <h1>Turn a chat into a link you can send</h1>
 
     <p class="verdict">Tell your AI: <span class="cmd">read upshot.fyi
@@ -196,23 +265,24 @@ pre{
 s  shape. Only "explainer" exists right now.
 m  your model name, e.g. GPT-5
 d  today's date, YYYY-MM-DD
-a  one line on what the user asked, scoped to what they are exporting
+a  one line on what the user asked, scoped to what they are exporting, under 20 words
 h  headline, under 12 words
-v  one sentence verdict
-p  one key point. Use 2 to 4. Repeat p= for each.
+v  one sentence verdict, under 25 words
+p  one key point, under 35 words. Use 2 to 4. Repeat p= for each.
 
 RULES
 Every space becomes + . The URL must contain no spaces.
 Encode inside values:  , %2C   . %2E   &amp; %26   = %3D   # %23   + %2B   % %25   " %22
 Commas and full stops MUST be encoded or WhatsApp breaks the link.
 Plain sentences only. No markdown, no line breaks inside values.
-Whole URL under 2000 characters.
+Keep it readable on one phone screen. The word limits above do this.
 If facts could have changed recently, search first. Do not write from memory.
 
 Reply with the URL and nothing else.</pre>
-  </main>
+  </main></div>
 
-  <footer><div class="frow"><span class="mark">upshot.fyi</span></div></footer>
+  <footer><div class="how">The whole export lives in the link, so this page
+    never sees what you shared.</div></footer>
 
 </div>
 
@@ -242,11 +312,11 @@ function esc(t){
 function broken(){
   return '<div class="meta"><span class="dot"></span><span class="model">' +
     'Nothing to show</span></div>' +
-    '<main><h1>This link looks incomplete</h1>' +
+    '<div class="scroller"><main><h1>This link looks incomplete</h1>' +
     '<p>The export is missing its content. This usually means the link got cut ' +
     'short when it was copied, or the AI that wrote it slipped on the format.</p>' +
     '<p>Ask the AI to export it again, and send the whole link this time.</p>' +
-    '</main>' +
+    '</main></div><div class="more" aria-hidden="true"></div>' +
     '<footer><div class="frow"><span class="mark">upshot.fyi</span></div>' +
     '<div class="how">Make your own. Tell your AI to ' +
     '<span class="cmd">read upshot.fyi</span> and export this</div></footer>';
@@ -259,11 +329,15 @@ function render(d){
   var h = '';
 
   // container: always drawn
-  var metaHtml = '<div class="meta"><span class="dot"></span>' +
-    '<span class="model">' + esc(d.m || 'Unknown model') + '</span>' +
-    '<span class="sep">/</span><span>' + esc(d.d || '') + '</span>' +
-    '<span class="spacer"></span>' +
-    '<button type="button" class="shareBtn" id="shareBtn">Share image</button></div>';
+  var metaHtml = '<div class="meta">' +
+    '<div class="sig">' +
+      '<div class="r1"><span class="dot"></span>' +
+        '<span class="by">Generated by</span>' +
+        '<span class="model">' + esc(d.m || 'Unknown model') + '</span></div>' +
+      '<div class="r2">' + esc(d.d || '') + '</div>' +
+    '</div>' +
+    '<button type="button" class="shareBtn" id="shareBtn">Share image</button>' +
+    '</div>';
 
   if(d.a){
     h += '<div class="ask"><div class="ask-label">What this covers</div>' +
@@ -271,7 +345,7 @@ function render(d){
   }
 
   // shape
-  h += '<main>';
+  h += '<div class="scroller"><main>';
   if(d.h) h += '<h1>' + esc(d.h) + '</h1>';
   if(d.v) h += '<p class="verdict">' + esc(d.v) + '</p>';
   if(d.b) h += '<p>' + esc(d.b) + '</p>';
@@ -282,7 +356,7 @@ function render(d){
     });
     h += '</ul>';
   }
-  h += '</main>';
+  h += '</main></div><div class="more" aria-hidden="true"></div>';
   h += metaHtml;
   h += '<footer><div class="frow"><span class="mark">upshot.fyi</span>' +
        '<span>AI summary</span></div>' +
@@ -297,40 +371,31 @@ function draw(){
   var frag = location.hash.replace(/^#/,'');
   if(!frag) return;                     // no fragment: leave the static landing page
   var d = parse(location.hash);
-  document.getElementById('sheet').innerHTML = render(d);
+  var sheet = document.getElementById('sheet');
+  sheet.classList.remove('landing');
+  sheet.innerHTML = render(d);
   bindShare();
   window.scrollTo(0, 0);
-  fit();
+  bindScroller();
 }
 
-/* Shrink the card until it fits one screen. Floors at 0.72 so text stays
-   readable; anything that still overflows is allowed to scroll. */
-var MIN_SCALE = 0.72;
-
-function fit(){
-  var card = document.getElementById('sheet');
-  if(!card) return;
-  card.style.transform = '';
-  card.style.marginBottom = '';
-
-  var avail = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-  var pad = window.innerWidth >= 470 ? 64 : 0;
-  var h = card.offsetHeight;
-  if(!h) return;
-
-  var k = Math.min(1, (avail - pad) / h);
-  if(k >= 1) return;
-  k = Math.max(MIN_SCALE, k);
-
-  card.style.transformOrigin = 'top center';
-  card.style.transform = 'scale(' + k.toFixed(4) + ')';
-  // a scaled element still reserves its unscaled height, so claw the gap back
-  card.style.marginBottom = (-(h * (1 - k))) + 'px';
+function bindScroller(){
+  var sheet = document.getElementById('sheet');
+  var m = sheet && sheet.querySelector('main');
+  if(!m) return;
+  function update(){
+    var over = m.scrollHeight - m.clientHeight > 4;
+    sheet.classList.toggle('overflowing', over);
+    sheet.classList.toggle('at-end', m.scrollTop + m.clientHeight >= m.scrollHeight - 6);
+  }
+  m.addEventListener('scroll', update, {passive:true});
+  window.addEventListener('resize', update);
+  if(document.fonts) document.fonts.ready.then(update);
+  update();
 }
+bindScroller();
 
-window.addEventListener('resize', fit);
-if(window.visualViewport){ window.visualViewport.addEventListener('resize', fit); }
-document.fonts && document.fonts.ready.then(fit);
+
 draw();
 window.addEventListener('hashchange', draw);
 
@@ -342,9 +407,15 @@ function slug(){
 
 function shot(){
   var card = document.getElementById('sheet');
-  var t = card.style.transform, m = card.style.marginBottom;
-  card.style.transform = ''; card.style.marginBottom = '';
-  var restore = function(){ card.style.transform = t; card.style.marginBottom = m; };
+  var m = card.querySelector('main');
+  var prev = m ? {of:m.style.overflow, mask:m.style.maskImage} : null;
+  if(m){ m.style.overflow = 'visible'; m.style.maskImage = 'none'; }
+  var prevH = card.style.height;
+  card.style.height = 'auto';
+  var restore = function(){
+    card.style.height = prevH;
+    if(m){ m.style.overflow = prev.of; m.style.maskImage = prev.mask; }
+  };
   return html2canvas(card, {
     backgroundColor: getComputedStyle(document.documentElement)
       .getPropertyValue('--card').trim() || '#12131A',
