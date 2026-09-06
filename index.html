@@ -4,14 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>upshot</title>
-<script>
-/* A hash means draw() is about to replace the landing markup with the card.
-   Mark that NOW, before the body is parsed, so the tall landing document
-   never lays out. If it does, the browser commits a scroll offset for a long
-   page, and the card's overflow:hidden then freezes us at that offset with
-   the top of the card scrolled out of view and no way to scroll back. */
-if(location.hash.replace(/^#/,'')) document.documentElement.className = 'card';
-</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap">
