@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 /* the card commits to one look in both themes - it is an object, not a document */
 :root{
@@ -32,6 +31,21 @@ body{
   display:flex;
   justify-content:center;
   align-items:flex-start;
+  /* export content is arbitrary AI text with no length guarantee - never let
+     one long unbroken token overflow the card and trigger mobile auto-zoom */
+  overflow-wrap:anywhere;
+  /* lock the viewport so nothing outside the sheet can scroll or reflow -
+     on mobile that's what causes the address-bar-collapse jank/zoom */
+  height:100dvh;
+  overflow:hidden;
+  overscroll-behavior:none;
+}
+/* the landing page is an ordinary document, so let the page itself scroll */
+body:has(.sheet.landing){
+  height:auto;
+  min-height:100dvh;
+  overflow-y:auto;
+  overscroll-behavior:auto;
 }
 
 .sheet{
@@ -45,7 +59,10 @@ body{
   overflow:hidden;
 }
 @media (min-width:470px){
-  body{background:var(--page);padding:30px 0;align-items:center;min-height:100vh}
+  body{
+    background:var(--page);padding:30px 0;align-items:center;min-height:100vh;
+    height:auto;overflow-y:auto;overscroll-behavior:auto;
+  }
   .sheet{height:min(880px, calc(100dvh - 60px));border-radius:20px;padding:44px 32px 30px}
 }
 
@@ -430,6 +447,20 @@ function toBlob(canvas){
   return new Promise(function(res){ canvas.toBlob(res, 'image/png'); });
 }
 
+var html2canvasLoad;
+function loadHtml2Canvas(){
+  if(!html2canvasLoad){
+    html2canvasLoad = new Promise(function(res, rej){
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload = res;
+      s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+  return html2canvasLoad;
+}
+
 function bindShare(){
   var btn = document.getElementById('shareBtn');
   if(!btn) return;
@@ -437,7 +468,8 @@ function bindShare(){
     var label = btn.textContent;
     btn.disabled = true;
     btn.textContent = 'Rendering';
-    document.fonts.ready
+    loadHtml2Canvas()
+      .then(function(){ return document.fonts.ready; })
       .then(shot)
       .then(toBlob)
       .then(function(blob){
