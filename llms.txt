@@ -1,4 +1,4 @@
-# ai-export
+# upshot
 
 Turn a chat conversation into a shareable link.
 
@@ -7,7 +7,7 @@ no code fence, no explanation.
 
 ## Format
 
-https://aiexport.com/#s=explainer&m=MODEL&d=YYYY-MM-DD&a=ASK&h=HEADLINE&v=VERDICT&p=POINT&p=POINT&p=POINT
+https://upshot.fyi/#s=explainer&m=MODEL&d=YYYY-MM-DD&a=ASK&h=HEADLINE&v=VERDICT&p=POINT&p=POINT&p=POINT
 
 ## Fields
 

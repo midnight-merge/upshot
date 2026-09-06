@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ai-export</title>
+<title>upshot</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap">
@@ -178,20 +178,20 @@ pre{
 <body>
 <div class="wrap"><div class="sheet" id="sheet">
 
-  <div class="meta"><span class="dot"></span><span class="model">ai-export</span></div>
+  <div class="meta"><span class="dot"></span><span class="model">upshot</span></div>
 
   <main>
     <h1>Turn a chat into a link you can send</h1>
 
     <p class="verdict">Tell your AI: <span class="cmd">export this to
-      aiexport.com</span>. It replies with a link. Send the link.</p>
+      upshot.fyi</span>. It replies with a link. Send the link.</p>
 
     <p>No account, no API key, nothing to install. Everything lives in the link
       itself, so this page never sees what you exported.</p>
 
     <h2>Format</h2>
     <p class="note">For any AI reading this page.</p>
-<pre>https://aiexport.com/#s=explainer&amp;m=MODEL&amp;d=YYYY-MM-DD&amp;a=ASK&amp;h=HEADLINE&amp;v=VERDICT&amp;p=POINT&amp;p=POINT
+<pre>https://upshot.fyi/#s=explainer&amp;m=MODEL&amp;d=YYYY-MM-DD&amp;a=ASK&amp;h=HEADLINE&amp;v=VERDICT&amp;p=POINT&amp;p=POINT
 
 s  shape. Only "explainer" exists right now.
 m  your model name, e.g. GPT-5
@@ -212,7 +212,7 @@ If facts could have changed recently, search first. Do not write from memory.
 Reply with the URL and nothing else.</pre>
   </main>
 
-  <footer><div class="frow"><span class="mark">ai-export</span></div></footer>
+  <footer><div class="frow"><span class="mark">upshot.fyi</span></div></footer>
 
 </div>
 
@@ -247,9 +247,9 @@ function broken(){
     'short when it was copied, or the AI that wrote it slipped on the format.</p>' +
     '<p>Ask the AI to export it again, and send the whole link this time.</p>' +
     '</main>' +
-    '<footer><div class="frow"><span class="mark">ai-export</span></div>' +
+    '<footer><div class="frow"><span class="mark">upshot.fyi</span></div>' +
     '<div class="how">Make your own: tell your AI ' +
-    '<span class="cmd">export this to aiexport.com</span></div></footer>';
+    '<span class="cmd">export this to upshot.fyi</span></div></footer>';
 }
 
 function render(d){
@@ -284,10 +284,10 @@ function render(d){
   }
   h += '</main>';
   h += metaHtml;
-  h += '<footer><div class="frow"><span class="mark">ai-export</span>' +
+  h += '<footer><div class="frow"><span class="mark">upshot.fyi</span>' +
        '<span>AI summary</span></div>' +
        '<div class="how">Make your own: tell your AI ' +
-       '<span class="cmd">export this to aiexport.com</span></div></footer>';
+       '<span class="cmd">export this to upshot.fyi</span></div></footer>';
   return h;
 }
 

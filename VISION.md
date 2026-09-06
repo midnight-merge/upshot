@@ -146,7 +146,7 @@ Same look, different skeleton.
 The user shouldn't have to paste a wall of instructions. Host the spec as a plain
 text file and let the AI fetch it. Then the whole flow is one sentence:
 
-> "export this to aiexport.com"
+> "export this to upshot.fyi"
 
 The AI reads `/llms.txt`, gets the format, writes the URL. No setup, no custom GPT,
 no pinned prompt. Still just a static file — the "server" is a text file.

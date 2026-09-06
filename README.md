@@ -1,9 +1,9 @@
-# ai-export
+# upshot
 
 Turn a chat conversation into a link you can send.
 
 You're talking to an AI, it says something worth sharing, you say **"export this
-to aiexport.com"**. It replies with a link. You send the link.
+to upshot.fyi"**. It replies with a link. You send the link.
 
 No account, no API key, nothing to install.
 
@@ -17,7 +17,7 @@ That means one static page can render unlimited exports for free. It also means
 the URL length caps how long an export can be, which keeps them short.
 
 ```
-https://aiexport.com/#s=explainer&m=GPT-5&d=2026-09-06&a=...&h=...&v=...&p=...
+https://upshot.fyi/#s=explainer&m=GPT-5&d=2026-09-06&a=...&h=...&v=...&p=...
 ```
 
 `index.html` reads those fields and draws the page. That's the entire system.
