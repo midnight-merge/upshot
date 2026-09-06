@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# The format spec lives at /llms.txt and in the page at /
+Sitemap: https://upshot.fyi/sitemap.xml
