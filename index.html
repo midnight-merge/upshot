@@ -70,7 +70,7 @@ body:has(.sheet.landing){
   .sheet{height:min(880px, calc(100svh - 60px));border-radius:20px;padding:44px 32px 30px}
 }
 
-/* pinned head - scope line and headline, never scrolls */
+/* pinned head - the quiet scope line only, never scrolls */
 .head{flex:none}
 
 /* quiet scope line, no label, no box */
@@ -347,8 +347,7 @@ function esc(t){
 }
 
 function broken(){
-  return '<div class="head"><h1>This link looks incomplete</h1></div>' +
-    '<div class="scroller"><main>' +
+  return '<div class="scroller"><main><h1>This link looks incomplete</h1>' +
     '<p>The export is missing its content. This usually means the link got cut ' +
     'short when it was copied, or the AI that wrote it slipped on the format.</p>' +
     '<p>Ask the AI to export it again, and send the whole link this time.</p>' +
@@ -377,17 +376,17 @@ function render(d){
     '<button type="button" class="shareBtn" id="shareBtn">Share image</button>' +
     '</div>';
 
-  // pinned head: scope line and headline never scroll
+  // pinned head: just the quiet scope line, never scrolls
   h += '<div class="head">';
   if(d.a){
     h += '<div class="ask"><div class="ask-label">What this covers</div>' +
          '<div class="ask-text">' + esc(d.a) + '</div></div>';
   }
-  if(d.h) h += '<h1>' + esc(d.h) + '</h1>';
   h += '</div>';
 
   // shape
   h += '<div class="scroller"><main>';
+  if(d.h) h += '<h1>' + esc(d.h) + '</h1>';
   if(d.v) h += '<p class="verdict">' + esc(d.v) + '</p>';
   if(d.b) h += '<p>' + esc(d.b) + '</p>';
   if(d.p.length){
