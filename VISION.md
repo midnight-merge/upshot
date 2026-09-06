@@ -97,6 +97,30 @@ emit a clean URL with the right fields in the right slots."
 Page should decode loosely — missing slot, just don't draw it. Unknown shape, fall
 back to the plainest one.
 
+## WhatsApp findings (tested 6 Sep 2026)
+
+Tested by sending real links to WhatsApp and seeing what stays blue.
+
+Fine: length up to at least 800 characters, `&` separators, `%22`, hyphens,
+`localhost` with a port, capitals, digits.
+
+Breaks it: **a raw comma or full stop inside a value.** WhatsApp stops linkifying
+at that point and the rest of the URL arrives as plain text. It doesn't cut at the
+punctuation itself, it cuts earlier, so it looks random until you bisect it.
+
+Fix: encode `,` as %2C and `.` as %2E. Confirmed working on the full 806 character
+Clancy link.
+
+**What this means for the format.** Every sentence has a full stop. So the AI now
+has to encode punctuation on every single sentence it writes, in a URL it can't
+see rendered, with silent failure if it slips once. That's a big reliability ask
+for a plain chat model, and it's real evidence for base64 plus a paste box or a
+tool, rather than the AI typing the URL by hand.
+
+Test this before committing to the readable path. If ChatGPT gets punctuation
+encoding right nine times in ten, the readable path lives. If it's six in ten, it
+doesn't.
+
 ## Container and shapes
 
 **Metadata is the container.** It's on every page, always. Model, date, and one line

@@ -25,8 +25,10 @@ https://aiexport.com/#s=explainer&m=MODEL&d=YYYY-MM-DD&a=ASK&h=HEADLINE&v=VERDIC
 ## Rules
 
 - Every space becomes `+`. The URL must contain no spaces at all.
-- Escape inside values: `&` %26, `=` %3D, `#` %23, `+` %2B, `%` %25, `?` %3F,
-  `"` %22
+- Escape inside values: `,` %2C, `.` %2E, `&` %26, `=` %3D, `#` %23, `+` %2B,
+  `%` %25, `?` %3F, `"` %22
+- Commas and full stops MUST be encoded. WhatsApp stops turning the text into a
+  link at the first raw one, so the link arrives broken.
 - Plain sentences only. No markdown, no bullets, no line breaks inside values.
 - Whole URL under 2000 characters.
 - If facts could have changed recently, search before summarising. Do not write
