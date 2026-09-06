@@ -6,199 +6,146 @@
 <title>ai-export</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap">
 <style>
+/* the card commits to one look in both themes - it is an object, not a document */
 :root{
-  --page:#E7E8E4;
-  --ground:#FCFCFA;
-  --ink:#16181C;
-  --muted:#6E7472;
-  --faint:#9AA09D;
-  --rule:#E3E5E1;
-  --accent:#2F5D50;
-  --shadow:0 1px 2px rgba(22,24,28,.05),0 12px 32px rgba(22,24,28,.08);
+  --page:#C9C9C4;
+  --card:#12131A;
+  --ink:#F7F7F4;
+  --dim:#B4B6C2;
+  --faint:#8E91A6;
+  --accent:#C8FF3D;
+  --hair:rgba(247,247,244,.12);
 }
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --page:#0A0B0D;
-    --ground:#111316;
-    --ink:#E9EBE7;
-    --muted:#969C99;
-    --faint:#6A706D;
-    --rule:#23262A;
-    --accent:#84B8A6;
-    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.5);
-  }
-}
-:root[data-theme="dark"]{
-  --page:#0A0B0D;
-  --ground:#111316;
-  --ink:#E9EBE7;
-  --muted:#969C99;
-  --faint:#6A706D;
-  --rule:#23262A;
-  --accent:#84B8A6;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.5);
-}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --page:#050506 } }
+:root[data-theme="dark"]{ --page:#050506 }
 
 *{box-sizing:border-box}
 html,body{margin:0}
 body{
   background:var(--page);
   color:var(--ink);
-  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  font-size:16px;
-  line-height:1.6;
+  font-family:Archivo,-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
   -webkit-font-smoothing:antialiased;
   display:flex;
   justify-content:center;
-  padding:0;
+  align-items:flex-start;
 }
 
-/* the phone column — same width everywhere */
 .sheet{
   width:100%;
-  max-width:420px;
+  max-width:430px;
   min-height:100vh;
-  background:var(--ground);
-  border-left:1px solid var(--rule);
-  border-right:1px solid var(--rule);
-  box-shadow:var(--shadow);
+  background:var(--card);
+  padding:44px 30px 30px;
   display:flex;
   flex-direction:column;
+  gap:0;
 }
-@media (min-width:460px){
-  body{padding:32px 0}
-  .sheet{min-height:calc(100vh - 64px);border-radius:2px}
+@media (min-width:470px){
+  body{padding:26px 0}
+  .sheet{min-height:auto;border-radius:20px;padding:48px 34px 32px}
 }
 
-/* ---- container chrome: metadata, always present ---- */
-.meta{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:18px 26px 16px;
-  border-bottom:1px solid var(--rule);
-  font-family:"IBM Plex Mono",ui-monospace,monospace;
-  font-size:10.5px;
-  letter-spacing:.09em;
-  text-transform:uppercase;
-  color:var(--faint);
-}
-.meta .dot{width:4px;height:4px;border-radius:50%;background:var(--accent);flex:none}
-.meta .sep{color:var(--rule)}
-.meta .model{color:var(--muted)}
-
-.ask{
-  padding:22px 26px 24px;
-  border-bottom:1px solid var(--rule);
-}
-.ask-label{
-  font-family:"IBM Plex Mono",ui-monospace,monospace;
-  font-size:10.5px;
-  letter-spacing:.11em;
-  text-transform:uppercase;
-  color:var(--faint);
-  margin-bottom:7px;
-}
+/* quiet scope line, no label, no box */
+.ask{margin:0 0 26px}
+.ask-label{display:none}
 .ask-text{
-  font-size:14px;
+  font-family:"DM Mono",ui-monospace,monospace;
+  font-size:12.5px;
   line-height:1.5;
-  color:var(--muted);
+  letter-spacing:.01em;
+  color:var(--faint);
 }
 
-/* ---- body: the "explainer" shape ---- */
-main{padding:28px 26px 0;flex:1}
+main{padding:0;flex:1;display:flex;flex-direction:column}
 
 h1{
-  font-family:Newsreader,Georgia,"Times New Roman",serif;
-  font-weight:400;
-  font-size:31px;
-  line-height:1.18;
-  letter-spacing:-.011em;
+  font-weight:700;
+  font-size:40px;
+  line-height:1.0;
+  letter-spacing:-.038em;
   text-wrap:balance;
-  margin:0 0 18px;
+  margin:0 0 22px;
 }
 
 .verdict{
-  font-family:Newsreader,Georgia,serif;
-  font-size:18px;
-  line-height:1.45;
-  color:var(--ink);
-  margin:0 0 22px;
-  padding-left:14px;
+  font-size:19.5px;
+  font-weight:400;
+  line-height:1.42;
+  letter-spacing:-.008em;
+  color:var(--dim);
+  margin:0 0 34px;
+  padding-left:15px;
   border-left:2px solid var(--accent);
 }
 
-p{margin:0 0 16px;font-size:15.5px}
-p:last-child{margin-bottom:0}
+p{margin:0 0 15px;font-size:15px;color:var(--dim)}
 
 .points{
   list-style:none;
-  margin:22px 0 4px;
+  margin:0;
   padding:0;
   display:flex;
   flex-direction:column;
-  gap:14px;
-  border-top:1px solid var(--rule);
-  padding-top:20px;
+  gap:16px;
 }
-.points li{display:flex;gap:12px;font-size:14.5px;line-height:1.5}
-.points .n{
-  font-family:"IBM Plex Mono",monospace;
-  font-size:11px;
-  color:var(--accent);
-  padding-top:3px;
-  flex:none;
-}
-.points strong{font-weight:500}
-
-footer{
-  margin-top:32px;
-  padding:16px 26px 20px;
-  border-top:1px solid var(--rule);
+.points li{
   display:flex;
-  justify-content:space-between;
-  align-items:baseline;
-  gap:12px;
-  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  gap:11px;
+  font-size:15.5px;
+  line-height:1.5;
+  color:var(--dim);
+}
+.points .n{
+  color:var(--accent);
+  flex:none;
+  font-size:16px;
+  line-height:1.4;
+}
+.points strong{font-weight:600;color:var(--ink)}
+
+/* metadata sits at the bottom like a signature, not a footer bar */
+.meta{
+  order:2;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:38px;
+  padding-top:16px;
+  border-top:1px solid var(--hair);
+  font-family:"DM Mono",ui-monospace,monospace;
   font-size:10.5px;
-  letter-spacing:.07em;
+  letter-spacing:.1em;
   text-transform:uppercase;
   color:var(--faint);
 }
-footer{flex-direction:column;align-items:stretch;gap:10px}
-footer .frow{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
-footer .mark{color:var(--muted);font-weight:500;letter-spacing:.1em}
-footer .how{
-  text-transform:none;
-  letter-spacing:0;
-  font-family:"IBM Plex Sans",sans-serif;
-  font-size:11.5px;
+.meta .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex:none}
+.meta .sep{opacity:.5}
+.meta .model{color:var(--dim)}
+
+footer{
+  order:3;
+  margin-top:10px;
+  font-family:"DM Mono",ui-monospace,monospace;
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
   color:var(--faint);
 }
-footer .cmd{color:var(--accent);white-space:nowrap}
-h2{
-  font-family:Newsreader,Georgia,serif;
-  font-weight:500;
-  font-size:15px;
-  letter-spacing:.01em;
-  margin:26px 0 4px;
-  padding-top:20px;
-  border-top:1px solid var(--rule);
-}
-.note{font-size:12.5px;color:var(--faint);margin-bottom:12px}
-.cmd{color:var(--accent);white-space:nowrap}
+footer .frow{display:none}
+footer .how{text-transform:none;letter-spacing:0;font-size:12px}
+.cmd{color:var(--accent)}
+
+/* landing page only */
+h2{font-weight:600;font-size:13px;margin:30px 0 3px;padding-top:20px;border-top:1px solid var(--hair)}
+.note{font-size:12px;color:var(--faint);margin-bottom:11px}
 pre{
-  font-family:"IBM Plex Mono",ui-monospace,monospace;
-  font-size:10.5px;
-  line-height:1.65;
-  color:var(--muted);
-  background:transparent;
-  margin:0 0 8px;
-  padding:0;
-  white-space:pre-wrap;
-  word-break:break-word;
+  font-family:"DM Mono",ui-monospace,monospace;
+  font-size:11px;line-height:1.7;color:var(--faint);
+  background:transparent;margin:0;padding:0;
+  white-space:pre-wrap;word-break:break-word;
 }
 </style>
 </head>
@@ -284,9 +231,9 @@ function render(d){
   var h = '';
 
   // container: always drawn
-  h += '<div class="meta"><span class="dot"></span>';
-  h += '<span class="model">' + esc(d.m || 'Unknown model') + '</span>';
-  h += '<span class="sep">/</span><span>' + esc(d.d || '') + '</span></div>';
+  var metaHtml = '<div class="meta"><span class="dot"></span>' +
+    '<span class="model">' + esc(d.m || 'Unknown model') + '</span>' +
+    '<span class="sep">/</span><span>' + esc(d.d || '') + '</span></div>';
 
   if(d.a){
     h += '<div class="ask"><div class="ask-label">What this covers</div>' +
@@ -301,14 +248,12 @@ function render(d){
   if(d.p.length){
     h += '<ul class="points">';
     d.p.forEach(function(pt, i){
-      var n = String(i + 1);
-      if(n.length < 2) n = '0' + n;
-      h += '<li><span class="n">' + n + '</span><span>' + esc(pt) + '</span></li>';
+      h += '<li><span class="n">&bull;</span><span>' + esc(pt) + '</span></li>';
     });
     h += '</ul>';
   }
   h += '</main>';
-
+  h += metaHtml;
   h += '<footer><div class="frow"><span class="mark">ai-export</span>' +
        '<span>AI summary</span></div>' +
        '<div class="how">Make your own: tell your AI ' +
