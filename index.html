@@ -44,8 +44,8 @@ body{
   gap:0;
 }
 @media (min-width:470px){
-  body{padding:26px 0}
-  .sheet{min-height:auto;border-radius:20px;padding:48px 34px 32px}
+  body{padding:32px 0;min-height:100vh;align-items:center}
+  .sheet{min-height:auto;border-radius:20px;padding:48px 34px 34px}
 }
 
 /* quiet scope line, no label, no box */
@@ -93,16 +93,20 @@ p{margin:0 0 15px;font-size:15px;color:var(--dim)}
 }
 .points li{
   display:flex;
-  gap:11px;
+  gap:12px;
   font-size:15.5px;
   line-height:1.5;
   color:var(--dim);
 }
 .points .n{
-  color:var(--accent);
+  color:transparent;
   flex:none;
-  font-size:16px;
-  line-height:1.4;
+  width:5px;
+  height:5px;
+  margin-top:9px;
+  border-radius:50%;
+  background:var(--accent);
+  overflow:hidden;
 }
 .points strong{font-weight:600;color:var(--ink)}
 
@@ -135,7 +139,7 @@ footer{
   color:var(--faint);
 }
 footer .frow{display:none}
-footer .how{text-transform:none;letter-spacing:0;font-size:12px}
+footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;text-wrap:pretty}
 .cmd{color:var(--accent)}
 
 /* landing page only */
