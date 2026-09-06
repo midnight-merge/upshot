@@ -25,7 +25,7 @@
 *{box-sizing:border-box}
 html,body{margin:0}
 body{
-  background:var(--page);
+  background:var(--card);
   color:var(--ink);
   font-family:Archivo,-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
   -webkit-font-smoothing:antialiased;
@@ -37,20 +37,20 @@ body{
 .sheet{
   width:100%;
   max-width:430px;
-  min-height:100dvh;
+  height:100dvh;
   background:var(--card);
-  padding:44px 30px 30px;
+  padding:40px 26px 30px;
   display:flex;
   flex-direction:column;
-  gap:0;
+  overflow:hidden;
 }
 @media (min-width:470px){
-  body{padding:32px 0;min-height:100vh;align-items:center}
-  .sheet{min-height:auto;border-radius:20px;padding:48px 34px 34px}
+  body{background:var(--page);padding:30px 0;align-items:center;min-height:100vh}
+  .sheet{height:min(880px, calc(100dvh - 60px));border-radius:20px;padding:44px 32px 30px}
 }
 
 /* quiet scope line, no label, no box */
-.ask{margin:0 0 26px}
+.ask{margin:0 0 22px;flex:none}
 .ask-label{display:none}
 .ask-text{
   font-family:"DM Mono",ui-monospace,monospace;
@@ -60,7 +60,18 @@ body{
   color:var(--faint);
 }
 
-main{padding:0;flex:1;display:flex;flex-direction:column}
+main{
+  padding:0;
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  /* fade only the bottom edge, so it reads as a window onto more text */
+  mask-image:linear-gradient(to bottom, #000 calc(100% - 22px), transparent 100%);
+}
+main::-webkit-scrollbar{width:0}
 
 h1{
   font-weight:700;
@@ -300,37 +311,9 @@ function draw(){
   document.getElementById('sheet').innerHTML = render(d);
   bindShare();
   window.scrollTo(0, 0);
-  fit();
 }
 
-/* Shrink the card until it fits one screen. Floors at 0.72 so text stays
-   readable; anything that still overflows is allowed to scroll. */
-var MIN_SCALE = 0.72;
 
-function fit(){
-  var card = document.getElementById('sheet');
-  if(!card) return;
-  card.style.transform = '';
-  card.style.marginBottom = '';
-
-  var avail = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-  var pad = window.innerWidth >= 470 ? 64 : 0;
-  var h = card.offsetHeight;
-  if(!h) return;
-
-  var k = Math.min(1, (avail - pad) / h);
-  if(k >= 1) return;
-  k = Math.max(MIN_SCALE, k);
-
-  card.style.transformOrigin = 'top center';
-  card.style.transform = 'scale(' + k.toFixed(4) + ')';
-  // a scaled element still reserves its unscaled height, so claw the gap back
-  card.style.marginBottom = (-(h * (1 - k))) + 'px';
-}
-
-window.addEventListener('resize', fit);
-if(window.visualViewport){ window.visualViewport.addEventListener('resize', fit); }
-document.fonts && document.fonts.ready.then(fit);
 draw();
 window.addEventListener('hashchange', draw);
 
@@ -342,9 +325,15 @@ function slug(){
 
 function shot(){
   var card = document.getElementById('sheet');
-  var t = card.style.transform, m = card.style.marginBottom;
-  card.style.transform = ''; card.style.marginBottom = '';
-  var restore = function(){ card.style.transform = t; card.style.marginBottom = m; };
+  var m = card.querySelector('main');
+  var prev = m ? {of:m.style.overflow, mask:m.style.maskImage} : null;
+  if(m){ m.style.overflow = 'visible'; m.style.maskImage = 'none'; }
+  var prevH = card.style.height;
+  card.style.height = 'auto';
+  var restore = function(){
+    card.style.height = prevH;
+    if(m){ m.style.overflow = prev.of; m.style.maskImage = prev.mask; }
+  };
   return html2canvas(card, {
     backgroundColor: getComputedStyle(document.documentElement)
       .getPropertyValue('--card').trim() || '#12131A',
