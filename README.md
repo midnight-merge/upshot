@@ -44,15 +44,21 @@ domain works.
 
 ## The card
 
-An export is a fixed-height card sized to the phone screen. The scope line at
-the top and the signature at the bottom stay pinned; the headline, verdict and
-points scroll if they overflow, with a fade and a chevron to show there's more.
-The homepage is an ordinary scrolling page, not a card.
+An export is an ordinary scrolling page, one phone-width column at every
+viewport - no media queries, no viewport units, nothing that depends on
+measuring the viewport correctly. The signature at the bottom is pinned and the
+export scrolls behind it. The homepage uses the same shell, minus the pinned
+foot.
 
-**Share as image** renders the card to a PNG in the browser and hands it to the
-native share sheet, for Instagram and X where a link is no use. It falls back to
-a download on desktop. This is the only dependency: html2canvas, pinned, from
-cdnjs.
+**Share as image** draws the card onto a canvas and hands the PNG to the native
+share sheet, for Instagram and X where a link is no use. It falls back to a
+download on desktop. Nothing is fetched from a third party - the page has no
+dependencies at all.
+
+The renderer wraps every block itself and sums the line counts into a height
+before allocating the canvas, so the image cannot come out clipped. It reads
+typography, colour and box metrics off the live computed styles, so the
+stylesheet stays the one place the design is defined.
 
 ## Gotcha: WhatsApp and punctuation
 
