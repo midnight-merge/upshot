@@ -386,7 +386,6 @@ function render(d){
   var main = '';
   if(d.h) main += '<h1>' + esc(d.h) + '</h1>';
   if(d.v) main += '<p class="verdict">' + esc(d.v) + '</p>';
-  if(d.b) main += '<p>' + esc(d.b) + '</p>';
   if(d.p.length){
     main += '<ul class="points">';
     d.p.forEach(function(pt){
@@ -635,7 +634,8 @@ const shareImage = (() => {
       y = box.bottom + verdict.marginBottom;
     }
 
-    // every plain paragraph, not just the first - the broken-link page has two
+    // the broken-link page is the only thing with plain paragraphs, and it
+    // has two of them - so this loops rather than taking the first
     const para = styleOf('#main p:not(.verdict)');
     if(para){
       for(const el of document.querySelectorAll('#main p:not(.verdict)')){
