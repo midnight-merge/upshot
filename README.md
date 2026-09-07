@@ -66,8 +66,16 @@ stylesheet stays the one place the design is defined.
 | | |
 |---|---|
 | `explainer` | a conclusion and the points behind it. The default |
+| `steps` | a how-to where order matters. Shares `p=` with explainer - only the presentation differs |
 | `checklist` | things to do, tappable. Ticks are written back into the fragment, so a viewer ends up holding a link to their own half-finished version and can pass it on |
 | `compare` | two named options with points under each, stacked |
+| `facts` | a spec sheet of `Label~Value` rows. What most people wanted a table for, without the table |
+| `stats` | two to four figures at headline size |
+
+Six is about the ceiling. Every shape costs two implementations that have to
+agree, a test case, and - the one that bites - a harder decision for the model.
+The spec is a prompt, and past a handful of options an LLM starts guessing; a
+mis-picked shape is a worse export than a plain explainer would have been.
 
 A shape owns only the body beneath the verdict - the scope line, headline,
 verdict and signature are the same whatever it is. Each declares three things

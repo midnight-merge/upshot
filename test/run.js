@@ -54,6 +54,10 @@ const CASES = [
   ['checklistTicked', `#s=checklist&m=GPT-5&d=2026-09-07&h=Half done&v=Progress&c=First item&c=Second item&c=Third item&k=101`],
   ['compare',        `#s=compare&m=Claude Opus 5&d=2026-09-07&a=Picking a database for the new service&h=Postgres or SQLite&v=Postgres, unless you are shipping to the edge&l=Postgres&la=Concurrent writes without a global lock&la=Real types, extensions, and a query planner worth trusting&r=SQLite&ra=Zero ops - it is one file on disk&ra=Faster for read-heavy work at small scale`],
   ['compareOneSided', `#s=compare&h=Only one option given&v=Should still render&l=Postgres&la=One point&la=Two points`],
+  ['steps',     `#s=steps&m=GPT-5&d=2026-09-08&a=Moving off the CDN build&h=Vendoring the library&v=About an hour, no downtime needed&p=Vendor the library into the repo&p=Swap the script tag for a local path&p=${POINT}&p=Drop the CSP exception`],
+  ['facts',     `#s=facts&m=Claude Opus 5&d=2026-09-08&a=What the new service costs to run&h=Runtime and cost&v=Cheaper than the old one at every tier we measured&f=Runtime~Node 20&f=Cold start~180ms&f=Cost~$0.40 per million requests&f=Region~eu-west-2&f=A very long label that will wrap~and a value long enough to push it onto another line`],
+  ['stats',     `#s=stats&m=GPT-5&d=2026-09-08&a=What the migration actually bought us&h=What the migration cost&v=Worth it, but not for the reasons we expected&n=42%~fewer timeouts&n=3.1x~faster cold start&n=6 wks~of engineer time`],
+  ['factsBare', `#s=facts&h=Rows with no value&v=Should not break&f=Just a label&f=Another~with a value`],
   ['absurd',    `#h=Tall&v=v${`&p=${WORDY}`.repeat(9)}`],
   ['gigantic',  `#h=Tall&v=v${`&p=${WORDY}`.repeat(40)}`]
 ];

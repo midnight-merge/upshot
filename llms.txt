@@ -20,7 +20,7 @@ fields above; the rest depend on the shape.
 
 ## Shared fields
 
-- s  shape: `explainer`, `checklist` or `compare`
+- s  shape: `explainer`, `steps`, `checklist`, `compare`, `facts` or `stats`
 - m  your model name, e.g. GPT-5
 - d  today's date, YYYY-MM-DD
 - a  one line describing what the user asked, scoped to whatever they are
@@ -30,11 +30,28 @@ fields above; the rest depend on the shape.
 - h  headline, under 12 words
 - v  one sentence verdict, under 25 words
 
+## Choosing a shape
+
+Default to `explainer`. Only reach for another one when it clearly fits better:
+the user was following instructions (`steps`), has things to do (`checklist`),
+was choosing between two named options (`compare`), wanted figures at a glance
+(`facts`), or the whole point is two or three numbers (`stats`).
+
+For pros and cons of a single thing, use `compare` with `l=Pros` and `r=Cons`
+rather than looking for a shape that does not exist.
+
 ## s=explainer
 
 A conclusion and the points behind it. The default when nothing else fits.
 
 - p  one key point, under 35 words. Use 2 to 4. Repeat `p=` for each one.
+
+## s=steps
+
+A how-to, where the order matters. Same `p=` field as explainer - only the
+presentation differs, so picking the wrong one of the two still works.
+
+- p  one step, under 25 words. Use 3 to 6. Repeat `p=` for each one.
 
 ## s=checklist
 
@@ -53,6 +70,21 @@ between things, and put the recommendation in `v`.
 - la  one point for the first option, under 30 words. Use 2 to 4. Repeat `la=`.
 - r   name of the second option
 - ra  one point for the second option. Repeat `ra=` for each one.
+
+## s=facts
+
+A spec sheet: short label and value pairs, one line each. Use it for figures,
+settings or specifications rather than trying to build a table.
+
+- f  `Label~Value`, e.g. `f=Cold+start~180ms`. Use 3 to 6. Repeat `f=`.
+- Keep both halves short. A row that wraps stops looking like a spec sheet.
+
+## s=stats
+
+Two to four figures that carry the whole point on their own.
+
+- n  `Value~Label`, e.g. `n=42%25~fewer+timeouts`. Repeat `n=` for each one.
+- Keep the value under 6 characters. It is set at headline size.
 
 ## Rules
 
