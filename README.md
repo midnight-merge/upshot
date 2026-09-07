@@ -76,6 +76,7 @@ characters. `VISION.md` has the full results.
 | `robots.txt`, `sitemap.xml` | let crawlers in, point at the spec |
 | `CNAME` | custom domain for GitHub Pages |
 | `VISION.md` | product direction, decisions, and test findings |
+| `test/run.js` | regression tests, no dependencies |
 
 ## Running it
 
@@ -84,6 +85,36 @@ python3 -m http.server 8787
 ```
 
 Open `http://localhost:8787/` for the homepage. Add a fragment to see an export.
+
+## Tests
+
+```
+node test/run.js
+```
+
+Drives whatever Chrome is on the machine. No dependencies, no install. Set
+`CHROME=/path/to/chrome` if it cannot find one.
+
+The page and the share image are two implementations of the same design - the
+browser lays the card out from CSS, and `layout()` re-derives it in canvas ops.
+They can drift apart silently, so the tests render eight cards and check that:
+
+- the image's height agrees with what the browser laid out
+- no canvas exceeds the size cap, which is what silently truncated long exports
+- `.foot` is never positioned, because `getComputedStyle` reports a positioned
+  element's *used* margin, which the renderer would read as zero
+- nothing is fetched from a third party
+- the inline script parses
+
+`test/baselines.json` holds exact expected heights, which catch changes the DOM
+comparison is too loose to see. Font metrics differ between operating systems,
+so they are only meaningful on the machine that wrote them:
+
+```
+node test/run.js --update
+```
+
+after an intentional design change, or when moving machines.
 
 ## Status
 
