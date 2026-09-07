@@ -244,12 +244,13 @@ p{margin:0 0 15px;font-size:15px;color:var(--dim)}
   margin-top:3px;
 }
 
-/* comparison - the two options stack. Side by side in a 378px column is not a
-   comparison, it is two very narrow lists. The option name reuses the
-   signature's mono register so it reads as a label, not a second headline;
-   the padding and rule are reset because h2 is styled for the landing page. */
-.side + .side{margin-top:27px}
-.opt{
+/* Blocks. The frame never changes - scope line, headline, verdict, signature -
+   and up to three of these stack between the verdict and the foot. The label
+   reuses the signature's mono register so it reads as a label rather than a
+   second headline; the padding and rule are reset because h2 is styled for the
+   landing page. Two labelled bullet blocks are what a comparison is. */
+.block + .block{margin-top:28px}
+.bl{
   font-family:var(--mono);
   font-size:11px;
   font-weight:400;
@@ -365,42 +366,36 @@ pre{
 
     <h2>Format</h2>
     <p class="note">For any AI reading this page.</p>
-<pre>https://upshot.fyi/#s=SHAPE&amp;m=MODEL&amp;d=YYYY-MM-DD&amp;a=ASK&amp;h=HEADLINE&amp;v=VERDICT&amp;...
+<pre>https://upshot.fyi/#a=ASK&amp;h=HEADLINE&amp;v=VERDICT&amp;m=MODEL&amp;d=YYYY-MM-DD
+  &amp;g=LABEL&amp;p=POINT&amp;p=POINT
+  &amp;g=LABEL&amp;n=VALUE~LABEL
 
-Every shape takes s, m, d, a, h and v. The rest depends on the shape.
+THE FRAME - always all five, always first
 
-s  shape: explainer, steps, checklist, compare, facts or stats
-m  your model name, e.g. GPT-5
-d  today's date, YYYY-MM-DD
 a  one line on what the user asked, scoped to what they are exporting, under 20 words
 h  headline, under 12 words
 v  one sentence verdict, under 25 words
+m  your model name, e.g. GPT-5
+d  today's date, YYYY-MM-DD
+
+BLOCKS - up to 3, shown in the order you write them
+
+g  label for the block that follows. Optional, 1 to 4 words.
+   A g= always starts a new block, so two of the same kind can sit together.
+p  bullet, under 35 words. Repeat p= for each. Use 2 to 4.
+o  numbered step, under 25 words. Repeat o= for each. Use 3 to 6.
+c  checklist item, under 20 words. Repeat c= for each. Use 3 to 7.
+   Do not send k= - the page writes that as people tick.
+f  fact, written Label~Value. Keep both halves short - one line each.
+n  figure, written Value~Label. Keep the value under 6 characters.
 
 CHOOSING
-Default to explainer. Only use another shape if it clearly fits better.
-For pros and cons of one thing, use compare with l=Pros and r=Cons.
 
-s=explainer   a conclusion and the points behind it
-p  one key point, under 35 words. Use 2 to 4. Repeat p= for each.
+One block is usually right. Reach for p unless something else clearly fits.
+Only use a second or third block when it says something the first cannot.
+For a comparison, use two labelled p blocks:
+  &amp;g=Postgres&amp;p=...&amp;p=...&amp;g=SQLite&amp;p=...&amp;p=...
 
-s=steps       a how-to, where the order matters
-p  one step, under 25 words. Use 3 to 6. Repeat p= for each.
-
-s=checklist   things to do. Whoever opens the link can tick them off.
-c  one item, under 20 words. Use 3 to 7. Repeat c= for each.
-   Do not send k= - the page writes that as people tick.
-
-s=compare     two options weighed against each other
-l  name of the first option, 1 to 3 words
-la one point for it, under 30 words. Use 2 to 4. Repeat la= for each.
-r  name of the second option
-ra one point for it. Repeat ra= for each.
-
-s=facts       a spec sheet of short label and value pairs
-f  Label~Value. Keep both short - this is one line per row. Use 3 to 6.
-
-s=stats       two to four figures that carry the whole point
-n  Value~Label, e.g. n=42%25~fewer+timeouts. Keep the value under 6 characters.
 
 RULES
 Every space becomes + . The URL must contain no spaces.
@@ -455,20 +450,45 @@ function decodeAll(v){
   return v;
 }
 
-// keys a shape may repeat. Everything else is last-one-wins.
-var LISTS = ['p', 'c', 'f', 'n', 'la', 'ra'];
+/* The card is a fixed frame - scope line, headline, verdict, signature - with
+   up to three blocks stacked in the middle. g= starts a block and labels it;
+   the key that follows decides what kind. Blocks come out in the order they
+   appear in the URL, so the grammar needs no numbering and no nesting. */
+var BLOCK_KEYS = ['p', 'o', 'c', 'f', 'n'];
+var MAX_BLOCKS = 3;
 
 function parse(hash){
-  var out = {};
-  LISTS.forEach(function(k){ out[k] = []; });
+  var out = {blocks: []};
+  var current = null;
+  var pendingLabel = null;
+
   hash.replace(/^#/,'').split('&').forEach(function(pair){
     if(!pair) return;
     var i = pair.indexOf('=');
     if(i < 0) return;
     var k = pair.slice(0,i);
     var v = decodeAll(pair.slice(i+1).replace(/\+/g,' '));
-    if(LISTS.indexOf(k) >= 0) out[k].push(v); else out[k] = v;
+
+    if(k === 'g'){
+      // a label always begins a new block, so two of the same kind can sit
+      // side by side - which is all a comparison ever was
+      pendingLabel = v;
+      current = null;
+      return;
+    }
+    if(BLOCK_KEYS.indexOf(k) >= 0){
+      if(!current || current.type !== k){
+        current = {type: k, label: pendingLabel, items: []};
+        pendingLabel = null;
+        out.blocks.push(current);
+      }
+      current.items.push(v);
+      return;
+    }
+    out[k] = v;
   });
+
+  out.blocks = out.blocks.filter(function(b){ return b.items.length; }).slice(0, MAX_BLOCKS);
   return out;
 }
 
@@ -500,169 +520,122 @@ function broken(){
   };
 }
 
-/* ---- shapes ----
-   A shape owns the middle of the card and nothing else. The scope line above
-   it, the headline, the verdict and the signature below are the same whatever
-   the shape is - only the body beneath the verdict differs.
+/* ---- blocks ----
+   A block owns one stretch of the middle and nothing else. Each declares the
+   HTML for its items and how the share renderer redraws them in canvas ops -
+   two implementations that have to agree, which is what `node test/run.js`
+   checks. A block with no measure() still works as a page; it just cannot be
+   exported as an image. */
 
-   Each shape declares three things: whether a fragment carries its content,
-   the HTML for its body, and how the share renderer should re-draw that body
-   in canvas ops. The last one is the tax for a hand-drawn share image: every
-   shape is two implementations that have to agree. `node test/run.js` is what
-   tells you when they stop agreeing. A shape with no measure() still works as
-   a page - it just cannot be exported as an image. */
-// Bullets belong to two shapes now, so they get one implementation each side
-// of the divide - one for the page, one for the canvas - rather than four.
-const bulletsHTML = points => '<ul class="points">' + points.map(pt =>
-  '<li><span class="n">&bull;</span><span>' + esc(pt) + '</span></li>'
-).join('') + '</ul>';
+const listHTML = (cls, items, row) =>
+  '<ul class="' + cls + '">' + items.map(row).join('') + '</ul>';
 
-function measureBullets(y, m, list){
-  const items = [...list.querySelectorAll('li')];
+/* Bullets, steps and checklists differ only in their marker, so they share one
+   walk. rowSel names the element carrying the row's own font and gap - for a
+   checklist that is the <label> inside the <li>, not the <li> itself, and
+   taking the wrong one silently mis-measures every line. */
+function measureRows(y, m, list, markerWidth, marker, rowSel){
+  const items = [...list.children];
   if(!items.length) return y;
-  const item = m.styleOfEl(items[0]);
+  const boxOf = el => rowSel ? el.querySelector(rowSel) : el;
+  const row = m.styleOfEl(boxOf(items[0]));
   const rowGap = parseFloat(getComputedStyle(list).rowGap);
-  const colGap = parseFloat(item.s.columnGap);
-  const dot = getComputedStyle(items[0].querySelector('.n'));
-  const dotW = parseFloat(dot.width);
-  const dotH = parseFloat(dot.height);
-  const dotTop = parseFloat(dot.marginTop);
+  const colGap = parseFloat(row.s.columnGap);
 
   items.forEach((el, i) => {
-    const box = m.block(y, item, m.runsIn(el.querySelector('span:last-child'), item.upper),
-                        {indent: dotW + colGap});
-    m.ops.push({
-      kind: 'dot', color: m.accent, r: dotW / 2,
-      x: m.padX + dotW / 2,
-      y: box.top + dotTop + dotH / 2
-    });
+    const box = m.block(y, row, m.runsIn(boxOf(el).querySelector('span:last-child'), row.upper),
+                        {indent: markerWidth + colGap});
+    marker(el, box, row);
     y = box.bottom + (i < items.length - 1 ? rowGap : 0);
   });
   return y;
 }
 
-const SHAPES = {
-  explainer: {
-    has: d => !!(d.h || d.v || d.p.length),
+const BLOCKS = {
+  p: {
+    body: items => listHTML('points', items, pt =>
+      '<li><span class="n">&bull;</span><span>' + esc(pt) + '</span></li>'),
 
-    body: d => d.p.length ? bulletsHTML(d.p) : '',
-
-    measure(y, m){
-      const list = document.querySelector('#main .points');
-      return list ? measureBullets(y, m, list) : y;
+    measure(y, m, section){
+      const list = section.querySelector('.points');
+      if(!list) return y;
+      const dot = getComputedStyle(list.querySelector('.n'));
+      const w = parseFloat(dot.width);
+      const h = parseFloat(dot.height);
+      const top = parseFloat(dot.marginTop);
+      return measureRows(y, m, list, w, (el, box) => m.ops.push({
+        kind: 'dot', color: m.accent, r: w / 2,
+        x: m.padX + w / 2, y: box.top + top + h / 2
+      }));
     }
   },
 
-  checklist: {
-    has: d => !!(d.h || d.v || d.c.length),
+  o: {
+    // the digit lives in the markup, not a CSS counter, because the share
+    // renderer has to be able to read it
+    body: items => '<ol class="steps">' + items.map((step, i) =>
+      '<li><span class="n">' + (i + 1) + '</span><span>' + esc(step) + '</span></li>'
+    ).join('') + '</ol>',
 
-    /* k= is a string of 1s and 0s, one per item, written back by the page as
-       people tick. The AI never has to send it; an absent k= is all unticked. */
-    body(d){
-      if(!d.c.length) return '';
-      const ticked = String(d.k || '');
-      return '<ul class="checks">' + d.c.map((item, i) =>
-        '<li><label><input type="checkbox"' +
-        (ticked[i] === '1' ? ' checked' : '') +
-        '><span>' + esc(item) + '</span></label></li>'
-      ).join('') + '</ul>';
-    },
+    measure(y, m, section){
+      const list = section.querySelector('.steps');
+      if(!list) return y;
+      const w = parseFloat(getComputedStyle(list.querySelector('.n')).width);
+      return measureRows(y, m, list, w, (el, box) => {
+        const marker = el.querySelector('.n');
+        const st = m.styleOfEl(marker);
+        // same font and line-height as the row, so one baseline serves both
+        m.block(box.top, st, m.runsIn(marker, st.upper));
+      });
+    }
+  },
 
-    /* Ticks rewrite the fragment, so a viewer who works through the list ends
-       up holding a link to their own version and can pass it on. replaceState
-       rather than assignment: it leaves the back button alone and fires no
-       hashchange, so this cannot loop back into draw(). */
-    bind(){
-      const boxes = [...document.querySelectorAll('.checks input')];
-      if(!boxes.length) return;
-      boxes.forEach(box => box.addEventListener('change', () => {
-        const bits = boxes.map(b => b.checked ? '1' : '0').join('');
-        const frag = location.hash.replace(/^#/, '');
-        const next = /(^|&)k=[^&]*/.test(frag)
-          ? frag.replace(/(^|&)k=[^&]*/, '$1k=' + bits)
-          : frag + '&k=' + bits;
-        history.replaceState(null, '', '#' + next);
-      }));
-    },
+  c: {
+    /* A real <input type=checkbox> in a <label>: focusable, tappable along the
+       whole row, and a checkbox to a screen reader. A ticked row goes quiet
+       rather than struck through, so the renderer reproduces the state for
+       free by reading each row's own computed colour. */
+    body: (items, ticked) => listHTML('checks', items, (item, i) =>
+      '<li><label><input type="checkbox"' +
+      (String(ticked || '')[i] === '1' ? ' checked' : '') +
+      '><span>' + esc(item) + '</span></label></li>'),
 
-    measure(y, m){
-      const label = m.styleOf('.checks label');
-      if(!label) return y;
-      const rowGap = parseFloat(getComputedStyle(document.querySelector('.checks')).rowGap);
-      const colGap = parseFloat(label.s.columnGap);
-      const items = [...document.querySelectorAll('.checks li')];
-
-      items.forEach((el, i) => {
+    measure(y, m, section){
+      const list = section.querySelector('.checks');
+      if(!list) return y;
+      const first = getComputedStyle(list.querySelector('input'));
+      const size = parseFloat(first.width);
+      return measureRows(y, m, list, size, (el, box) => {
         const input = el.querySelector('input');
-        const box = getComputedStyle(input);
-        const size = parseFloat(box.width);
-        const line = m.block(y, label, m.runsIn(el.querySelector('span'), label.upper),
-                             {indent: size + colGap});
+        const box2 = getComputedStyle(input);
         m.ops.push({
           kind: 'checkbox',
-          x: m.padX,
-          y: line.top + parseFloat(box.marginTop),
-          w: size,
-          h: parseFloat(box.height),
-          r: parseFloat(box.borderTopLeftRadius),
-          lineWidth: parseFloat(box.borderTopWidth),
+          x: m.padX, y: box.top + parseFloat(box2.marginTop),
+          w: size, h: parseFloat(box2.height),
+          r: parseFloat(box2.borderTopLeftRadius),
+          lineWidth: parseFloat(box2.borderTopWidth),
           checked: input.checked,
-          color: input.checked ? box.backgroundColor : box.borderTopColor
+          color: input.checked ? box2.backgroundColor : box2.borderTopColor
         });
-        y = line.bottom + (i < items.length - 1 ? rowGap : 0);
-      });
-      return y;
+      }, 'label');
     }
   },
 
-  steps: {
-    // shares p= with explainer: same content, different presentation, so a
-    // model that picks the wrong one of the two still produces something valid
-    has: d => !!(d.h || d.v || d.p.length),
-
-    body: d => !d.p.length ? '' :
-      '<ol class="steps">' + d.p.map((step, i) =>
-        '<li><span class="n">' + (i + 1) + '</span><span>' + esc(step) + '</span></li>'
-      ).join('') + '</ol>',
-
-    measure(y, m){
-      const items = [...document.querySelectorAll('#main .steps li')];
-      if(!items.length) return y;
-      const row = m.styleOfEl(items[0]);
-      const rowGap = parseFloat(getComputedStyle(document.querySelector('#main .steps')).rowGap);
-      const colGap = parseFloat(row.s.columnGap);
-      const markerW = parseFloat(getComputedStyle(items[0].querySelector('.n')).width);
-
-      items.forEach((el, i) => {
-        const marker = el.querySelector('.n');
-        const markerSt = m.styleOfEl(marker);
-        // same font and line-height as the row, so both sit on one baseline
-        m.block(y, markerSt, m.runsIn(marker, markerSt.upper));
-        const box = m.block(y, row, m.runsIn(el.querySelector('span:last-child'), row.upper),
-                            {indent: markerW + colGap});
-        y = box.bottom + (i < items.length - 1 ? rowGap : 0);
-      });
-      return y;
-    }
-  },
-
-  facts: {
-    has: d => !!(d.h || d.v || d.f.length),
-
-    // f=Label~Value. A tilde needs no escaping and is not on the list of
-    // characters WhatsApp objects to, so it costs one character.
-    body: d => !d.f.length ? '' :
-      '<div class="facts">' + d.f.map(row => {
+  f: {
+    // Label~Value. A tilde needs no escaping and is not one of the characters
+    // WhatsApp objects to, so a separator costs one character.
+    body(items){
+      return '<div class="facts">' + items.map(row => {
         const cut = row.indexOf('~');
         const key = cut < 0 ? row : row.slice(0, cut);
         const value = cut < 0 ? '' : row.slice(cut + 1);
         return '<div class="fact"><span class="fk">' + esc(key) + '</span>' +
                (value ? '<span class="fv">' + esc(value) + '</span>' : '') + '</div>';
-      }).join('') + '</div>',
+      }).join('') + '</div>';
+    },
 
-    measure(y, m){
-      const rows = [...document.querySelectorAll('#main .fact')];
-      rows.forEach((el, i) => {
+    measure(y, m, section){
+      [...section.querySelectorAll('.fact')].forEach((el, i) => {
         const st = m.styleOfEl(el);
         if(i){
           const rule = parseFloat(st.s.borderTopWidth);
@@ -675,24 +648,22 @@ const SHAPES = {
     }
   },
 
-  stats: {
-    has: d => !!(d.h || d.v || d.n.length),
-
-    // n=Value~Label, in the order you read them
-    body: d => !d.n.length ? '' :
-      '<div class="stats">' + d.n.map(row => {
+  n: {
+    // Value~Label, in the order you read them
+    body(items){
+      return '<div class="stats">' + items.map(row => {
         const cut = row.indexOf('~');
         const value = cut < 0 ? row : row.slice(0, cut);
         const label = cut < 0 ? '' : row.slice(cut + 1);
         return '<div class="stat"><div class="sv">' + esc(value) + '</div>' +
                (label ? '<div class="sl">' + esc(label) + '</div>' : '') + '</div>';
-      }).join('') + '</div>',
+      }).join('') + '</div>';
+    },
 
-    measure(y, m){
-      const stats = [...document.querySelectorAll('#main .stat')];
+    measure(y, m, section){
+      const stats = [...section.querySelectorAll('.stat')];
       if(!stats.length) return y;
-      const gap = parseFloat(getComputedStyle(document.querySelector('#main .stats')).rowGap);
-
+      const gap = parseFloat(getComputedStyle(section.querySelector('.stats')).rowGap);
       stats.forEach((stat, i) => {
         if(i) y += gap;
         for(const sel of ['.sv', '.sl']){
@@ -704,49 +675,16 @@ const SHAPES = {
       });
       return y;
     }
-  },
-
-  compare: {
-    has: d => !!(d.h || d.v || d.la.length || d.ra.length),
-
-    // l=/r= name the options, la=/ra= are the points under each
-    body(d){
-      const side = (name, points) =>
-        (!name && !points.length) ? '' :
-        '<section class="side">' +
-          (name ? '<h2 class="opt">' + esc(name) + '</h2>' : '') +
-          (points.length ? bulletsHTML(points) : '') +
-        '</section>';
-      return side(d.l, d.la) + side(d.r, d.ra);
-    },
-
-    measure(y, m){
-      const sides = [...document.querySelectorAll('#main .side')];
-      sides.forEach((section, i) => {
-        if(i) y += parseFloat(getComputedStyle(section).marginTop);
-        const heading = section.querySelector('.opt');
-        if(heading){
-          const st = m.styleOfEl(heading);
-          y = m.block(y, st, m.runsIn(heading, st.upper)).bottom + st.marginBottom;
-        }
-        const list = section.querySelector('.points');
-        if(list) y = measureBullets(y, m, list);
-      });
-      return y;
-    }
   }
 };
 
-// own-property lookup only: s= is attacker-controlled and must never reach
-// anything inherited from Object.prototype
-function shapeFor(d){
-  return Object.prototype.hasOwnProperty.call(SHAPES, d.s) ? SHAPES[d.s] : SHAPES.explainer;
-}
+// own-property lookup only: block keys come from the URL
+const blockKind = type =>
+  Object.prototype.hasOwnProperty.call(BLOCKS, type) ? BLOCKS[type] : null;
 
 // returns the contents of the three regions - never the regions themselves
 function render(d){
-  var shape = shapeFor(d);
-  if(!shape.has(d)) return broken();
+  if(!d.h && !d.v && !d.blocks.length) return broken();
 
   // head: same component and type as the homepage's, minus the logo - the
   // mark is our branding, and a card is the sender's content
@@ -758,7 +696,14 @@ function render(d){
   var main = '';
   if(d.h) main += '<h1>' + esc(d.h) + '</h1>';
   if(d.v) main += '<p class="verdict">' + esc(d.v) + '</p>';
-  main += shape.body(d);
+  main += d.blocks.map(function(b){
+    var kind = blockKind(b.type);
+    if(!kind) return '';
+    return '<section class="block" data-block="' + b.type + '">' +
+      (b.label ? '<h2 class="bl">' + esc(b.label) + '</h2>' : '') +
+      kind.body(b.items, d.k) +
+    '</section>';
+  }).join('');
 
   var foot = '<div class="meta">' +
     '<div class="sig">' +
@@ -773,6 +718,26 @@ function render(d){
   return {head: head, main: main, foot: foot};
 }
 
+/* Ticks rewrite the fragment, so a viewer who works through a list ends up
+   holding a link to their own version and can pass it on. replaceState rather
+   than assignment: it leaves the back button alone and fires no hashchange, so
+   this cannot loop back into draw(). One k= covers every checklist on the
+   card, in document order. */
+function bindChecks(){
+  var boxes = [].slice.call(document.querySelectorAll('.checks input'));
+  if(!boxes.length) return;
+  boxes.forEach(function(box){
+    box.addEventListener('change', function(){
+      var bits = boxes.map(function(b){ return b.checked ? '1' : '0'; }).join('');
+      var frag = location.hash.replace(/^#/, '');
+      var next = /(^|&)k=[^&]*/.test(frag)
+        ? frag.replace(/(^|&)k=[^&]*/, '$1k=' + bits)
+        : frag + '&k=' + bits;
+      history.replaceState(null, '', '#' + next);
+    });
+  });
+}
+
 if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 function draw(){
@@ -785,8 +750,7 @@ function draw(){
   document.getElementById('main').innerHTML = r.main;
   document.getElementById('foot').innerHTML = r.foot;
   shareImage.bind();
-  const shape = shapeFor(parse(location.hash));
-  if(shape.bind) shape.bind();
+  bindChecks();
   window.scrollTo(0, 0);
 }
 
@@ -1012,11 +976,18 @@ const shareImage = (() => {
       }
     }
 
-    // the shape owns everything between the verdict and the foot
-    const shape = shapeFor(parse(location.hash));
-    if(shape.measure){
-      y = shape.measure(y, {block, ops, accent, hair, colWidth, styleOf, styleOfEl, runsIn, padX: IMG.padX});
-    }
+    // up to three blocks fill the space between the verdict and the foot
+    const m = {block, ops, accent, hair, colWidth, styleOf, styleOfEl, runsIn, padX: IMG.padX};
+    [...document.querySelectorAll('#main .block')].forEach((section, i) => {
+      if(i) y += parseFloat(getComputedStyle(section).marginTop);
+      const label = section.querySelector('.bl');
+      if(label){
+        const st = styleOfEl(label);
+        y = block(y, st, runsIn(label, st.upper)).bottom + st.marginBottom;
+      }
+      const kind = blockKind(section.dataset.block);
+      if(kind) y = kind.measure(y, m, section);
+    });
 
     // foot: hairline, then signature and credit
     const foot = getComputedStyle(document.getElementById('foot'));

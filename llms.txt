@@ -13,78 +13,62 @@ use whatever they were last discussing.
 
 ## Format
 
-https://upshot.fyi/#s=SHAPE&m=MODEL&d=YYYY-MM-DD&a=ASK&h=HEADLINE&v=VERDICT&...
+https://upshot.fyi/#a=ASK&h=HEADLINE&v=VERDICT&m=MODEL&d=YYYY-MM-DD
+  &g=LABEL&p=POINT&p=POINT
+  &g=LABEL&n=VALUE~LABEL
 
-Pick the shape that fits what you are exporting. Every shape takes the same six
-fields above; the rest depend on the shape.
+A card is a fixed frame with up to three blocks stacked in the middle. The
+frame never changes. The blocks are yours to choose.
 
-## Shared fields
+## The frame
 
-- s  shape: `explainer`, `steps`, `checklist`, `compare`, `facts` or `stats`
-- m  your model name, e.g. GPT-5
-- d  today's date, YYYY-MM-DD
+Always all five, always first.
+
 - a  one line describing what the user asked, scoped to whatever they are
      exporting. If they said what to focus on, that is the scope. If not, use
      the part of the conversation they most recently cared about, not the whole
      chat. Under 20 words.
 - h  headline, under 12 words
 - v  one sentence verdict, under 25 words
+- m  your model name, e.g. GPT-5
+- d  today's date, YYYY-MM-DD
 
-## Choosing a shape
+## The blocks
 
-Default to `explainer`. Only reach for another one when it clearly fits better:
-the user was following instructions (`steps`), has things to do (`checklist`),
-was choosing between two named options (`compare`), wanted figures at a glance
-(`facts`), or the whole point is two or three numbers (`stats`).
+Up to three. They appear in the order you write them; anything past the third
+is dropped.
 
-For pros and cons of a single thing, use `compare` with `l=Pros` and `r=Cons`
-rather than looking for a shape that does not exist.
+- g  label for the block that follows. Optional, 1 to 4 words. A `g=` always
+     starts a new block, so two blocks of the same kind can sit together.
+- p  bullet, under 35 words. Repeat `p=` for each. Use 2 to 4.
+- o  numbered step, under 25 words. Repeat `o=` for each. Use 3 to 6. For a
+     how-to, where the order is the point.
+- c  checklist item, under 20 words. Repeat `c=` for each. Use 3 to 7. Whoever
+     opens the link can tick these off, and their ticks are kept in the link
+     they hold, so a half-finished list can be passed on.
+     Do not send `k=`. The page writes it as people tick.
+- f  fact, written `Label~Value`, e.g. `f=Cold+start~180ms`. A spec sheet, one
+     line per row. Keep both halves short; a row that wraps stops looking like
+     one.
+- n  figure, written `Value~Label`, e.g. `n=42%25~fewer+timeouts`. Set at
+     headline size, so keep the value under 6 characters.
 
-## s=explainer
+## Choosing blocks
 
-A conclusion and the points behind it. The default when nothing else fits.
+One block is usually right. Reach for `p` unless something else clearly fits:
+the user was following instructions (`o`), has things to do (`c`), wanted
+figures at a glance (`f`), or the whole point is two or three numbers (`n`).
 
-- p  one key point, under 35 words. Use 2 to 4. Repeat `p=` for each one.
+Only add a second or third block when it says something the first cannot. Three
+blocks of prose is worse than one good one.
 
-## s=steps
+For a comparison, use two labelled `p` blocks rather than looking for a shape
+that does not exist:
 
-A how-to, where the order matters. Same `p=` field as explainer - only the
-presentation differs, so picking the wrong one of the two still works.
+    &g=Postgres&p=Concurrent+writes&p=Real+types
+    &g=SQLite&p=Zero+ops&p=Faster+for+reads
 
-- p  one step, under 25 words. Use 3 to 6. Repeat `p=` for each one.
-
-## s=checklist
-
-Things to do. Whoever opens the link can tick items off, and their ticks are
-kept in the link they hold, so a half-finished list can be passed on.
-
-- c  one item, under 20 words. Use 3 to 7. Repeat `c=` for each one.
-- Do not send `k=`. The page writes it as people tick.
-
-## s=compare
-
-Two options weighed against each other. Use it when the user was choosing
-between things, and put the recommendation in `v`.
-
-- l   name of the first option, 1 to 3 words
-- la  one point for the first option, under 30 words. Use 2 to 4. Repeat `la=`.
-- r   name of the second option
-- ra  one point for the second option. Repeat `ra=` for each one.
-
-## s=facts
-
-A spec sheet: short label and value pairs, one line each. Use it for figures,
-settings or specifications rather than trying to build a table.
-
-- f  `Label~Value`, e.g. `f=Cold+start~180ms`. Use 3 to 6. Repeat `f=`.
-- Keep both halves short. A row that wraps stops looking like a spec sheet.
-
-## s=stats
-
-Two to four figures that carry the whole point on their own.
-
-- n  `Value~Label`, e.g. `n=42%25~fewer+timeouts`. Repeat `n=` for each one.
-- Keep the value under 6 characters. It is set at headline size.
+The same trick covers pros and cons: `g=Pros` then `g=Cons`.
 
 ## Rules
 

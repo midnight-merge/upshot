@@ -42,7 +42,7 @@ JS would be invisible to the thing it exists for.
 to submit content to a website, which it refuses. Asking it to *read* the
 domain works.
 
-## The card
+## Layout and the share image
 
 An export is an ordinary scrolling page, one phone-width column at every
 viewport - no media queries, no viewport units, nothing that depends on
@@ -59,34 +59,47 @@ before allocating the canvas, so the image cannot come out clipped. It reads
 typography, colour and box metrics off the live computed styles, so the
 stylesheet stays the one place the design is defined.
 
-## Shapes
+## The card
 
-`s=` picks what the middle of the card is. Three exist:
+A fixed frame with up to three blocks stacked in the middle. The frame is
+always the same shape, whatever the export is about:
 
 | | |
 |---|---|
-| `explainer` | a conclusion and the points behind it. The default |
-| `steps` | a how-to where order matters. Shares `p=` with explainer - only the presentation differs |
-| `checklist` | things to do, tappable. Ticks are written back into the fragment, so a viewer ends up holding a link to their own half-finished version and can pass it on |
-| `compare` | two named options with points under each, stacked |
-| `facts` | a spec sheet of `Label~Value` rows. What most people wanted a table for, without the table |
-| `stats` | two to four figures at headline size |
+| scope line | mono, quiet, one line on what was asked |
+| headline | the conclusion, set large |
+| verdict | one sentence, indented behind an accent rule |
+| **blocks** | 0 to 3, each optionally labelled |
+| signature | model, date, and how to make your own |
 
-Six is about the ceiling. Every shape costs two implementations that have to
-agree, a test case, and - the one that bites - a harder decision for the model.
-The spec is a prompt, and past a handful of options an LLM starts guessing; a
-mis-picked shape is a worse export than a plain explainer would have been.
+That fixed frame is the whole design language. Accent appears in exactly three
+places - the verdict rule, the block labels, and the markers - so a card is
+recognisable at a glance no matter which blocks it uses.
 
-A shape owns only the body beneath the verdict - the scope line, headline,
-verdict and signature are the same whatever it is. Each declares three things
-in `SHAPES`: whether a fragment carries its content, the HTML for its body, and
-how the share renderer redraws that body in canvas ops.
+`g=` starts a block and labels it; the key that follows decides what kind:
 
-That last one is the tax for a hand-drawn share image: every shape is two
-implementations that have to agree. `node test/run.js` renders each shape and
-checks the renderer's height against the browser's, which is what tells you
-when they have stopped agreeing. A shape with no `measure()` still works as a
-page, it just cannot be exported as an image.
+| | |
+|---|---|
+| `p` | bullets |
+| `o` | numbered steps, where order is the point |
+| `c` | checklist, tappable. Ticks are written back into the fragment, so a viewer ends up holding a link to their own half-finished version and can pass it on |
+| `f` | `Label~Value` rows. A spec sheet - what most people wanted a table for, without the table |
+| `n` | `Value~Label` figures at headline size |
+
+Composition rather than a fixed set of card types, because the alternative was
+an enum the model had to classify into, and past a handful of options an LLM
+starts guessing. There is nothing to classify now: it picks blocks that fit.
+A comparison is two labelled `p` blocks, which is also pros and cons, which is
+also anything else that pairs.
+
+Three is the cap. Not a technical limit - a card that needs four blocks is two
+cards.
+
+Each block declares two things in `BLOCKS`: the HTML for its items, and how the
+share renderer redraws them in canvas ops. That second one is the tax for a
+hand-drawn share image: every block is two implementations that have to agree.
+`node test/run.js` renders each one and checks the renderer's height against
+the browser's, which is what tells you when they have stopped agreeing.
 
 ## Gotcha: WhatsApp and punctuation
 
