@@ -29,6 +29,14 @@ body{
   /* export content is arbitrary AI text with no length guarantee - never let
      one long unbroken token overflow the card and trigger mobile auto-zoom */
   overflow-wrap:anywhere;
+  /* Trailing space at the end of the document. Chrome on iOS stops the scroll
+     with the last of the page still under its bottom toolbar - you can drag
+     past it, but it rubber-bands straight back. Ordinary sites do not show
+     this because they have slack down there; this card ended 30px after the
+     credit line. Static, because the moment the two viewport heights diverge
+     is not one that fires any event to measure at. */
+  padding-bottom:160px;
+
   /* an ordinary scrolling document - no viewport lock, no nested scrollport,
      and deliberately no min-height:100vh. On iOS, 100vh is the LARGE viewport
      (the height with the address bar retracted), so it stretches the body
