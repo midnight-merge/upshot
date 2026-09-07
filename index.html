@@ -13,11 +13,6 @@
   --faint:#8E91A6;
   --accent:#C8FF3D;
   --hair:rgba(247,247,244,.12);
-  /* the gap above the signature. A custom property rather than a bare
-     margin because the share renderer reads it too, and once .foot is
-     position:fixed getComputedStyle reports its USED margin-top - which the
-     absolute-positioning algorithm resolves to 0. A variable is immune. */
-  --foot-gap:34px;
   /* the platform's own faces - nothing to download, and none of the
      Google-Fonts pairings that read as templated */
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -59,7 +54,7 @@ body{
 /* foot - the hairline and spacing live HERE, not on .meta, so the homepage
    (credit only) and a card (signature + credit) open the same way */
 .foot{
-  margin-top:var(--foot-gap);
+  margin-top:34px;
   padding-top:18px;
   border-top:1px solid var(--hair);
 }
@@ -67,28 +62,6 @@ body{
 
 /* the page scrolls, not this - ordinary flow */
 main > :last-child{margin-bottom:0}
-
-/* Data page only: the signature is furniture, not the end of the document,
-   so it stays on screen and the export scrolls behind it. Sized to the
-   sheet's own text column rather than the full width, so the hairline lines
-   up with the content above it - the 26px gutters either side are body
-   background in the same colour, and nothing ever renders in them. */
-[data-page="card"] .foot{
-  position:fixed;
-  left:0; right:0; bottom:0;
-  margin:0 auto;
-  width:calc(100% - 52px);
-  max-width:378px;
-  background:var(--card);
-  /* the sheet's bottom padding used to provide this - a fixed element is
-     outside it, and the inset keeps the credit clear of the home indicator */
-  padding-bottom:calc(14px + env(safe-area-inset-bottom));
-  z-index:1;
-}
-/* Room for it. The credit wraps to one or two lines and the model name can
-   wrap the signature, so the height is content-dependent - measured from the
-   real element rather than written down here as a number that would drift. */
-[data-page="card"] main{padding-bottom:var(--foot-h,150px)}
 
 /* ONE header line, used by both the homepage and a card. Only the text
    inside it ever differs - so the header does not change size, weight or
@@ -412,8 +385,6 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 function draw(){
   var frag = location.hash.replace(/^#/,'');
   if(!frag) return;                     // no fragment: leave the static landing page
-  // the one thing that distinguishes the two page types, so CSS can tell
-  document.documentElement.dataset.page = 'card';
   var r = render(parse(location.hash));
   // fill the existing regions; the shell itself is never rebuilt, so the
   // layout does not change shape mid-load
@@ -670,9 +641,7 @@ const shareImage = (() => {
     // foot: hairline, then signature and credit
     const foot = getComputedStyle(document.getElementById('foot'));
     const hairline = parseFloat(foot.borderTopWidth);
-    // --foot-gap, not the computed margin: on the data page .foot is fixed,
-    // and getComputedStyle hands back the used margin-top, which is 0
-    y += parseFloat(cssVar('--foot-gap'));
+    y += parseFloat(foot.marginTop);
     ops.push({kind: 'rect', x: IMG.padX, y, w: colWidth, h: hairline, color: hair});
     y += hairline + parseFloat(foot.paddingTop);
 
@@ -849,18 +818,6 @@ const shareImage = (() => {
 draw();
 window.addEventListener('hashchange', draw);
 
-/* The pinned foot overlays the end of the export, so main needs exactly its
-   height as clearance. Measured, not assumed: it changes with wrapping, with
-   the model name, and once more when the webfonts settle. The element itself
-   survives every render - only its contents are replaced - so one observer
-   set up here lasts the life of the page. */
-new ResizeObserver(([entry]) => {
-  // the border box - contentRect would omit the 18px padding-top, the
-  // safe-area padding-bottom and the hairline, and the foot would sit over
-  // the last line of the export by exactly that much
-  const h = entry.target.getBoundingClientRect().height;
-  document.documentElement.style.setProperty('--foot-h', `${Math.ceil(h)}px`);
-}).observe(document.getElementById('foot'));
 </script>
 </body>
 </html>

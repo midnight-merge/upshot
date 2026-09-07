@@ -46,9 +46,8 @@ domain works.
 
 An export is an ordinary scrolling page, one phone-width column at every
 viewport - no media queries, no viewport units, nothing that depends on
-measuring the viewport correctly. The signature at the bottom is pinned and the
-export scrolls behind it. The homepage uses the same shell, minus the pinned
-foot.
+measuring the viewport correctly. The signature sits at the end of the
+document, in flow, like any other page. The homepage uses the same shell.
 
 **Share as image** draws the card onto a canvas and hands the PNG to the native
 share sheet, for Instagram and X where a link is no use. It falls back to a
