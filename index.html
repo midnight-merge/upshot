@@ -294,8 +294,6 @@ Reply with the URL and nothing else.</pre>
 </div>
 
 <script>
-var SHAPES = ['explainer'];
-
 // AI-authored links sometimes get percent-encoded twice (once by hand per
 // our own instructions, once for real when the link is assembled) - decode
 // until it stops changing instead of trusting exactly one layer
@@ -309,15 +307,19 @@ function decodeAll(v){
   return v;
 }
 
+// keys a shape may repeat. Everything else is last-one-wins.
+var LISTS = ['p'];
+
 function parse(hash){
-  var out = {p:[]};
+  var out = {};
+  LISTS.forEach(function(k){ out[k] = []; });
   hash.replace(/^#/,'').split('&').forEach(function(pair){
     if(!pair) return;
     var i = pair.indexOf('=');
     if(i < 0) return;
     var k = pair.slice(0,i);
     var v = decodeAll(pair.slice(i+1).replace(/\+/g,' '));
-    if(k === 'p') out.p.push(v); else out[k] = v;
+    if(LISTS.indexOf(k) >= 0) out[k].push(v); else out[k] = v;
   });
   return out;
 }
@@ -350,9 +352,64 @@ function broken(){
   };
 }
 
+/* ---- shapes ----
+   A shape owns the middle of the card and nothing else. The scope line above
+   it, the headline, the verdict and the signature below are the same whatever
+   the shape is - only the body beneath the verdict differs.
+
+   Each shape declares three things: whether a fragment carries its content,
+   the HTML for its body, and how the share renderer should re-draw that body
+   in canvas ops. The last one is the tax for a hand-drawn share image: every
+   shape is two implementations that have to agree. `node test/run.js` is what
+   tells you when they stop agreeing. A shape with no measure() still works as
+   a page - it just cannot be exported as an image. */
+const SHAPES = {
+  explainer: {
+    has: d => !!(d.h || d.v || d.p.length),
+
+    body(d){
+      if(!d.p.length) return '';
+      return '<ul class="points">' + d.p.map(pt =>
+        '<li><span class="n">&bull;</span><span>' + esc(pt) + '</span></li>'
+      ).join('') + '</ul>';
+    },
+
+    measure(y, m){
+      const item = m.styleOf('#main .points li');
+      if(!item) return y;
+      const rowGap = parseFloat(getComputedStyle(document.querySelector('.points')).rowGap);
+      const colGap = parseFloat(item.s.columnGap);
+      const dot = getComputedStyle(document.querySelector('.points .n'));
+      const dotW = parseFloat(dot.width);
+      const dotH = parseFloat(dot.height);
+      const dotTop = parseFloat(dot.marginTop);
+      const items = [...document.querySelectorAll('.points li')];
+
+      items.forEach((el, i) => {
+        const box = m.block(y, item, m.runsIn(el.querySelector('span:last-child'), item.upper),
+                            {indent: dotW + colGap});
+        m.ops.push({
+          kind: 'dot', color: m.accent, r: dotW / 2,
+          x: m.padX + dotW / 2,
+          y: box.top + dotTop + dotH / 2
+        });
+        y = box.bottom + (i < items.length - 1 ? rowGap : 0);
+      });
+      return y;
+    }
+  }
+};
+
+// own-property lookup only: s= is attacker-controlled and must never reach
+// anything inherited from Object.prototype
+function shapeFor(d){
+  return Object.prototype.hasOwnProperty.call(SHAPES, d.s) ? SHAPES[d.s] : SHAPES.explainer;
+}
+
 // returns the contents of the three regions - never the regions themselves
 function render(d){
-  if(!d.h && !d.v && !d.p.length) return broken();
+  var shape = shapeFor(d);
+  if(!shape.has(d)) return broken();
 
   // head: same component and type as the homepage's, minus the logo - the
   // mark is our branding, and a card is the sender's content
@@ -364,13 +421,7 @@ function render(d){
   var main = '';
   if(d.h) main += '<h1>' + esc(d.h) + '</h1>';
   if(d.v) main += '<p class="verdict">' + esc(d.v) + '</p>';
-  if(d.p.length){
-    main += '<ul class="points">';
-    d.p.forEach(function(pt){
-      main += '<li><span class="n">&bull;</span><span>' + esc(pt) + '</span></li>';
-    });
-    main += '</ul>';
-  }
+  main += shape.body(d);
 
   var foot = '<div class="meta">' +
     '<div class="sig">' +
@@ -621,26 +672,10 @@ const shareImage = (() => {
       }
     }
 
-    const item = styleOf('#main .points li');
-    if(item){
-      const rowGap = parseFloat(getComputedStyle(document.querySelector('.points')).rowGap);
-      const colGap = parseFloat(item.s.columnGap);
-      const dot = getComputedStyle(document.querySelector('.points .n'));
-      const dotW = parseFloat(dot.width);
-      const dotH = parseFloat(dot.height);
-      const dotTop = parseFloat(dot.marginTop);
-      const items = [...document.querySelectorAll('.points li')];
-
-      items.forEach((el, i) => {
-        const box = block(y, item, runsIn(el.querySelector('span:last-child'), item.upper),
-                          {indent: dotW + colGap});
-        ops.push({
-          kind: 'dot', color: accent, r: dotW / 2,
-          x: IMG.padX + dotW / 2,
-          y: box.top + dotTop + dotH / 2
-        });
-        y = box.bottom + (i < items.length - 1 ? rowGap : 0);
-      });
+    // the shape owns everything between the verdict and the foot
+    const shape = shapeFor(parse(location.hash));
+    if(shape.measure){
+      y = shape.measure(y, {block, ops, accent, styleOf, runsIn, padX: IMG.padX});
     }
 
     // foot: hairline, then signature and credit
