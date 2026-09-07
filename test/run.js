@@ -50,6 +50,10 @@ const CASES = [
   ['longtoken', `#h=${'A'.repeat(120)}&v=ok&p=fine`],
   ['nodate',    `#h=No date here&v=ok&p=fine&m=GPT-5`],
   ['noscope',   `#h=No scope line&v=ok&p=one&p=two&m=GPT-5&d=2026-09-07`],
+  ['checklist',      `#s=checklist&m=GPT-5&d=2026-09-07&a=Before the launch&h=What is left to do&v=Two of these block the release&c=Vendor the library into the repo&c=Swap the script tag for a local path&c=Drop the CSP exception&c=${POINT}`],
+  ['checklistTicked', `#s=checklist&m=GPT-5&d=2026-09-07&h=Half done&v=Progress&c=First item&c=Second item&c=Third item&k=101`],
+  ['compare',        `#s=compare&m=Claude Opus 5&d=2026-09-07&a=Picking a database for the new service&h=Postgres or SQLite&v=Postgres, unless you are shipping to the edge&l=Postgres&la=Concurrent writes without a global lock&la=Real types, extensions, and a query planner worth trusting&r=SQLite&ra=Zero ops - it is one file on disk&ra=Faster for read-heavy work at small scale`],
+  ['compareOneSided', `#s=compare&h=Only one option given&v=Should still render&l=Postgres&la=One point&la=Two points`],
   ['absurd',    `#h=Tall&v=v${`&p=${WORDY}`.repeat(9)}`],
   ['gigantic',  `#h=Tall&v=v${`&p=${WORDY}`.repeat(40)}`]
 ];

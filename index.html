@@ -140,6 +140,62 @@ p{margin:0 0 15px;font-size:15px;color:var(--dim)}
 }
 .points strong{font-weight:600;color:var(--ink)}
 
+/* checklist - a real <input type=checkbox> inside a <label>, so it is
+   focusable, tappable anywhere along the row, and reaches a screen reader as
+   a checkbox. appearance:none only takes the native look away, not the
+   semantics. A ticked item goes quiet rather than struck through: the share
+   renderer reads each row's own computed colour, so the state costs it
+   nothing to reproduce. */
+.checks{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.checks label{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  cursor:pointer;
+  font-size:15.5px;
+  line-height:1.5;
+  color:var(--dim);
+}
+.checks input{
+  appearance:none;
+  -webkit-appearance:none;
+  flex:none;
+  width:16px;
+  height:16px;
+  margin:3px 0 0;
+  border:1.5px solid var(--faint);
+  border-radius:4px;
+  background:transparent;
+  cursor:pointer;
+}
+.checks input:checked{background:var(--accent);border-color:var(--accent)}
+.checks input:checked + span{color:var(--faint)}
+.checks input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* comparison - the two options stack. Side by side in a 378px column is not a
+   comparison, it is two very narrow lists. The option name reuses the
+   signature's mono register so it reads as a label, not a second headline;
+   the padding and rule are reset because h2 is styled for the landing page. */
+.side + .side{margin-top:27px}
+.opt{
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:400;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin:0 0 13px;
+  padding-top:0;
+  border-top:0;
+}
+
 /* metadata sits at the bottom like a signature, not a footer bar */
 .meta{
   display:flex;
@@ -244,15 +300,29 @@ pre{
 
     <h2>Format</h2>
     <p class="note">For any AI reading this page.</p>
-<pre>https://upshot.fyi/#s=explainer&amp;m=MODEL&amp;d=YYYY-MM-DD&amp;a=ASK&amp;h=HEADLINE&amp;v=VERDICT&amp;p=POINT&amp;p=POINT
+<pre>https://upshot.fyi/#s=SHAPE&amp;m=MODEL&amp;d=YYYY-MM-DD&amp;a=ASK&amp;h=HEADLINE&amp;v=VERDICT&amp;...
 
-s  shape. Only "explainer" exists right now.
+Every shape takes s, m, d, a, h and v. The rest depends on the shape.
+
+s  shape: explainer, checklist or compare
 m  your model name, e.g. GPT-5
 d  today's date, YYYY-MM-DD
 a  one line on what the user asked, scoped to what they are exporting, under 20 words
 h  headline, under 12 words
 v  one sentence verdict, under 25 words
+
+s=explainer   a conclusion and the points behind it
 p  one key point, under 35 words. Use 2 to 4. Repeat p= for each.
+
+s=checklist   things to do. Whoever opens the link can tick them off.
+c  one item, under 20 words. Use 3 to 7. Repeat c= for each.
+   Do not send k= - the page writes that as people tick.
+
+s=compare     two options weighed against each other
+l  name of the first option, 1 to 3 words
+la one point for it, under 30 words. Use 2 to 4. Repeat la= for each.
+r  name of the second option
+ra one point for it. Repeat ra= for each.
 
 RULES
 Every space becomes + . The URL must contain no spaces.
@@ -308,7 +378,7 @@ function decodeAll(v){
 }
 
 // keys a shape may repeat. Everything else is last-one-wins.
-var LISTS = ['p'];
+var LISTS = ['p', 'c', 'la', 'ra'];
 
 function parse(hash){
   var out = {};
@@ -363,37 +433,135 @@ function broken(){
    shape is two implementations that have to agree. `node test/run.js` is what
    tells you when they stop agreeing. A shape with no measure() still works as
    a page - it just cannot be exported as an image. */
+// Bullets belong to two shapes now, so they get one implementation each side
+// of the divide - one for the page, one for the canvas - rather than four.
+const bulletsHTML = points => '<ul class="points">' + points.map(pt =>
+  '<li><span class="n">&bull;</span><span>' + esc(pt) + '</span></li>'
+).join('') + '</ul>';
+
+function measureBullets(y, m, list){
+  const items = [...list.querySelectorAll('li')];
+  if(!items.length) return y;
+  const item = m.styleOfEl(items[0]);
+  const rowGap = parseFloat(getComputedStyle(list).rowGap);
+  const colGap = parseFloat(item.s.columnGap);
+  const dot = getComputedStyle(items[0].querySelector('.n'));
+  const dotW = parseFloat(dot.width);
+  const dotH = parseFloat(dot.height);
+  const dotTop = parseFloat(dot.marginTop);
+
+  items.forEach((el, i) => {
+    const box = m.block(y, item, m.runsIn(el.querySelector('span:last-child'), item.upper),
+                        {indent: dotW + colGap});
+    m.ops.push({
+      kind: 'dot', color: m.accent, r: dotW / 2,
+      x: m.padX + dotW / 2,
+      y: box.top + dotTop + dotH / 2
+    });
+    y = box.bottom + (i < items.length - 1 ? rowGap : 0);
+  });
+  return y;
+}
+
 const SHAPES = {
   explainer: {
     has: d => !!(d.h || d.v || d.p.length),
 
+    body: d => d.p.length ? bulletsHTML(d.p) : '',
+
+    measure(y, m){
+      const list = document.querySelector('#main .points');
+      return list ? measureBullets(y, m, list) : y;
+    }
+  },
+
+  checklist: {
+    has: d => !!(d.h || d.v || d.c.length),
+
+    /* k= is a string of 1s and 0s, one per item, written back by the page as
+       people tick. The AI never has to send it; an absent k= is all unticked. */
     body(d){
-      if(!d.p.length) return '';
-      return '<ul class="points">' + d.p.map(pt =>
-        '<li><span class="n">&bull;</span><span>' + esc(pt) + '</span></li>'
+      if(!d.c.length) return '';
+      const ticked = String(d.k || '');
+      return '<ul class="checks">' + d.c.map((item, i) =>
+        '<li><label><input type="checkbox"' +
+        (ticked[i] === '1' ? ' checked' : '') +
+        '><span>' + esc(item) + '</span></label></li>'
       ).join('') + '</ul>';
     },
 
+    /* Ticks rewrite the fragment, so a viewer who works through the list ends
+       up holding a link to their own version and can pass it on. replaceState
+       rather than assignment: it leaves the back button alone and fires no
+       hashchange, so this cannot loop back into draw(). */
+    bind(){
+      const boxes = [...document.querySelectorAll('.checks input')];
+      if(!boxes.length) return;
+      boxes.forEach(box => box.addEventListener('change', () => {
+        const bits = boxes.map(b => b.checked ? '1' : '0').join('');
+        const frag = location.hash.replace(/^#/, '');
+        const next = /(^|&)k=[^&]*/.test(frag)
+          ? frag.replace(/(^|&)k=[^&]*/, '$1k=' + bits)
+          : frag + '&k=' + bits;
+        history.replaceState(null, '', '#' + next);
+      }));
+    },
+
     measure(y, m){
-      const item = m.styleOf('#main .points li');
-      if(!item) return y;
-      const rowGap = parseFloat(getComputedStyle(document.querySelector('.points')).rowGap);
-      const colGap = parseFloat(item.s.columnGap);
-      const dot = getComputedStyle(document.querySelector('.points .n'));
-      const dotW = parseFloat(dot.width);
-      const dotH = parseFloat(dot.height);
-      const dotTop = parseFloat(dot.marginTop);
-      const items = [...document.querySelectorAll('.points li')];
+      const label = m.styleOf('.checks label');
+      if(!label) return y;
+      const rowGap = parseFloat(getComputedStyle(document.querySelector('.checks')).rowGap);
+      const colGap = parseFloat(label.s.columnGap);
+      const items = [...document.querySelectorAll('.checks li')];
 
       items.forEach((el, i) => {
-        const box = m.block(y, item, m.runsIn(el.querySelector('span:last-child'), item.upper),
-                            {indent: dotW + colGap});
+        const input = el.querySelector('input');
+        const box = getComputedStyle(input);
+        const size = parseFloat(box.width);
+        const line = m.block(y, label, m.runsIn(el.querySelector('span'), label.upper),
+                             {indent: size + colGap});
         m.ops.push({
-          kind: 'dot', color: m.accent, r: dotW / 2,
-          x: m.padX + dotW / 2,
-          y: box.top + dotTop + dotH / 2
+          kind: 'checkbox',
+          x: m.padX,
+          y: line.top + parseFloat(box.marginTop),
+          w: size,
+          h: parseFloat(box.height),
+          r: parseFloat(box.borderTopLeftRadius),
+          lineWidth: parseFloat(box.borderTopWidth),
+          checked: input.checked,
+          color: input.checked ? box.backgroundColor : box.borderTopColor
         });
-        y = box.bottom + (i < items.length - 1 ? rowGap : 0);
+        y = line.bottom + (i < items.length - 1 ? rowGap : 0);
+      });
+      return y;
+    }
+  },
+
+  compare: {
+    has: d => !!(d.h || d.v || d.la.length || d.ra.length),
+
+    // l=/r= name the options, la=/ra= are the points under each
+    body(d){
+      const side = (name, points) =>
+        (!name && !points.length) ? '' :
+        '<section class="side">' +
+          (name ? '<h2 class="opt">' + esc(name) + '</h2>' : '') +
+          (points.length ? bulletsHTML(points) : '') +
+        '</section>';
+      return side(d.l, d.la) + side(d.r, d.ra);
+    },
+
+    measure(y, m){
+      const sides = [...document.querySelectorAll('#main .side')];
+      sides.forEach((section, i) => {
+        if(i) y += parseFloat(getComputedStyle(section).marginTop);
+        const heading = section.querySelector('.opt');
+        if(heading){
+          const st = m.styleOfEl(heading);
+          y = m.block(y, st, m.runsIn(heading, st.upper)).bottom + st.marginBottom;
+        }
+        const list = section.querySelector('.points');
+        if(list) y = measureBullets(y, m, list);
       });
       return y;
     }
@@ -448,6 +616,8 @@ function draw(){
   document.getElementById('main').innerHTML = r.main;
   document.getElementById('foot').innerHTML = r.foot;
   shareImage.bind();
+  const shape = shapeFor(parse(location.hash));
+  if(shape.bind) shape.bind();
   window.scrollTo(0, 0);
 }
 
@@ -488,8 +658,9 @@ const shareImage = (() => {
      length. Every box metric resolves to px on a rendered element, so
      reading those needs no default, and giving them one would just be the
      design written down a second time. */
-  function styleOf(selector){
-    const el = document.querySelector(selector);
+  const styleOf = selector => styleOfEl(document.querySelector(selector));
+
+  function styleOfEl(el){
     if(!el) return null;
     const s = getComputedStyle(el);
     const size = parseFloat(s.fontSize);
@@ -675,7 +846,7 @@ const shareImage = (() => {
     // the shape owns everything between the verdict and the foot
     const shape = shapeFor(parse(location.hash));
     if(shape.measure){
-      y = shape.measure(y, {block, ops, accent, styleOf, runsIn, padX: IMG.padX});
+      y = shape.measure(y, {block, ops, accent, styleOf, styleOfEl, runsIn, padX: IMG.padX});
     }
 
     // foot: hairline, then signature and credit
@@ -783,6 +954,18 @@ const shareImage = (() => {
           ctx.beginPath();
           ctx.arc(op.x, op.y, op.r, 0, Math.PI * 2);
           ctx.fill();
+          break;
+        case 'checkbox':
+          // filled when ticked, outlined when not - same two states the CSS has
+          roundedPath(ctx, op.x, op.y, op.w, op.h, op.r);
+          if(op.checked){
+            ctx.fillStyle = op.color;
+            ctx.fill();
+          } else {
+            ctx.strokeStyle = op.color;
+            ctx.lineWidth = op.lineWidth;
+            ctx.stroke();
+          }
           break;
         case 'logo':
           drawLogo(ctx, op);

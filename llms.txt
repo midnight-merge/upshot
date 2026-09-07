@@ -13,11 +13,14 @@ use whatever they were last discussing.
 
 ## Format
 
-https://upshot.fyi/#s=explainer&m=MODEL&d=YYYY-MM-DD&a=ASK&h=HEADLINE&v=VERDICT&p=POINT&p=POINT&p=POINT
+https://upshot.fyi/#s=SHAPE&m=MODEL&d=YYYY-MM-DD&a=ASK&h=HEADLINE&v=VERDICT&...
 
-## Fields
+Pick the shape that fits what you are exporting. Every shape takes the same six
+fields above; the rest depend on the shape.
 
-- s  shape. Only `explainer` exists right now.
+## Shared fields
+
+- s  shape: `explainer`, `checklist` or `compare`
 - m  your model name, e.g. GPT-5
 - d  today's date, YYYY-MM-DD
 - a  one line describing what the user asked, scoped to whatever they are
@@ -26,7 +29,30 @@ https://upshot.fyi/#s=explainer&m=MODEL&d=YYYY-MM-DD&a=ASK&h=HEADLINE&v=VERDICT&
      chat. Under 20 words.
 - h  headline, under 12 words
 - v  one sentence verdict, under 25 words
+
+## s=explainer
+
+A conclusion and the points behind it. The default when nothing else fits.
+
 - p  one key point, under 35 words. Use 2 to 4. Repeat `p=` for each one.
+
+## s=checklist
+
+Things to do. Whoever opens the link can tick items off, and their ticks are
+kept in the link they hold, so a half-finished list can be passed on.
+
+- c  one item, under 20 words. Use 3 to 7. Repeat `c=` for each one.
+- Do not send `k=`. The page writes it as people tick.
+
+## s=compare
+
+Two options weighed against each other. Use it when the user was choosing
+between things, and put the recommendation in `v`.
+
+- l   name of the first option, 1 to 3 words
+- la  one point for the first option, under 30 words. Use 2 to 4. Repeat `la=`.
+- r   name of the second option
+- ra  one point for the second option. Repeat `ra=` for each one.
 
 ## Rules
 

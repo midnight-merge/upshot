@@ -59,6 +59,27 @@ before allocating the canvas, so the image cannot come out clipped. It reads
 typography, colour and box metrics off the live computed styles, so the
 stylesheet stays the one place the design is defined.
 
+## Shapes
+
+`s=` picks what the middle of the card is. Three exist:
+
+| | |
+|---|---|
+| `explainer` | a conclusion and the points behind it. The default |
+| `checklist` | things to do, tappable. Ticks are written back into the fragment, so a viewer ends up holding a link to their own half-finished version and can pass it on |
+| `compare` | two named options with points under each, stacked |
+
+A shape owns only the body beneath the verdict - the scope line, headline,
+verdict and signature are the same whatever it is. Each declares three things
+in `SHAPES`: whether a fragment carries its content, the HTML for its body, and
+how the share renderer redraws that body in canvas ops.
+
+That last one is the tax for a hand-drawn share image: every shape is two
+implementations that have to agree. `node test/run.js` renders each shape and
+checks the renderer's height against the browser's, which is what tells you
+when they have stopped agreeing. A shape with no `measure()` still works as a
+page, it just cannot be exported as an image.
+
 ## Gotcha: WhatsApp and punctuation
 
 A raw comma or full stop inside a value stops WhatsApp turning the text into a
