@@ -44,14 +44,29 @@ const POINT = 'A key point with enough words in it that it will wrap to two or t
 const WORDY = 'word '.repeat(90);
 
 const CASES = [
-  ['short',     `#s=explainer&m=GPT-5&d=2026-09-07&a=Short one&h=A short headline&v=One sentence verdict&p=First point&p=Second point`],
-  ['long',      `#m=Claude Opus 5&d=2026-09-07&a=Scope line&h=A considerably longer headline that will wrap onto three lines&v=A verdict sentence long enough to wrap across several lines in the card${`&p=${POINT}`.repeat(4)}`],
-  ['broken',    `#nonsense`],
-  ['longtoken', `#h=${'A'.repeat(120)}&v=ok&p=fine`],
-  ['nodate',    `#h=No date here&v=ok&p=fine&m=GPT-5`],
-  ['noscope',   `#h=No scope line&v=ok&p=one&p=two&m=GPT-5&d=2026-09-07`],
-  ['absurd',    `#h=Tall&v=v${`&p=${WORDY}`.repeat(9)}`],
-  ['gigantic',  `#h=Tall&v=v${`&p=${WORDY}`.repeat(40)}`]
+  // the frame on its own, and one block of each kind
+  ['bare',       `#h=Just a headline and a verdict&v=No blocks at all&m=GPT-5&d=2026-09-08`],
+  ['bullets',    `#m=GPT-5&d=2026-09-08&a=Short one&h=A short headline&v=One sentence verdict&p=First point&p=Second point`],
+  ['steps',      `#m=GPT-5&d=2026-09-08&a=Moving off the CDN build&h=Vendoring the library&v=About an hour, no downtime needed&o=Vendor the library into the repo&o=Swap the script tag for a local path&o=${POINT}&o=Drop the CSP exception`],
+  ['checks',     `#m=GPT-5&d=2026-09-08&a=Before the launch&h=What is left to do&v=Two of these block the release&c=Vendor the library into the repo&c=Swap the script tag for a local path&c=Drop the CSP exception&c=${POINT}`],
+  ['checksTicked', `#m=GPT-5&d=2026-09-08&h=Half done&v=Progress&c=First item&c=Second item&c=Third item&k=101`],
+  ['facts',      `#m=Claude Opus 5&d=2026-09-08&a=What the new service costs&h=Runtime and cost&v=Cheaper at every tier we measured&f=Runtime~Node 20&f=Cold start~180ms&f=Cost~$0.40 per million requests&f=Region~eu-west-2&f=A very long label that will wrap~and a value long enough to push it onto another line`],
+  ['stats',      `#m=GPT-5&d=2026-09-08&a=What the migration bought us&h=What the migration cost&v=Worth it, but not for the reasons we expected&n=42%~fewer timeouts&n=3.1x~faster cold start&n=6 wks~of engineer time`],
+
+  // composition: labels, several blocks, the cap
+  ['labelled',   `#m=GPT-5&d=2026-09-08&h=One labelled block&v=The label sits above it&g=What changed&p=First point&p=Second point`],
+  ['comparison', `#m=Claude Opus 5&d=2026-09-08&a=Picking a database&h=Postgres or SQLite&v=Postgres, unless you are shipping to the edge&g=Postgres&p=Concurrent writes without a global lock&p=Real types, extensions, a planner worth trusting&g=SQLite&p=Zero ops - it is one file on disk&p=Faster for read-heavy work at small scale`],
+  ['threeBlocks', `#m=GPT-5&d=2026-09-08&a=Everything at once&h=Three blocks stacked&v=The maximum the card allows&g=The numbers&n=42%~fewer timeouts&n=3.1x~faster cold start&g=What changed&p=The renderer draws the card itself now&p=Nothing is fetched from a third party&g=Still to do&c=Check it on a real phone&c=Merge the branch`],
+  ['overCap',    `#h=Four blocks, one dropped&v=Only the first three render&g=One&p=a&p=b&g=Two&o=c&o=d&g=Three&f=e~f&g=Four&n=9~should not appear`],
+  ['mixedNoLabels', `#h=Blocks without labels&v=Still stack in order&p=A bullet&f=Key~Value&n=7~things`],
+
+  // shapes of failure
+  ['broken',     `#nonsense`],
+  ['legacy',     `#s=explainer&m=GPT-5&d=2026-09-08&h=An old link&v=s= is ignored and p= still makes a block&p=This must render exactly as it always did`],
+  ['longtoken',  `#h=${'A'.repeat(120)}&v=ok&p=fine`],
+  ['bareFacts',  `#h=Rows with no value&v=Should not break&f=Just a label&f=Another~with a value`],
+  ['absurd',     `#h=Tall&v=v${`&p=${WORDY}`.repeat(9)}`],
+  ['gigantic',   `#h=Tall&v=v${`&p=${WORDY}`.repeat(40)}`]
 ];
 
 const fail = [];

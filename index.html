@@ -140,6 +140,128 @@ p{margin:0 0 15px;font-size:15px;color:var(--dim)}
 }
 .points strong{font-weight:600;color:var(--ink)}
 
+/* checklist - a real <input type=checkbox> inside a <label>, so it is
+   focusable, tappable anywhere along the row, and reaches a screen reader as
+   a checkbox. appearance:none only takes the native look away, not the
+   semantics. A ticked item goes quiet rather than struck through: the share
+   renderer reads each row's own computed colour, so the state costs it
+   nothing to reproduce. */
+.checks{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.checks label{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  cursor:pointer;
+  font-size:15.5px;
+  line-height:1.5;
+  color:var(--dim);
+}
+.checks input{
+  appearance:none;
+  -webkit-appearance:none;
+  flex:none;
+  width:16px;
+  height:16px;
+  margin:3px 0 0;
+  border:1.5px solid var(--faint);
+  border-radius:4px;
+  background:transparent;
+  cursor:pointer;
+}
+.checks input:checked{background:var(--accent);border-color:var(--accent)}
+.checks input:checked + span{color:var(--faint)}
+.checks input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* steps - ordered, so the marker is the number itself rather than a dot. It
+   carries the row's font and line-height so the two line boxes are identical
+   and the baselines agree without being told to; the canvas renderer leans on
+   that too. The digit lives in the markup, not a CSS counter, because the
+   share renderer has to be able to read it. */
+.steps{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+.steps li{
+  display:flex;
+  gap:12px;
+  font-size:15.5px;
+  line-height:1.5;
+  color:var(--dim);
+}
+.steps .n{
+  flex:none;
+  width:20px;
+  font-weight:600;
+  color:var(--accent);
+}
+
+/* facts - a spec sheet, which is what most people actually wanted a table for.
+   One line per row, label then value, both in the mono register so a single
+   font covers the row and the canvas renderer needs nothing new. */
+.facts{margin:0}
+.fact{
+  font-family:var(--mono);
+  font-size:12.5px;
+  line-height:1.6;
+  color:var(--ink);
+  padding-bottom:9px;
+}
+.fact + .fact{border-top:1px solid var(--hair);padding-top:9px}
+.fact:last-child{padding-bottom:0}
+.fact .fv{margin-left:10px}
+.fact .fk{color:var(--faint)}
+
+/* stats - two to four figures. The number carries the card, so it gets
+   headline treatment and the label stays out of its way. */
+.stats{
+  margin:0;
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+}
+.stat .sv{
+  font-size:34px;
+  font-weight:700;
+  line-height:1.12;
+  letter-spacing:-.03em;
+  color:var(--ink);
+}
+.stat .sl{
+  font-size:13px;
+  line-height:1.4;
+  color:var(--faint);
+  margin-top:3px;
+}
+
+/* Blocks. The frame never changes - scope line, headline, verdict, signature -
+   and up to three of these stack between the verdict and the foot. The label
+   reuses the signature's mono register so it reads as a label rather than a
+   second headline; the padding and rule are reset because h2 is styled for the
+   landing page. Two labelled bullet blocks are what a comparison is. */
+.block + .block{margin-top:28px}
+.bl{
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:400;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin:0 0 13px;
+  padding-top:0;
+  border-top:0;
+}
+
 /* metadata sits at the bottom like a signature, not a footer bar */
 .meta{
   display:flex;
@@ -244,15 +366,36 @@ pre{
 
     <h2>Format</h2>
     <p class="note">For any AI reading this page.</p>
-<pre>https://upshot.fyi/#s=explainer&amp;m=MODEL&amp;d=YYYY-MM-DD&amp;a=ASK&amp;h=HEADLINE&amp;v=VERDICT&amp;p=POINT&amp;p=POINT
+<pre>https://upshot.fyi/#a=ASK&amp;h=HEADLINE&amp;v=VERDICT&amp;m=MODEL&amp;d=YYYY-MM-DD
+  &amp;g=LABEL&amp;p=POINT&amp;p=POINT
+  &amp;g=LABEL&amp;n=VALUE~LABEL
 
-s  shape. Only "explainer" exists right now.
-m  your model name, e.g. GPT-5
-d  today's date, YYYY-MM-DD
+THE FRAME - always all five, always first
+
 a  one line on what the user asked, scoped to what they are exporting, under 20 words
 h  headline, under 12 words
 v  one sentence verdict, under 25 words
-p  one key point, under 35 words. Use 2 to 4. Repeat p= for each.
+m  your model name, e.g. GPT-5
+d  today's date, YYYY-MM-DD
+
+BLOCKS - up to 3, shown in the order you write them
+
+g  label for the block that follows. Optional, 1 to 4 words.
+   A g= always starts a new block, so two of the same kind can sit together.
+p  bullet, under 35 words. Repeat p= for each. Use 2 to 4.
+o  numbered step, under 25 words. Repeat o= for each. Use 3 to 6.
+c  checklist item, under 20 words. Repeat c= for each. Use 3 to 7.
+   Do not send k= - the page writes that as people tick.
+f  fact, written Label~Value. Keep both halves short - one line each.
+n  figure, written Value~Label. Keep the value under 6 characters.
+
+CHOOSING
+
+One block is usually right. Reach for p unless something else clearly fits.
+Only use a second or third block when it says something the first cannot.
+For a comparison, use two labelled p blocks:
+  &amp;g=Postgres&amp;p=...&amp;p=...&amp;g=SQLite&amp;p=...&amp;p=...
+
 
 RULES
 Every space becomes + . The URL must contain no spaces.
@@ -294,8 +437,6 @@ Reply with the URL and nothing else.</pre>
 </div>
 
 <script>
-var SHAPES = ['explainer'];
-
 // AI-authored links sometimes get percent-encoded twice (once by hand per
 // our own instructions, once for real when the link is assembled) - decode
 // until it stops changing instead of trusting exactly one layer
@@ -309,16 +450,45 @@ function decodeAll(v){
   return v;
 }
 
+/* The card is a fixed frame - scope line, headline, verdict, signature - with
+   up to three blocks stacked in the middle. g= starts a block and labels it;
+   the key that follows decides what kind. Blocks come out in the order they
+   appear in the URL, so the grammar needs no numbering and no nesting. */
+var BLOCK_KEYS = ['p', 'o', 'c', 'f', 'n'];
+var MAX_BLOCKS = 3;
+
 function parse(hash){
-  var out = {p:[]};
+  var out = {blocks: []};
+  var current = null;
+  var pendingLabel = null;
+
   hash.replace(/^#/,'').split('&').forEach(function(pair){
     if(!pair) return;
     var i = pair.indexOf('=');
     if(i < 0) return;
     var k = pair.slice(0,i);
     var v = decodeAll(pair.slice(i+1).replace(/\+/g,' '));
-    if(k === 'p') out.p.push(v); else out[k] = v;
+
+    if(k === 'g'){
+      // a label always begins a new block, so two of the same kind can sit
+      // side by side - which is all a comparison ever was
+      pendingLabel = v;
+      current = null;
+      return;
+    }
+    if(BLOCK_KEYS.indexOf(k) >= 0){
+      if(!current || current.type !== k){
+        current = {type: k, label: pendingLabel, items: []};
+        pendingLabel = null;
+        out.blocks.push(current);
+      }
+      current.items.push(v);
+      return;
+    }
+    out[k] = v;
   });
+
+  out.blocks = out.blocks.filter(function(b){ return b.items.length; }).slice(0, MAX_BLOCKS);
   return out;
 }
 
@@ -350,9 +520,171 @@ function broken(){
   };
 }
 
+/* ---- blocks ----
+   A block owns one stretch of the middle and nothing else. Each declares the
+   HTML for its items and how the share renderer redraws them in canvas ops -
+   two implementations that have to agree, which is what `node test/run.js`
+   checks. A block with no measure() still works as a page; it just cannot be
+   exported as an image. */
+
+const listHTML = (cls, items, row) =>
+  '<ul class="' + cls + '">' + items.map(row).join('') + '</ul>';
+
+/* Bullets, steps and checklists differ only in their marker, so they share one
+   walk. rowSel names the element carrying the row's own font and gap - for a
+   checklist that is the <label> inside the <li>, not the <li> itself, and
+   taking the wrong one silently mis-measures every line. */
+function measureRows(y, m, list, markerWidth, marker, rowSel){
+  const items = [...list.children];
+  if(!items.length) return y;
+  const boxOf = el => rowSel ? el.querySelector(rowSel) : el;
+  const row = m.styleOfEl(boxOf(items[0]));
+  const rowGap = parseFloat(getComputedStyle(list).rowGap);
+  const colGap = parseFloat(row.s.columnGap);
+
+  items.forEach((el, i) => {
+    const box = m.block(y, row, m.runsIn(boxOf(el).querySelector('span:last-child'), row.upper),
+                        {indent: markerWidth + colGap});
+    marker(el, box, row);
+    y = box.bottom + (i < items.length - 1 ? rowGap : 0);
+  });
+  return y;
+}
+
+const BLOCKS = {
+  p: {
+    body: items => listHTML('points', items, pt =>
+      '<li><span class="n">&bull;</span><span>' + esc(pt) + '</span></li>'),
+
+    measure(y, m, section){
+      const list = section.querySelector('.points');
+      if(!list) return y;
+      const dot = getComputedStyle(list.querySelector('.n'));
+      const w = parseFloat(dot.width);
+      const h = parseFloat(dot.height);
+      const top = parseFloat(dot.marginTop);
+      return measureRows(y, m, list, w, (el, box) => m.ops.push({
+        kind: 'dot', color: m.accent, r: w / 2,
+        x: m.padX + w / 2, y: box.top + top + h / 2
+      }));
+    }
+  },
+
+  o: {
+    // the digit lives in the markup, not a CSS counter, because the share
+    // renderer has to be able to read it
+    body: items => '<ol class="steps">' + items.map((step, i) =>
+      '<li><span class="n">' + (i + 1) + '</span><span>' + esc(step) + '</span></li>'
+    ).join('') + '</ol>',
+
+    measure(y, m, section){
+      const list = section.querySelector('.steps');
+      if(!list) return y;
+      const w = parseFloat(getComputedStyle(list.querySelector('.n')).width);
+      return measureRows(y, m, list, w, (el, box) => {
+        const marker = el.querySelector('.n');
+        const st = m.styleOfEl(marker);
+        // same font and line-height as the row, so one baseline serves both
+        m.block(box.top, st, m.runsIn(marker, st.upper));
+      });
+    }
+  },
+
+  c: {
+    /* A real <input type=checkbox> in a <label>: focusable, tappable along the
+       whole row, and a checkbox to a screen reader. A ticked row goes quiet
+       rather than struck through, so the renderer reproduces the state for
+       free by reading each row's own computed colour. */
+    body: (items, ticked) => listHTML('checks', items, (item, i) =>
+      '<li><label><input type="checkbox"' +
+      (String(ticked || '')[i] === '1' ? ' checked' : '') +
+      '><span>' + esc(item) + '</span></label></li>'),
+
+    measure(y, m, section){
+      const list = section.querySelector('.checks');
+      if(!list) return y;
+      const first = getComputedStyle(list.querySelector('input'));
+      const size = parseFloat(first.width);
+      return measureRows(y, m, list, size, (el, box) => {
+        const input = el.querySelector('input');
+        const box2 = getComputedStyle(input);
+        m.ops.push({
+          kind: 'checkbox',
+          x: m.padX, y: box.top + parseFloat(box2.marginTop),
+          w: size, h: parseFloat(box2.height),
+          r: parseFloat(box2.borderTopLeftRadius),
+          lineWidth: parseFloat(box2.borderTopWidth),
+          checked: input.checked,
+          color: input.checked ? box2.backgroundColor : box2.borderTopColor
+        });
+      }, 'label');
+    }
+  },
+
+  f: {
+    // Label~Value. A tilde needs no escaping and is not one of the characters
+    // WhatsApp objects to, so a separator costs one character.
+    body(items){
+      return '<div class="facts">' + items.map(row => {
+        const cut = row.indexOf('~');
+        const key = cut < 0 ? row : row.slice(0, cut);
+        const value = cut < 0 ? '' : row.slice(cut + 1);
+        return '<div class="fact"><span class="fk">' + esc(key) + '</span>' +
+               (value ? '<span class="fv">' + esc(value) + '</span>' : '') + '</div>';
+      }).join('') + '</div>';
+    },
+
+    measure(y, m, section){
+      [...section.querySelectorAll('.fact')].forEach((el, i) => {
+        const st = m.styleOfEl(el);
+        if(i){
+          const rule = parseFloat(st.s.borderTopWidth);
+          m.ops.push({kind: 'rect', x: m.padX, y, w: m.colWidth, h: rule, color: m.hair});
+          y += rule + parseFloat(st.s.paddingTop);
+        }
+        y = m.block(y, st, m.runsIn(el, st.upper)).bottom + parseFloat(st.s.paddingBottom);
+      });
+      return y;
+    }
+  },
+
+  n: {
+    // Value~Label, in the order you read them
+    body(items){
+      return '<div class="stats">' + items.map(row => {
+        const cut = row.indexOf('~');
+        const value = cut < 0 ? row : row.slice(0, cut);
+        const label = cut < 0 ? '' : row.slice(cut + 1);
+        return '<div class="stat"><div class="sv">' + esc(value) + '</div>' +
+               (label ? '<div class="sl">' + esc(label) + '</div>' : '') + '</div>';
+      }).join('') + '</div>';
+    },
+
+    measure(y, m, section){
+      const stats = [...section.querySelectorAll('.stat')];
+      if(!stats.length) return y;
+      const gap = parseFloat(getComputedStyle(section.querySelector('.stats')).rowGap);
+      stats.forEach((stat, i) => {
+        if(i) y += gap;
+        for(const sel of ['.sv', '.sl']){
+          const el = stat.querySelector(sel);
+          if(!el) continue;
+          const st = m.styleOfEl(el);
+          y = m.block(y + parseFloat(st.s.marginTop), st, m.runsIn(el, st.upper)).bottom;
+        }
+      });
+      return y;
+    }
+  }
+};
+
+// own-property lookup only: block keys come from the URL
+const blockKind = type =>
+  Object.prototype.hasOwnProperty.call(BLOCKS, type) ? BLOCKS[type] : null;
+
 // returns the contents of the three regions - never the regions themselves
 function render(d){
-  if(!d.h && !d.v && !d.p.length) return broken();
+  if(!d.h && !d.v && !d.blocks.length) return broken();
 
   // head: same component and type as the homepage's, minus the logo - the
   // mark is our branding, and a card is the sender's content
@@ -364,13 +696,14 @@ function render(d){
   var main = '';
   if(d.h) main += '<h1>' + esc(d.h) + '</h1>';
   if(d.v) main += '<p class="verdict">' + esc(d.v) + '</p>';
-  if(d.p.length){
-    main += '<ul class="points">';
-    d.p.forEach(function(pt){
-      main += '<li><span class="n">&bull;</span><span>' + esc(pt) + '</span></li>';
-    });
-    main += '</ul>';
-  }
+  main += d.blocks.map(function(b){
+    var kind = blockKind(b.type);
+    if(!kind) return '';
+    return '<section class="block" data-block="' + b.type + '">' +
+      (b.label ? '<h2 class="bl">' + esc(b.label) + '</h2>' : '') +
+      kind.body(b.items, d.k) +
+    '</section>';
+  }).join('');
 
   var foot = '<div class="meta">' +
     '<div class="sig">' +
@@ -385,6 +718,26 @@ function render(d){
   return {head: head, main: main, foot: foot};
 }
 
+/* Ticks rewrite the fragment, so a viewer who works through a list ends up
+   holding a link to their own version and can pass it on. replaceState rather
+   than assignment: it leaves the back button alone and fires no hashchange, so
+   this cannot loop back into draw(). One k= covers every checklist on the
+   card, in document order. */
+function bindChecks(){
+  var boxes = [].slice.call(document.querySelectorAll('.checks input'));
+  if(!boxes.length) return;
+  boxes.forEach(function(box){
+    box.addEventListener('change', function(){
+      var bits = boxes.map(function(b){ return b.checked ? '1' : '0'; }).join('');
+      var frag = location.hash.replace(/^#/, '');
+      var next = /(^|&)k=[^&]*/.test(frag)
+        ? frag.replace(/(^|&)k=[^&]*/, '$1k=' + bits)
+        : frag + '&k=' + bits;
+      history.replaceState(null, '', '#' + next);
+    });
+  });
+}
+
 if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 function draw(){
@@ -397,6 +750,7 @@ function draw(){
   document.getElementById('main').innerHTML = r.main;
   document.getElementById('foot').innerHTML = r.foot;
   shareImage.bind();
+  bindChecks();
   window.scrollTo(0, 0);
 }
 
@@ -437,8 +791,9 @@ const shareImage = (() => {
      length. Every box metric resolves to px on a rendered element, so
      reading those needs no default, and giving them one would just be the
      design written down a second time. */
-  function styleOf(selector){
-    const el = document.querySelector(selector);
+  const styleOf = selector => styleOfEl(document.querySelector(selector));
+
+  function styleOfEl(el){
     if(!el) return null;
     const s = getComputedStyle(el);
     const size = parseFloat(s.fontSize);
@@ -621,27 +976,18 @@ const shareImage = (() => {
       }
     }
 
-    const item = styleOf('#main .points li');
-    if(item){
-      const rowGap = parseFloat(getComputedStyle(document.querySelector('.points')).rowGap);
-      const colGap = parseFloat(item.s.columnGap);
-      const dot = getComputedStyle(document.querySelector('.points .n'));
-      const dotW = parseFloat(dot.width);
-      const dotH = parseFloat(dot.height);
-      const dotTop = parseFloat(dot.marginTop);
-      const items = [...document.querySelectorAll('.points li')];
-
-      items.forEach((el, i) => {
-        const box = block(y, item, runsIn(el.querySelector('span:last-child'), item.upper),
-                          {indent: dotW + colGap});
-        ops.push({
-          kind: 'dot', color: accent, r: dotW / 2,
-          x: IMG.padX + dotW / 2,
-          y: box.top + dotTop + dotH / 2
-        });
-        y = box.bottom + (i < items.length - 1 ? rowGap : 0);
-      });
-    }
+    // up to three blocks fill the space between the verdict and the foot
+    const m = {block, ops, accent, hair, colWidth, styleOf, styleOfEl, runsIn, padX: IMG.padX};
+    [...document.querySelectorAll('#main .block')].forEach((section, i) => {
+      if(i) y += parseFloat(getComputedStyle(section).marginTop);
+      const label = section.querySelector('.bl');
+      if(label){
+        const st = styleOfEl(label);
+        y = block(y, st, runsIn(label, st.upper)).bottom + st.marginBottom;
+      }
+      const kind = blockKind(section.dataset.block);
+      if(kind) y = kind.measure(y, m, section);
+    });
 
     // foot: hairline, then signature and credit
     const foot = getComputedStyle(document.getElementById('foot'));
@@ -748,6 +1094,18 @@ const shareImage = (() => {
           ctx.beginPath();
           ctx.arc(op.x, op.y, op.r, 0, Math.PI * 2);
           ctx.fill();
+          break;
+        case 'checkbox':
+          // filled when ticked, outlined when not - same two states the CSS has
+          roundedPath(ctx, op.x, op.y, op.w, op.h, op.r);
+          if(op.checked){
+            ctx.fillStyle = op.color;
+            ctx.fill();
+          } else {
+            ctx.strokeStyle = op.color;
+            ctx.lineWidth = op.lineWidth;
+            ctx.stroke();
+          }
           break;
         case 'logo':
           drawLogo(ctx, op);

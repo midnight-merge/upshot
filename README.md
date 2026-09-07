@@ -42,7 +42,7 @@ JS would be invisible to the thing it exists for.
 to submit content to a website, which it refuses. Asking it to *read* the
 domain works.
 
-## The card
+## Layout and the share image
 
 An export is an ordinary scrolling page, one phone-width column at every
 viewport - no media queries, no viewport units, nothing that depends on
@@ -58,6 +58,48 @@ The renderer wraps every block itself and sums the line counts into a height
 before allocating the canvas, so the image cannot come out clipped. It reads
 typography, colour and box metrics off the live computed styles, so the
 stylesheet stays the one place the design is defined.
+
+## The card
+
+A fixed frame with up to three blocks stacked in the middle. The frame is
+always the same shape, whatever the export is about:
+
+| | |
+|---|---|
+| scope line | mono, quiet, one line on what was asked |
+| headline | the conclusion, set large |
+| verdict | one sentence, indented behind an accent rule |
+| **blocks** | 0 to 3, each optionally labelled |
+| signature | model, date, and how to make your own |
+
+That fixed frame is the whole design language. Accent appears in exactly three
+places - the verdict rule, the block labels, and the markers - so a card is
+recognisable at a glance no matter which blocks it uses.
+
+`g=` starts a block and labels it; the key that follows decides what kind:
+
+| | |
+|---|---|
+| `p` | bullets |
+| `o` | numbered steps, where order is the point |
+| `c` | checklist, tappable. Ticks are written back into the fragment, so a viewer ends up holding a link to their own half-finished version and can pass it on |
+| `f` | `Label~Value` rows. A spec sheet - what most people wanted a table for, without the table |
+| `n` | `Value~Label` figures at headline size |
+
+Composition rather than a fixed set of card types, because the alternative was
+an enum the model had to classify into, and past a handful of options an LLM
+starts guessing. There is nothing to classify now: it picks blocks that fit.
+A comparison is two labelled `p` blocks, which is also pros and cons, which is
+also anything else that pairs.
+
+Three is the cap. Not a technical limit - a card that needs four blocks is two
+cards.
+
+Each block declares two things in `BLOCKS`: the HTML for its items, and how the
+share renderer redraws them in canvas ops. That second one is the tax for a
+hand-drawn share image: every block is two implementations that have to agree.
+`node test/run.js` renders each one and checks the renderer's height against
+the browser's, which is what tells you when they have stopped agreeing.
 
 ## Gotcha: WhatsApp and punctuation
 

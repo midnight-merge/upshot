@@ -13,20 +13,62 @@ use whatever they were last discussing.
 
 ## Format
 
-https://upshot.fyi/#s=explainer&m=MODEL&d=YYYY-MM-DD&a=ASK&h=HEADLINE&v=VERDICT&p=POINT&p=POINT&p=POINT
+https://upshot.fyi/#a=ASK&h=HEADLINE&v=VERDICT&m=MODEL&d=YYYY-MM-DD
+  &g=LABEL&p=POINT&p=POINT
+  &g=LABEL&n=VALUE~LABEL
 
-## Fields
+A card is a fixed frame with up to three blocks stacked in the middle. The
+frame never changes. The blocks are yours to choose.
 
-- s  shape. Only `explainer` exists right now.
-- m  your model name, e.g. GPT-5
-- d  today's date, YYYY-MM-DD
+## The frame
+
+Always all five, always first.
+
 - a  one line describing what the user asked, scoped to whatever they are
      exporting. If they said what to focus on, that is the scope. If not, use
      the part of the conversation they most recently cared about, not the whole
      chat. Under 20 words.
 - h  headline, under 12 words
 - v  one sentence verdict, under 25 words
-- p  one key point, under 35 words. Use 2 to 4. Repeat `p=` for each one.
+- m  your model name, e.g. GPT-5
+- d  today's date, YYYY-MM-DD
+
+## The blocks
+
+Up to three. They appear in the order you write them; anything past the third
+is dropped.
+
+- g  label for the block that follows. Optional, 1 to 4 words. A `g=` always
+     starts a new block, so two blocks of the same kind can sit together.
+- p  bullet, under 35 words. Repeat `p=` for each. Use 2 to 4.
+- o  numbered step, under 25 words. Repeat `o=` for each. Use 3 to 6. For a
+     how-to, where the order is the point.
+- c  checklist item, under 20 words. Repeat `c=` for each. Use 3 to 7. Whoever
+     opens the link can tick these off, and their ticks are kept in the link
+     they hold, so a half-finished list can be passed on.
+     Do not send `k=`. The page writes it as people tick.
+- f  fact, written `Label~Value`, e.g. `f=Cold+start~180ms`. A spec sheet, one
+     line per row. Keep both halves short; a row that wraps stops looking like
+     one.
+- n  figure, written `Value~Label`, e.g. `n=42%25~fewer+timeouts`. Set at
+     headline size, so keep the value under 6 characters.
+
+## Choosing blocks
+
+One block is usually right. Reach for `p` unless something else clearly fits:
+the user was following instructions (`o`), has things to do (`c`), wanted
+figures at a glance (`f`), or the whole point is two or three numbers (`n`).
+
+Only add a second or third block when it says something the first cannot. Three
+blocks of prose is worse than one good one.
+
+For a comparison, use two labelled `p` blocks rather than looking for a shape
+that does not exist:
+
+    &g=Postgres&p=Concurrent+writes&p=Real+types
+    &g=SQLite&p=Zero+ops&p=Faster+for+reads
+
+The same trick covers pros and cons: `g=Pros` then `g=Cons`.
 
 ## Rules
 
