@@ -41,7 +41,9 @@ height after it is laid out.
 The path is the version. A fragment never reaches the server, so GitHub Pages
 cannot route on it and the version has to live somewhere it can see: the path.
 `/v1/` keeps rendering every link ever written against it, so a later format
-gets `/v2/` and nothing already sent goes stale.
+gets `/v2/` and nothing already sent goes stale. An unversioned
+`upshot.fyi/#link` is forwarded to `/v1/` by a head script, because the client
+is the only thing that can see a fragment.
 
 Fields are bounded by word count rather than URL length, because a model can
 hold to "under 25 words" but cannot count characters of a percent-encoded URL.
@@ -134,7 +136,7 @@ characters. `VISION.md` has the full results.
 
 | | |
 |---|---|
-| `index.html` | landing page and spec. Static HTML, no script at all |
+| `index.html` | landing page and spec. Static, plus a head redirect for unversioned `#links` |
 | `v1/index.html` | the card: renderer, share image, and nothing else |
 | `broken/index.html` | the page a link with no content in it lands on |
 | `llms.txt` | the format, for AIs that look there |

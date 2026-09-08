@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>upshot</title>
+<script>
+/* An unversioned link - upshot.fyi/#a=... - is an export written against the
+   old one-page URL, or by a model that dropped the path. The server never sees
+   a fragment, so GitHub Pages cannot route it and only this can. Runs before
+   <body>, so the landing copy is never laid out for a reader on their way to a
+   card. The fragment survives the replace untouched, ticks and all. */
+if(location.hash.replace(/^#/, '')){
+  location.replace('/v1/' + location.hash);
+}
+</script>
 <style>
 /* the card commits to one look in both themes - it is an object, not a document */
 :root{

@@ -120,11 +120,22 @@ function siblingChecks(){
   const landing = fs.readFileSync(LANDING, 'utf8');
   const brokenPage = fs.readFileSync(BROKEN, 'utf8');
 
-  // Static HTML start to finish. Fetchers do not run JS, and a spec built by
-  // JS would be invisible to the thing it exists for - so the bar is not "no
-  // renderer", it is no script at all.
-  check(!/<script/.test(landing), 'the landing page is static HTML',
-        'it is the document AIs fetch - nothing on it may depend on JS');
+  // A fragment never reaches GitHub Pages, so nothing but the page itself can
+  // send an unversioned link to the card. Head script, ahead of <body>, or the
+  // landing copy lays out first for a reader who is on their way to a card.
+  check(/location\.replace\(['"]\/v1\/['"]\s*\+\s*location\.hash\)/.test(landing),
+        'the landing page forwards unversioned #links to /v1/');
+  check(landing.indexOf('<script>') < landing.indexOf('<body'),
+        'that redirect is in the head, ahead of the landing copy');
+
+  // The spec itself stays static: fetchers do not run JS, and a spec built by
+  // JS would be invisible to the thing it exists for. Matching on the
+  // renderer's identifiers is no good here - the page teaches the format, so
+  // its prose says "BLOCKS" and "p=". Match on the shape: that one script, and
+  // no function declared anywhere.
+  check((landing.match(/<script/g) || []).length === 1 && !/\bfunction\b/.test(landing),
+        'the landing page carries nothing but that redirect',
+        'it is the document AIs fetch - the spec may not depend on JS');
   check(/upshot\.fyi\/v1\/#a=ASK/.test(landing),
         'the landing page teaches the versioned URL');
 

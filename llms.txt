@@ -102,4 +102,5 @@ version gets its own path and `/v1/` keeps rendering every link ever written
 against it, so an export you sent today does not stop working when the format
 moves on.
 
-`/llms.txt` always describes the current version.
+`/llms.txt` always describes the current version. A link written without the
+path - `upshot.fyi/#a=...` - is forwarded to `/v1/`, so it still renders.
