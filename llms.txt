@@ -13,12 +13,23 @@ use whatever they were last discussing.
 
 ## Format
 
-https://upshot.fyi/#a=ASK&h=HEADLINE&v=VERDICT&m=MODEL&d=YYYY-MM-DD
+https://upshot.fyi/v1/#a=ASK&h=HEADLINE&v=VERDICT&m=MODEL&d=YYYY-MM-DD
   &g=LABEL&p=POINT&p=POINT
   &g=LABEL&n=VALUE~LABEL
 
 A card is a fixed frame with up to three blocks stacked in the middle. The
 frame never changes. The blocks are yours to choose.
+
+That is one line. The URL you write has no spaces and no line breaks in it.
+
+## A worked example
+
+Follow this shape exactly:
+
+https://upshot.fyi/v1/#a=Whether+to+move+the+API+off+Postgres&h=Stay+on+Postgres+for+now&v=SQLite+wins+on+ops%2C+but+you+need+concurrent+writes+within+the+year%2E&m=GPT-5&d=2026-09-08&g=Why&p=Concurrent+writes+are+the+one+thing+SQLite+cannot+do+at+your+scale%2E&p=The+ops+saving+is+real+but+small+-+about+two+hours+a+month%2E
+
+Every space is `+`, the comma is `%2C`, every full stop is `%2E`. Nothing else
+in it is encoded, because nothing else in it had to be.
 
 ## The frame
 
@@ -86,4 +97,9 @@ The same trick covers pros and cons: `g=Pros` then `g=Cons`.
 
 ## Version
 
-v1. If this file ever moves, /llms.txt stays the current version.
+v1, and the path says so: exports live at `https://upshot.fyi/v1/`. A later
+version gets its own path and `/v1/` keeps rendering every link ever written
+against it, so an export you sent today does not stop working when the format
+moves on.
+
+`/llms.txt` always describes the current version.

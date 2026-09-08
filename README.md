@@ -17,10 +17,31 @@ content and there is nothing to store.
 That means one static page can render unlimited exports for free.
 
 ```
-https://upshot.fyi/#s=explainer&m=GPT-5&d=2026-09-06&a=...&h=...&v=...&p=...
+https://upshot.fyi/v1/#s=explainer&m=GPT-5&d=2026-09-06&a=...&h=...&v=...&p=...
 ```
 
-`index.html` reads those fields and draws the card. That's the entire system.
+`v1/index.html` reads those fields and draws the card. That's the entire system.
+
+## Three documents, one job each
+
+| | |
+|---|---|
+| `/` | the landing page and the format spec. Static HTML, no renderer |
+| `/v1/` | the card. Ships an empty `<main>` and fills it from the fragment |
+| `/broken/` | what a link with nothing renderable in it gets |
+
+The split is not tidiness. One document that was both a landing page and a card
+had to carry the whole format spec to every card link, lay it out as a very
+tall page, then throw it away and put a ~500px card in its place. A document
+that changes height that drastically after layout is a document iOS will hand
+you scrolled, with the header up behind the browser chrome - which is a bug
+this repo chased through five layout rewrites. Now neither document changes
+height after it is laid out.
+
+The path is the version. A fragment never reaches the server, so GitHub Pages
+cannot route on it and the version has to live somewhere it can see: the path.
+`/v1/` keeps rendering every link ever written against it, so a later format
+gets `/v2/` and nothing already sent goes stale.
 
 Fields are bounded by word count rather than URL length, because a model can
 hold to "under 25 words" but cannot count characters of a percent-encoded URL.
@@ -28,8 +49,8 @@ The limits keep an export readable on one phone screen.
 
 ## The site teaches the AI
 
-`index.html` with no fragment is a landing page that spells out the format in
-plain text, and `/llms.txt` says the same thing. Point an AI at the domain and
+`/` is a landing page that spells out the format in plain text, and
+`/llms.txt` says the same thing. Point an AI at the domain and
 it learns the format on the spot. Nothing to paste, no saved prompt to go stale,
 and the format can change without breaking anyone's setup.
 
@@ -47,7 +68,7 @@ domain works.
 An export is an ordinary scrolling page, one phone-width column at every
 viewport - no media queries, no viewport units, nothing that depends on
 measuring the viewport correctly. The signature sits at the end of the
-document, in flow, like any other page. The homepage uses the same shell.
+document, in flow, like any other page.
 
 **Share as image** draws the card onto a canvas and hands the PNG to the native
 share sheet, for Instagram and X where a link is no use. It falls back to a
@@ -113,7 +134,9 @@ characters. `VISION.md` has the full results.
 
 | | |
 |---|---|
-| `index.html` | the whole thing: landing page, spec, and renderer |
+| `index.html` | landing page and spec. Static HTML, no script at all |
+| `v1/index.html` | the card: renderer, share image, and nothing else |
+| `broken/index.html` | the page a link with no content in it lands on |
 | `llms.txt` | the format, for AIs that look there |
 | `robots.txt`, `sitemap.xml` | let crawlers in, point at the spec |
 | `CNAME` | custom domain for GitHub Pages |
@@ -126,7 +149,9 @@ characters. `VISION.md` has the full results.
 python3 -m http.server 8787
 ```
 
-Open `http://localhost:8787/` for the homepage. Add a fragment to see an export.
+Open `http://localhost:8787/` for the homepage, and
+`http://localhost:8787/v1/#h=Hello&v=A+verdict&m=GPT-5&d=2026-09-08` for an
+export.
 
 ## Tests
 
@@ -139,7 +164,8 @@ Drives whatever Chrome is on the machine. No dependencies, no install. Set
 
 The page and the share image are two implementations of the same design - the
 browser lays the card out from CSS, and `layout()` re-derives it in canvas ops.
-They can drift apart silently, so the tests render eight cards and check that:
+They can drift apart silently, so the tests render every card shape and check
+that:
 
 - the image's height agrees with what the browser laid out
 - no canvas exceeds the size cap, which is what silently truncated long exports
@@ -147,6 +173,9 @@ They can drift apart silently, so the tests render eight cards and check that:
   element's *used* margin, which the renderer would read as zero
 - nothing is fetched from a third party
 - the inline script parses
+- `/v1/` still ships an empty `<main>`, and `/` and `/broken/` are still static
+  HTML with no script - the properties that keep the documents from collapsing
+  back into one
 
 `test/baselines.json` holds exact expected heights, which catch changes the DOM
 comparison is too loose to see. Font metrics differ between operating systems,

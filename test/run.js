@@ -22,7 +22,9 @@ const os = require('os');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const PAGE = path.join(ROOT, 'index.html');
+const CARD = path.join(ROOT, 'v1', 'index.html');
+const LANDING = path.join(ROOT, 'index.html');
+const BROKEN = path.join(ROOT, 'broken', 'index.html');
 const BASELINES = path.join(__dirname, 'baselines.json');
 
 const CHROME_CANDIDATES = [
@@ -60,9 +62,10 @@ const CASES = [
   ['overCap',    `#h=Four blocks, one dropped&v=Only the first three render&g=One&p=a&p=b&g=Two&o=c&o=d&g=Three&f=e~f&g=Four&n=9~should not appear`],
   ['mixedNoLabels', `#h=Blocks without labels&v=Still stack in order&p=A bullet&f=Key~Value&n=7~things`],
 
-  // shapes of failure
-  ['broken',     `#nonsense`],
-  ['legacy',     `#s=explainer&m=GPT-5&d=2026-09-08&h=An old link&v=s= is ignored and p= still makes a block&p=This must render exactly as it always did`],
+  // shapes of failure. A fragment with nothing renderable in it is not here:
+  // /v1/ redirects it to /broken/ rather than drawing a card that says it is
+  // not a card, and a redirect is checked statically below.
+  ['unknownKey', `#s=explainer&m=GPT-5&d=2026-09-08&h=An unknown key&v=s= is not in the grammar, so parse() drops it and the card renders&p=Anything not in the grammar is ignored, never fatal`],
   ['longtoken',  `#h=${'A'.repeat(120)}&v=ok&p=fine`],
   ['bareFacts',  `#h=Rows with no value&v=Should not break&f=Just a label&f=Another~with a value`],
   ['absurd',     `#h=Tall&v=v${`&p=${WORDY}`.repeat(9)}`],
@@ -102,6 +105,55 @@ function staticChecks(raw){
   check(!/\.foot\s*\{[^}]*position\s*:\s*(fixed|absolute|sticky)/.test(src),
         '.foot is not positioned',
         'positioning silently zeroes the margin the renderer reads');
+
+  // The card ships no copy of its own. This is the whole reason the site is
+  // three documents: a card link that carries the landing page with it lays
+  // out a tall page and then shrinks it, and on iOS that page comes up
+  // scrolled with its header behind the browser chrome.
+  check(/<main id="main"><\/main>/.test(raw), '/v1/ ships an empty <main>',
+        'copy here means a card link lays out a tall page and then shrinks it');
+}
+
+/* ---- the other two documents ---- */
+function siblingChecks(){
+  console.log('\nlanding + broken');
+  const landing = fs.readFileSync(LANDING, 'utf8');
+  const brokenPage = fs.readFileSync(BROKEN, 'utf8');
+
+  // Static HTML start to finish. Fetchers do not run JS, and a spec built by
+  // JS would be invisible to the thing it exists for - so the bar is not "no
+  // renderer", it is no script at all.
+  check(!/<script/.test(landing), 'the landing page is static HTML',
+        'it is the document AIs fetch - nothing on it may depend on JS');
+  check(/upshot\.fyi\/v1\/#a=ASK/.test(landing),
+        'the landing page teaches the versioned URL');
+
+  /* The spec exists twice - on the page and in /llms.txt - and most models
+     only ever read the page. So the page is the authoritative one, and these
+     check the copy in llms.txt has not drifted away from it. Encoding is
+     where drift actually bites: a missing escape is a link that arrives
+     broken, silently, in WhatsApp. */
+  const llms = fs.readFileSync(path.join(ROOT, 'llms.txt'), 'utf8');
+  const codes = t => [...new Set(t.match(/%[0-9A-F]{2}/g) || [])].sort().join(' ');
+  const pageEscapes = codes(/Encode inside values:(.*)/.exec(landing)[1]);
+  const llmsEscapes = codes(/Escape inside values:([\s\S]*?)\n- /.exec(llms)[1]);
+  check(pageEscapes === llmsEscapes && pageEscapes.length > 0,
+        'the page and llms.txt escape the same characters',
+        pageEscapes === llmsEscapes ? pageEscapes : `page ${pageEscapes} vs llms ${llmsEscapes}`);
+
+  // One real URL, byte-identical in both, that a model can copy the shape of.
+  // Rules alone have never been enough here - see the WhatsApp findings in
+  // VISION.md - and an example that has drifted from the grammar is worse
+  // than none, so the render tests below cover this exact URL too.
+  const example = /(https:\/\/upshot\.fyi\/v1\/#a=Whether[^\s<]*)/.exec(llms);
+  check(!!example, 'llms.txt carries the worked example');
+  if(example){
+    check(landing.includes(example[1].replace(/&/g, '&amp;')),
+          'the page carries the same worked example, byte for byte');
+  }
+
+  check(!/<script/.test(brokenPage), '/broken/ is static HTML');
+  check(/Make your own/.test(brokenPage), '/broken/ still says how to make one');
 }
 
 /* ---- 2. the page's own JavaScript parses ---- */
@@ -166,7 +218,9 @@ function renderAll(chrome, src){
       '--force-device-scale-factor=2',
       '--virtual-time-budget=20000',
       '--window-size=500,900',
-      '--dump-dom', 'file://' + harness
+      // draw() runs at parse time and sends an unrenderable link to /broken/,
+      // which would navigate the harness away before the probe reports
+      '--dump-dom', 'file://' + harness + '#h=harness&v=ready'
     ], {encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 64 * 1024 * 1024});
   } finally { fs.unlinkSync(harness); }
 
@@ -181,11 +235,20 @@ function renderAll(chrome, src){
 /* ---- 4. compare ---- */
 function main(){
   const update = process.argv.includes('--update');
-  const src = fs.readFileSync(PAGE, 'utf8');
+  const src = fs.readFileSync(CARD, 'utf8');
   const chrome = findChrome();
 
   staticChecks(src);
+  siblingChecks();
   syntaxCheck(src);
+
+  /* Render the worked example itself, taken from llms.txt rather than retyped
+     here - it is the one URL the whole site tells models to copy, so an
+     example that has quietly drifted out of the grammar is worse than no
+     example at all. */
+  const ex = /https:\/\/upshot\.fyi\/v1\/(#a=Whether[^\s<]*)/
+    .exec(fs.readFileSync(path.join(ROOT, 'llms.txt'), 'utf8'));
+  if(ex) CASES.push(['workedExample', ex[1]]);
 
   const results = renderAll(chrome, src);
 

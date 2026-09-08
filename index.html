@@ -113,177 +113,6 @@ h1{
 
 p{margin:0 0 15px;font-size:15px;color:var(--dim)}
 
-.points{
-  list-style:none;
-  margin:0;
-  padding:0;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-}
-.points li{
-  display:flex;
-  gap:12px;
-  font-size:15.5px;
-  line-height:1.5;
-  color:var(--dim);
-}
-.points .n{
-  color:transparent;
-  flex:none;
-  width:5px;
-  height:5px;
-  margin-top:9px;
-  border-radius:50%;
-  background:var(--accent);
-  overflow:hidden;
-}
-.points strong{font-weight:600;color:var(--ink)}
-
-/* checklist - a real <input type=checkbox> inside a <label>, so it is
-   focusable, tappable anywhere along the row, and reaches a screen reader as
-   a checkbox. appearance:none only takes the native look away, not the
-   semantics. A ticked item goes quiet rather than struck through: the share
-   renderer reads each row's own computed colour, so the state costs it
-   nothing to reproduce. */
-.checks{
-  list-style:none;
-  margin:0;
-  padding:0;
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-}
-.checks label{
-  display:flex;
-  gap:12px;
-  align-items:flex-start;
-  cursor:pointer;
-  font-size:15.5px;
-  line-height:1.5;
-  color:var(--dim);
-}
-.checks input{
-  appearance:none;
-  -webkit-appearance:none;
-  flex:none;
-  width:16px;
-  height:16px;
-  margin:3px 0 0;
-  border:1.5px solid var(--faint);
-  border-radius:4px;
-  background:transparent;
-  cursor:pointer;
-}
-.checks input:checked{background:var(--accent);border-color:var(--accent)}
-.checks input:checked + span{color:var(--faint)}
-.checks input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-
-/* steps - ordered, so the marker is the number itself rather than a dot. It
-   carries the row's font and line-height so the two line boxes are identical
-   and the baselines agree without being told to; the canvas renderer leans on
-   that too. The digit lives in the markup, not a CSS counter, because the
-   share renderer has to be able to read it. */
-.steps{
-  list-style:none;
-  margin:0;
-  padding:0;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-}
-.steps li{
-  display:flex;
-  gap:12px;
-  font-size:15.5px;
-  line-height:1.5;
-  color:var(--dim);
-}
-.steps .n{
-  flex:none;
-  width:20px;
-  font-weight:600;
-  color:var(--accent);
-}
-
-/* facts - a spec sheet, which is what most people actually wanted a table for.
-   One line per row, label then value, both in the mono register so a single
-   font covers the row and the canvas renderer needs nothing new. */
-.facts{margin:0}
-.fact{
-  font-family:var(--mono);
-  font-size:12.5px;
-  line-height:1.6;
-  color:var(--ink);
-  padding-bottom:9px;
-}
-.fact + .fact{border-top:1px solid var(--hair);padding-top:9px}
-.fact:last-child{padding-bottom:0}
-.fact .fv{margin-left:10px}
-.fact .fk{color:var(--faint)}
-
-/* stats - two to four figures. The number carries the card, so it gets
-   headline treatment and the label stays out of its way. */
-.stats{
-  margin:0;
-  display:flex;
-  flex-direction:column;
-  gap:22px;
-}
-.stat .sv{
-  font-size:34px;
-  font-weight:700;
-  line-height:1.12;
-  letter-spacing:-.03em;
-  color:var(--ink);
-}
-.stat .sl{
-  font-size:13px;
-  line-height:1.4;
-  color:var(--faint);
-  margin-top:3px;
-}
-
-/* Blocks. The frame never changes - scope line, headline, verdict, signature -
-   and up to three of these stack between the verdict and the foot. The label
-   reuses the signature's mono register so it reads as a label rather than a
-   second headline; the padding and rule are reset because h2 is styled for the
-   landing page. Two labelled bullet blocks are what a comparison is. */
-.block + .block{margin-top:28px}
-.bl{
-  font-family:var(--mono);
-  font-size:11px;
-  font-weight:400;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  color:var(--accent);
-  margin:0 0 13px;
-  padding-top:0;
-  border-top:0;
-}
-
-/* metadata sits at the bottom like a signature, not a footer bar */
-.meta{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:16px;
-  font-family:var(--mono);
-  font-size:10.5px;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  color:var(--faint);
-}
-.meta .sig{display:flex;flex-direction:column;gap:5px;min-width:0}
-.meta .r1{line-height:1.5}
-.meta .r1::after{content:"";display:block;clear:both}
-.meta .r2{color:var(--faint)}
-/* same mark, scaled to the signature's smaller type */
-.meta .logo{width:10px;height:8px;margin:2px 7px 0 0}
-.meta .sep{opacity:.5}
-.meta .model{color:var(--dim);margin-left:6px}
-.meta .by{color:var(--faint)}
-
 footer{
   margin-top:14px;
   font-family:var(--mono);
@@ -300,27 +129,8 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;text-wrap:pretty}
 .cmd{color:var(--accent)}
 
-/* share control, on the signature line so it reads as part of the card */
+/* the column the sheet sits in */
 .wrap{display:flex;flex-direction:column;align-items:center;width:100%}
-.meta .spacer{flex:1}
-.shareBtn{
-  font-family:var(--mono);
-  font-size:10.5px;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  color:var(--dim);
-  background:transparent;
-  border:0;
-  border-bottom:1px solid var(--hair);
-  padding:1px 0 2px;
-  margin:0;
-  cursor:pointer;
-  flex:none;
-}
-.shareBtn{align-self:flex-start;margin-top:-1px}
-.shareBtn:hover{color:var(--accent);border-bottom-color:var(--accent)}
-.shareBtn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-.shareBtn[disabled]{opacity:.55;cursor:default}
 
 /* landing page only */
 h2{font-weight:600;font-size:13px;margin:30px 0 3px;padding-top:20px;border-top:1px solid var(--hair)}
@@ -339,13 +149,12 @@ pre{
 </style>
 </head>
 <body>
-<!-- ONE shell, used by both the landing page and a rendered card. Only the
-     contents of .head / main / .foot are ever replaced - the structure and
-     its layout mode never change, so the browser lays out one kind of
-     document per load instead of two. -->
-<div class="wrap"><div class="sheet" id="sheet">
+<!-- Static copy, start to finish. An export is a different document at
+     /v1/, so nothing here is ever replaced and this page never changes
+     height after it is laid out. -->
+<div class="wrap"><div class="sheet">
 
-  <div class="head" id="head">
+  <div class="head">
     <div class="brand">
       <svg class="logo" viewBox="0 0 12 10" aria-hidden="true">
         <rect x="0" y="0" width="12" height="2" rx="1"/>
@@ -356,7 +165,7 @@ pre{
     </div>
   </div>
 
-  <main id="main">
+  <main>
     <h1>Turn a chat into a link you can send</h1>
 
     <p class="verdict">Tell your AI: <span class="cmd">read upshot.fyi
@@ -366,9 +175,31 @@ pre{
 
     <h2>Format</h2>
     <p class="note">For any AI reading this page.</p>
-<pre>https://upshot.fyi/#a=ASK&amp;h=HEADLINE&amp;v=VERDICT&amp;m=MODEL&amp;d=YYYY-MM-DD
-  &amp;g=LABEL&amp;p=POINT&amp;p=POINT
-  &amp;g=LABEL&amp;n=VALUE~LABEL
+<pre>WHAT TO DO
+
+When the user says "export this", reply with the URL and nothing else. No
+preamble, no code fence, no explanation.
+
+Export what they pointed at, not the whole conversation. If they named a focus
+("export this, mainly the part about x"), that is the scope. If they did not,
+use whatever they were last discussing.
+
+
+THE SHAPE
+
+https://upshot.fyi/v1/#a=ASK&amp;h=HEADLINE&amp;v=VERDICT&amp;m=MODEL&amp;d=YYYY-MM-DD&amp;g=LABEL&amp;p=POINT&amp;p=POINT
+
+That is one line. It soft-wraps here to fit the column; the URL you write has
+no spaces and no line breaks in it.
+
+
+A WORKED EXAMPLE - follow this shape exactly
+
+https://upshot.fyi/v1/#a=Whether+to+move+the+API+off+Postgres&amp;h=Stay+on+Postgres+for+now&amp;v=SQLite+wins+on+ops%2C+but+you+need+concurrent+writes+within+the+year%2E&amp;m=GPT-5&amp;d=2026-09-08&amp;g=Why&amp;p=Concurrent+writes+are+the+one+thing+SQLite+cannot+do+at+your+scale%2E&amp;p=The+ops+saving+is+real+but+small+-+about+two+hours+a+month%2E
+
+Every space is +, the comma is %2C, every full stop is %2E. Nothing else in it
+is encoded, because nothing else in it had to be.
+
 
 THE FRAME - always all five, always first
 
@@ -378,31 +209,46 @@ v  one sentence verdict, under 25 words
 m  your model name, e.g. GPT-5
 d  today's date, YYYY-MM-DD
 
-BLOCKS - up to 3, shown in the order you write them
+
+BLOCKS - up to 3, in the order you write them. Anything past the third is dropped.
 
 g  label for the block that follows. Optional, 1 to 4 words.
    A g= always starts a new block, so two of the same kind can sit together.
 p  bullet, under 35 words. Repeat p= for each. Use 2 to 4.
 o  numbered step, under 25 words. Repeat o= for each. Use 3 to 6.
+   For a how-to, where the order is the point.
 c  checklist item, under 20 words. Repeat c= for each. Use 3 to 7.
+   Whoever opens the link can tick these off, and their ticks are kept in the
+   link they hold, so a half-finished list can be passed on.
    Do not send k= - the page writes that as people tick.
-f  fact, written Label~Value. Keep both halves short - one line each.
-n  figure, written Value~Label. Keep the value under 6 characters.
+f  fact, written Label~Value, e.g. f=Cold+start~180ms. A spec sheet, one row
+   per line. Keep both halves short - a row that wraps stops looking like one.
+n  figure, written Value~Label, e.g. n=42%25~fewer+timeouts. Set at headline
+   size, so keep the value under 6 characters.
+
 
 CHOOSING
 
-One block is usually right. Reach for p unless something else clearly fits.
+One block is usually right. Reach for p unless something else clearly fits:
+the user was following instructions (o), has things to do (c), wanted figures
+at a glance (f), or the whole point is two or three numbers (n).
+
 Only use a second or third block when it says something the first cannot.
+Three blocks of prose is worse than one good one.
+
 For a comparison, use two labelled p blocks:
   &amp;g=Postgres&amp;p=...&amp;p=...&amp;g=SQLite&amp;p=...&amp;p=...
+The same trick covers pros and cons - g=Pros then g=Cons.
 
 
 RULES
+
 Every space becomes + . The URL must contain no spaces.
-Encode inside values:  , %2C   . %2E   &amp; %26   = %3D   # %23   + %2B   % %25   " %22
+Encode inside values:  , %2C   . %2E   &amp; %26   = %3D   # %23   + %2B   % %25   ? %3F   " %22
 Commas and full stops MUST be encoded or WhatsApp breaks the link.
 Plain sentences only. No markdown, no line breaks inside values.
 Keep it readable on one phone screen. The word limits above do this.
+Hard ceiling is 2000 characters of URL. A good export is about half that.
 If facts could have changed recently, search first. Do not write from memory.
 
 Reply with the URL and nothing else.</pre>
@@ -427,7 +273,7 @@ Reply with the URL and nothing else.</pre>
     <p class="fine">Provided as is, without warranty.</p>
   </main>
 
-  <div class="foot" id="foot">
+  <div class="foot">
     <footer><div class="how">Made by <a href="https://github.com/midnight-merge">Midnight
       Merge</a></div></footer>
   </div>
@@ -436,751 +282,6 @@ Reply with the URL and nothing else.</pre>
 
 </div>
 
-<script>
-// AI-authored links sometimes get percent-encoded twice (once by hand per
-// our own instructions, once for real when the link is assembled) - decode
-// until it stops changing instead of trusting exactly one layer
-function decodeAll(v){
-  for(var i = 0; i < 4; i++){
-    var next;
-    try { next = decodeURIComponent(v); } catch(e){ break; }
-    if(next === v) break;
-    v = next;
-  }
-  return v;
-}
 
-/* The card is a fixed frame - scope line, headline, verdict, signature - with
-   up to three blocks stacked in the middle. g= starts a block and labels it;
-   the key that follows decides what kind. Blocks come out in the order they
-   appear in the URL, so the grammar needs no numbering and no nesting. */
-var BLOCK_KEYS = ['p', 'o', 'c', 'f', 'n'];
-var MAX_BLOCKS = 3;
-
-function parse(hash){
-  var out = {blocks: []};
-  var current = null;
-  var pendingLabel = null;
-
-  hash.replace(/^#/,'').split('&').forEach(function(pair){
-    if(!pair) return;
-    var i = pair.indexOf('=');
-    if(i < 0) return;
-    var k = pair.slice(0,i);
-    var v = decodeAll(pair.slice(i+1).replace(/\+/g,' '));
-
-    if(k === 'g'){
-      // a label always begins a new block, so two of the same kind can sit
-      // side by side - which is all a comparison ever was
-      pendingLabel = v;
-      current = null;
-      return;
-    }
-    if(BLOCK_KEYS.indexOf(k) >= 0){
-      if(!current || current.type !== k){
-        current = {type: k, label: pendingLabel, items: []};
-        pendingLabel = null;
-        out.blocks.push(current);
-      }
-      current.items.push(v);
-      return;
-    }
-    out[k] = v;
-  });
-
-  out.blocks = out.blocks.filter(function(b){ return b.items.length; }).slice(0, MAX_BLOCKS);
-  return out;
-}
-
-function esc(t){
-  return String(t == null ? '' : t)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// the mark, same geometry as the homepage's - see .logo
-var LOGO = '<svg class="logo" viewBox="0 0 12 10" aria-hidden="true">' +
-  '<rect x="0" y="0" width="12" height="2" rx="1"/>' +
-  '<rect x="0" y="4" width="7" height="2" rx="1"/>' +
-  '<circle cx="1.5" cy="8.5" r="1.5"/></svg>';
-
-var CREDIT = '<footer><div class="how">Make your own. Tell your AI to ' +
-  '<span class="cmd">read upshot.fyi</span> and export this</div></footer>';
-
-function broken(){
-  return {
-    head: '',
-    main: '<h1>This link looks incomplete</h1>' +
-      '<p>The export is missing its content. This usually means the link got cut ' +
-      'short when it was copied, or the AI that wrote it slipped on the format.</p>' +
-      '<p>Ask the AI to export it again, and send the whole link this time.</p>',
-    // same sig/r1 nesting as a real card, so the floated mark behaves the
-    // same way here (a float is ignored on a flex item, and .meta is flex)
-    foot: '<div class="meta"><div class="sig"><div class="r1">' + LOGO +
-          '<span class="model">Nothing to show</span></div></div></div>' + CREDIT
-  };
-}
-
-/* ---- blocks ----
-   A block owns one stretch of the middle and nothing else. Each declares the
-   HTML for its items and how the share renderer redraws them in canvas ops -
-   two implementations that have to agree, which is what `node test/run.js`
-   checks. A block with no measure() still works as a page; it just cannot be
-   exported as an image. */
-
-const listHTML = (cls, items, row) =>
-  '<ul class="' + cls + '">' + items.map(row).join('') + '</ul>';
-
-/* Bullets, steps and checklists differ only in their marker, so they share one
-   walk. rowSel names the element carrying the row's own font and gap - for a
-   checklist that is the <label> inside the <li>, not the <li> itself, and
-   taking the wrong one silently mis-measures every line. */
-function measureRows(y, m, list, markerWidth, marker, rowSel){
-  const items = [...list.children];
-  if(!items.length) return y;
-  const boxOf = el => rowSel ? el.querySelector(rowSel) : el;
-  const row = m.styleOfEl(boxOf(items[0]));
-  const rowGap = parseFloat(getComputedStyle(list).rowGap);
-  const colGap = parseFloat(row.s.columnGap);
-
-  items.forEach((el, i) => {
-    const box = m.block(y, row, m.runsIn(boxOf(el).querySelector('span:last-child'), row.upper),
-                        {indent: markerWidth + colGap});
-    marker(el, box, row);
-    y = box.bottom + (i < items.length - 1 ? rowGap : 0);
-  });
-  return y;
-}
-
-const BLOCKS = {
-  p: {
-    body: items => listHTML('points', items, pt =>
-      '<li><span class="n">&bull;</span><span>' + esc(pt) + '</span></li>'),
-
-    measure(y, m, section){
-      const list = section.querySelector('.points');
-      if(!list) return y;
-      const dot = getComputedStyle(list.querySelector('.n'));
-      const w = parseFloat(dot.width);
-      const h = parseFloat(dot.height);
-      const top = parseFloat(dot.marginTop);
-      return measureRows(y, m, list, w, (el, box) => m.ops.push({
-        kind: 'dot', color: m.accent, r: w / 2,
-        x: m.padX + w / 2, y: box.top + top + h / 2
-      }));
-    }
-  },
-
-  o: {
-    // the digit lives in the markup, not a CSS counter, because the share
-    // renderer has to be able to read it
-    body: items => '<ol class="steps">' + items.map((step, i) =>
-      '<li><span class="n">' + (i + 1) + '</span><span>' + esc(step) + '</span></li>'
-    ).join('') + '</ol>',
-
-    measure(y, m, section){
-      const list = section.querySelector('.steps');
-      if(!list) return y;
-      const w = parseFloat(getComputedStyle(list.querySelector('.n')).width);
-      return measureRows(y, m, list, w, (el, box) => {
-        const marker = el.querySelector('.n');
-        const st = m.styleOfEl(marker);
-        // same font and line-height as the row, so one baseline serves both
-        m.block(box.top, st, m.runsIn(marker, st.upper));
-      });
-    }
-  },
-
-  c: {
-    /* A real <input type=checkbox> in a <label>: focusable, tappable along the
-       whole row, and a checkbox to a screen reader. A ticked row goes quiet
-       rather than struck through, so the renderer reproduces the state for
-       free by reading each row's own computed colour. */
-    body: (items, ticked) => listHTML('checks', items, (item, i) =>
-      '<li><label><input type="checkbox"' +
-      (String(ticked || '')[i] === '1' ? ' checked' : '') +
-      '><span>' + esc(item) + '</span></label></li>'),
-
-    measure(y, m, section){
-      const list = section.querySelector('.checks');
-      if(!list) return y;
-      const first = getComputedStyle(list.querySelector('input'));
-      const size = parseFloat(first.width);
-      return measureRows(y, m, list, size, (el, box) => {
-        const input = el.querySelector('input');
-        const box2 = getComputedStyle(input);
-        m.ops.push({
-          kind: 'checkbox',
-          x: m.padX, y: box.top + parseFloat(box2.marginTop),
-          w: size, h: parseFloat(box2.height),
-          r: parseFloat(box2.borderTopLeftRadius),
-          lineWidth: parseFloat(box2.borderTopWidth),
-          checked: input.checked,
-          color: input.checked ? box2.backgroundColor : box2.borderTopColor
-        });
-      }, 'label');
-    }
-  },
-
-  f: {
-    // Label~Value. A tilde needs no escaping and is not one of the characters
-    // WhatsApp objects to, so a separator costs one character.
-    body(items){
-      return '<div class="facts">' + items.map(row => {
-        const cut = row.indexOf('~');
-        const key = cut < 0 ? row : row.slice(0, cut);
-        const value = cut < 0 ? '' : row.slice(cut + 1);
-        return '<div class="fact"><span class="fk">' + esc(key) + '</span>' +
-               (value ? '<span class="fv">' + esc(value) + '</span>' : '') + '</div>';
-      }).join('') + '</div>';
-    },
-
-    measure(y, m, section){
-      [...section.querySelectorAll('.fact')].forEach((el, i) => {
-        const st = m.styleOfEl(el);
-        if(i){
-          const rule = parseFloat(st.s.borderTopWidth);
-          m.ops.push({kind: 'rect', x: m.padX, y, w: m.colWidth, h: rule, color: m.hair});
-          y += rule + parseFloat(st.s.paddingTop);
-        }
-        y = m.block(y, st, m.runsIn(el, st.upper)).bottom + parseFloat(st.s.paddingBottom);
-      });
-      return y;
-    }
-  },
-
-  n: {
-    // Value~Label, in the order you read them
-    body(items){
-      return '<div class="stats">' + items.map(row => {
-        const cut = row.indexOf('~');
-        const value = cut < 0 ? row : row.slice(0, cut);
-        const label = cut < 0 ? '' : row.slice(cut + 1);
-        return '<div class="stat"><div class="sv">' + esc(value) + '</div>' +
-               (label ? '<div class="sl">' + esc(label) + '</div>' : '') + '</div>';
-      }).join('') + '</div>';
-    },
-
-    measure(y, m, section){
-      const stats = [...section.querySelectorAll('.stat')];
-      if(!stats.length) return y;
-      const gap = parseFloat(getComputedStyle(section.querySelector('.stats')).rowGap);
-      stats.forEach((stat, i) => {
-        if(i) y += gap;
-        for(const sel of ['.sv', '.sl']){
-          const el = stat.querySelector(sel);
-          if(!el) continue;
-          const st = m.styleOfEl(el);
-          y = m.block(y + parseFloat(st.s.marginTop), st, m.runsIn(el, st.upper)).bottom;
-        }
-      });
-      return y;
-    }
-  }
-};
-
-// own-property lookup only: block keys come from the URL
-const blockKind = type =>
-  Object.prototype.hasOwnProperty.call(BLOCKS, type) ? BLOCKS[type] : null;
-
-// returns the contents of the three regions - never the regions themselves
-function render(d){
-  if(!d.h && !d.v && !d.blocks.length) return broken();
-
-  // head: same component and type as the homepage's, minus the logo - the
-  // mark is our branding, and a card is the sender's content
-  var head = '';
-  if(d.a){
-    head = '<div class="brand"><span>' + esc(d.a) + '</span></div>';
-  }
-
-  var main = '';
-  if(d.h) main += '<h1>' + esc(d.h) + '</h1>';
-  if(d.v) main += '<p class="verdict">' + esc(d.v) + '</p>';
-  main += d.blocks.map(function(b){
-    var kind = blockKind(b.type);
-    if(!kind) return '';
-    return '<section class="block" data-block="' + b.type + '">' +
-      (b.label ? '<h2 class="bl">' + esc(b.label) + '</h2>' : '') +
-      kind.body(b.items, d.k) +
-    '</section>';
-  }).join('');
-
-  var foot = '<div class="meta">' +
-    '<div class="sig">' +
-      '<div class="r1">' + LOGO +
-        '<span class="by">Generated by</span>' +
-        '<span class="model">' + esc(d.m || 'Unknown model') + '</span></div>' +
-      '<div class="r2">' + esc(d.d || '') + '</div>' +
-    '</div>' +
-    '<button type="button" class="shareBtn" id="shareBtn">Share image</button>' +
-    '</div>' + CREDIT;
-
-  return {head: head, main: main, foot: foot};
-}
-
-/* Ticks rewrite the fragment, so a viewer who works through a list ends up
-   holding a link to their own version and can pass it on. replaceState rather
-   than assignment: it leaves the back button alone and fires no hashchange, so
-   this cannot loop back into draw(). One k= covers every checklist on the
-   card, in document order. */
-function bindChecks(){
-  var boxes = [].slice.call(document.querySelectorAll('.checks input'));
-  if(!boxes.length) return;
-  boxes.forEach(function(box){
-    box.addEventListener('change', function(){
-      var bits = boxes.map(function(b){ return b.checked ? '1' : '0'; }).join('');
-      var frag = location.hash.replace(/^#/, '');
-      var next = /(^|&)k=[^&]*/.test(frag)
-        ? frag.replace(/(^|&)k=[^&]*/, '$1k=' + bits)
-        : frag + '&k=' + bits;
-      history.replaceState(null, '', '#' + next);
-    });
-  });
-}
-
-if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
-
-function draw(){
-  var frag = location.hash.replace(/^#/,'');
-  if(!frag) return;                     // no fragment: leave the static landing page
-  var r = render(parse(location.hash));
-  // fill the existing regions; the shell itself is never rebuilt, so the
-  // layout does not change shape mid-load
-  document.getElementById('head').innerHTML = r.head;
-  document.getElementById('main').innerHTML = r.main;
-  document.getElementById('foot').innerHTML = r.foot;
-  shareImage.bind();
-  bindChecks();
-  window.scrollTo(0, 0);
-}
-
-
-/* ---- share as image ----
-   We draw the card ourselves rather than screenshotting the DOM. Browsers
-   expose no screenshot API, so the library we used before (html2canvas)
-   re-implemented CSS painting in JS and had to GUESS the card's height -
-   long exports came back clipped, and only sometimes, which is the worst
-   kind of bug. Here the wrapping runs first and the canvas is sized from
-   line counts we already measured, so nothing can fall off the bottom.
-   Every metric comes off the live card's computed style, so the stylesheet
-   stays the one place the design is defined. */
-const shareImage = (() => {
-
-  /* the card's own geometry, which is now the same at every width - the
-     image is a fixed artifact, so it does not read this from the viewport */
-  const IMG = {w: 430, padX: 26, padT: 40, padB: 30, radius: 0};
-
-  /* browsers cap canvas size - iOS Safari is the tight one, around 4096 per
-     side plus a total-area ceiling - and going over throws nothing. You just
-     get a truncated or blank bitmap. This is what actually clipped the long
-     cards, so the scale bends instead of the image. No floor of 1: a card
-     tall enough to need shrinking below 1 is exactly the case this exists
-     for. */
-  const MAX_SIDE = 4096;
-  const MAX_AREA = 16777216;
-  const pickScale = (w, h) => Math.min(
-    3, (window.devicePixelRatio || 1) * 2,
-    MAX_SIDE / w, MAX_SIDE / h, Math.sqrt(MAX_AREA / (w * h))
-  );
-
-  const cssVar = name =>
-    getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-
-  /* Typography for one element. Only line-height and letter-spacing get a
-     fallback - they are the two that can come back as "normal" instead of a
-     length. Every box metric resolves to px on a rendered element, so
-     reading those needs no default, and giving them one would just be the
-     design written down a second time. */
-  const styleOf = selector => styleOfEl(document.querySelector(selector));
-
-  function styleOfEl(el){
-    if(!el) return null;
-    const s = getComputedStyle(el);
-    const size = parseFloat(s.fontSize);
-    const lh = parseFloat(s.lineHeight);
-    const track = parseFloat(s.letterSpacing);
-    return {
-      el, s, size,
-      font: `${s.fontStyle} ${s.fontWeight} ${size}px ${s.fontFamily}`,
-      lh: Number.isFinite(lh) ? lh : size * 1.2,
-      track: Number.isFinite(track) ? track : 0,
-      upper: s.textTransform === 'uppercase',
-      marginBottom: parseFloat(s.marginBottom)
-    };
-  }
-
-  function useFont(ctx, st){
-    ctx.font = st.font;
-    // tracking is honoured by measureText too, so wrapping and drawing always
-    // agree - and where it is unsupported both ignore it, which is still
-    // consistent. That agreement is the whole reason this cannot clip.
-    if('letterSpacing' in ctx) ctx.letterSpacing = `${st.track}px`;
-  }
-
-  const widthOf = (ctx, text) => ctx.measureText(text).width;
-
-  // ascent and descent of the current font, for placing baselines
-  function fontMetrics(ctx, size){
-    const m = ctx.measureText('Hxg');
-    return Number.isFinite(m.fontBoundingBoxAscent)
-      ? {ascent: m.fontBoundingBoxAscent, descent: m.fontBoundingBoxDescent}
-      : {ascent: size * 0.8, descent: size * 0.2};
-  }
-
-  // overflow-wrap:anywhere parity - a token wider than the column is split by
-  // character instead of being allowed to run past the edge
-  function splitToken(ctx, token, maxWidth){
-    const chunks = [];
-    let cur = '';
-    for(const ch of token){
-      if(cur && widthOf(ctx, cur + ch) > maxWidth){ chunks.push(cur); cur = ''; }
-      cur += ch;
-    }
-    if(cur) chunks.push(cur);
-    return chunks;
-  }
-
-  /* Lays coloured runs into lines. One font per block, so this is a single
-     measuring pass; used for the plain blocks (one run) and for the signature
-     and credit, which change colour mid-sentence. */
-  function flowRuns(ctx, runs, maxWidth){
-    const lines = [[]];
-    let lineWidth = 0;
-
-    const put = (text, color, lead) => {
-      const w = widthOf(ctx, text);
-      if(lineWidth && lineWidth + lead + w > maxWidth){
-        lines.push([]);
-        lineWidth = 0;
-        lead = 0;
-      }
-      lines.at(-1).push({text, color, x: lineWidth + lead});
-      lineWidth += lead + w;
-    };
-
-    for(const run of runs){
-      const words = run.text.split(/\s+/).filter(Boolean);
-      words.forEach((word, i) => {
-        // between runs: an explicit margin if there is one, otherwise a word
-        // space only where the markup actually had whitespace
-        const lead = lineWidth === 0 ? 0
-          : i === 0 ? (run.gap || (run.spaced ? widthOf(ctx, ' ') : 0))
-          : widthOf(ctx, ' ');
-        if(widthOf(ctx, word) > maxWidth){
-          for(const chunk of splitToken(ctx, word, maxWidth)) put(chunk, run.color, 0);
-        } else {
-          put(word, run.color, lead);
-        }
-      });
-    }
-    return lines;
-  }
-
-  /* text-wrap:balance, which the h1 asks for and greedy wrapping will not
-     give you. Same idea the browser uses: squeeze the column down to the
-     narrowest width that still fits in the same number of lines, so the last
-     line is not a runt. */
-  function balanceLines(ctx, runs, maxWidth, target){
-    let lo = 1;
-    let hi = maxWidth;
-    while(hi - lo > 1){
-      const mid = (lo + hi) / 2;
-      if(flowRuns(ctx, runs, mid).length <= target) hi = mid; else lo = mid;
-    }
-    return flowRuns(ctx, runs, hi);
-  }
-
-  const wantsBalance = s =>
-    `${s.textWrap} ${s.textWrapStyle}`.includes('balance');
-
-  /* Child nodes as coloured runs, so a .cmd or .model span keeps its own
-     colour. The mark is drawn separately, so skip the svg. Each run records
-     whether the markup put whitespace before it - trimming the nodes without
-     that would weld "to" onto "read upshot.fyi". */
-  function runsIn(el, upper){
-    const runs = [];
-    let pendingSpace = false;
-
-    for(const node of el.childNodes){
-      if(node.nodeName === 'svg') continue;
-      const raw = (node.textContent ?? '').replace(/\s+/g, ' ');
-      if(!raw.trim()){
-        if(raw) pendingSpace = true;
-        continue;
-      }
-      const isEl = node.nodeType === Node.ELEMENT_NODE;
-      const s = getComputedStyle(isEl ? node : el);
-      const text = raw.trim();
-      runs.push({
-        text: upper ? text.toUpperCase() : text,
-        color: s.color,
-        gap: isEl ? parseFloat(s.marginLeft) : 0,
-        spaced: pendingSpace || raw.startsWith(' ')
-      });
-      pendingSpace = raw.endsWith(' ');
-    }
-    return runs;
-  }
-
-  /* ---- layout: a flat op list, and the exact height it needs ---- */
-  function layout(){
-    const accent = cssVar('--accent');
-    const hair = cssVar('--hair');
-    const ctx = document.createElement('canvas').getContext('2d');
-    const colWidth = IMG.w - IMG.padX * 2;
-    const ops = [];
-    let y = IMG.padT;
-
-    // one text block at `top`: measure, emit, hand back the box it occupies.
-    // The caller owns the cursor - this does not move it.
-    function block(top, st, runs, {indent = 0} = {}){
-      const width = colWidth - indent;
-      useFont(ctx, st);
-      let lines = flowRuns(ctx, runs, width);
-      if(wantsBalance(st.s)) lines = balanceLines(ctx, runs, width, lines.length);
-      const height = lines.length * st.lh;
-      ops.push({kind: 'text', st, lines, x: IMG.padX + indent, y: top});
-      return {top, height, bottom: top + height};
-    }
-
-    const scope = styleOf('#head .brand');
-    if(scope){
-      const head = getComputedStyle(document.getElementById('head'));
-      y = block(y, scope, runsIn(scope.el, scope.upper)).bottom
-        + parseFloat(head.paddingBottom);
-    }
-
-    const heading = styleOf('#main h1');
-    if(heading){
-      y = block(y, heading, runsIn(heading.el, heading.upper)).bottom
-        + heading.marginBottom;
-    }
-
-    const verdict = styleOf('#main .verdict');
-    if(verdict){
-      const rule = parseFloat(verdict.s.borderLeftWidth);
-      const box = block(y, verdict, runsIn(verdict.el, verdict.upper),
-                        {indent: rule + parseFloat(verdict.s.paddingLeft)});
-      ops.push({kind: 'rect', x: IMG.padX, y: box.top, w: rule, h: box.height, color: accent});
-      y = box.bottom + verdict.marginBottom;
-    }
-
-    // the broken-link page is the only thing with plain paragraphs, and it
-    // has two of them - so this loops rather than taking the first
-    const para = styleOf('#main p:not(.verdict)');
-    if(para){
-      for(const el of document.querySelectorAll('#main p:not(.verdict)')){
-        // its own computed margin, so "main > :last-child" is honoured
-        y = block(y, para, runsIn(el, para.upper)).bottom
-          + parseFloat(getComputedStyle(el).marginBottom);
-      }
-    }
-
-    // up to three blocks fill the space between the verdict and the foot
-    const m = {block, ops, accent, hair, colWidth, styleOf, styleOfEl, runsIn, padX: IMG.padX};
-    [...document.querySelectorAll('#main .block')].forEach((section, i) => {
-      if(i) y += parseFloat(getComputedStyle(section).marginTop);
-      const label = section.querySelector('.bl');
-      if(label){
-        const st = styleOfEl(label);
-        y = block(y, st, runsIn(label, st.upper)).bottom + st.marginBottom;
-      }
-      const kind = blockKind(section.dataset.block);
-      if(kind) y = kind.measure(y, m, section);
-    });
-
-    // foot: hairline, then signature and credit
-    const foot = getComputedStyle(document.getElementById('foot'));
-    const hairline = parseFloat(foot.borderTopWidth);
-    y += parseFloat(foot.marginTop);
-    ops.push({kind: 'rect', x: IMG.padX, y, w: colWidth, h: hairline, color: hair});
-    y += hairline + parseFloat(foot.paddingTop);
-
-    const sig = styleOf('.meta .r1');
-    if(sig){
-      const mark = getComputedStyle(document.querySelector('.meta .logo'));
-      const markW = parseFloat(mark.width);
-      // the mark floats on the page so wrapped lines return to the margin;
-      // here the whole line is indented instead. A two-word signature never
-      // wraps, so the difference is not reachable.
-      const box = block(y, sig, runsIn(sig.el, sig.upper),
-                        {indent: markW + parseFloat(mark.marginRight)});
-      ops.push({
-        kind: 'logo', color: accent, x: IMG.padX,
-        y: box.top + parseFloat(mark.marginTop),
-        w: markW, h: parseFloat(mark.height)
-      });
-      y = box.bottom;
-
-      const date = styleOf('.meta .r2');
-      if(date?.el.textContent.trim()){
-        y += parseFloat(getComputedStyle(document.querySelector('.meta .sig')).rowGap);
-        y = block(y, date, runsIn(date.el, date.upper)).bottom;
-      }
-    }
-
-    const credit = styleOf('footer .how');
-    if(credit){
-      y += parseFloat(getComputedStyle(document.querySelector('#foot footer')).marginTop);
-      y = block(y, credit, runsIn(credit.el, credit.upper)).bottom;
-    }
-
-    return {width: IMG.w, height: Math.ceil(y + IMG.padB), ops, background: cssVar('--card')};
-  }
-
-  /* ---- paint ---- */
-  function roundedPath(ctx, x, y, w, h, r){
-    ctx.beginPath();
-    if(ctx.roundRect){ ctx.roundRect(x, y, w, h, r); return; }
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-  }
-
-  // the mark, same 12x10 geometry as the SVG - see .logo
-  function drawLogo(ctx, {x, y, w, color}){
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(w / 12, w / 12);
-    ctx.fillStyle = color;
-    roundedPath(ctx, 0, 0, 12, 2, 1); ctx.fill();
-    roundedPath(ctx, 0, 4, 7, 2, 1); ctx.fill();
-    ctx.beginPath();
-    ctx.arc(1.5, 8.5, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  function drawText(ctx, op){
-    useFont(ctx, op.st);
-    // CSS half-leading: the glyph box is centred in the line box, so the
-    // baseline sits (lh - ascent - descent)/2 + ascent below the line top
-    const {ascent, descent} = fontMetrics(ctx, op.st.size);
-    const halfLeading = (op.st.lh - ascent - descent) / 2;
-    op.lines.forEach((line, i) => {
-      const baseline = op.y + i * op.st.lh + halfLeading + ascent;
-      for(const run of line){
-        ctx.fillStyle = run.color;
-        ctx.fillText(run.text, op.x + run.x, baseline);
-      }
-    });
-  }
-
-  function paint({width, height, ops, background}){
-    const scale = pickScale(width, height);
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.round(width * scale);
-    canvas.height = Math.round(height * scale);
-
-    const ctx = canvas.getContext('2d');
-    ctx.scale(scale, scale);
-
-    // transparent outside the corners - the card is an object, not a page
-    ctx.fillStyle = background;
-    roundedPath(ctx, 0, 0, width, height, IMG.radius);
-    ctx.fill();
-
-    for(const op of ops){
-      switch(op.kind){
-        case 'rect':
-          ctx.fillStyle = op.color;
-          ctx.fillRect(op.x, op.y, op.w, op.h);
-          break;
-        case 'dot':
-          ctx.fillStyle = op.color;
-          ctx.beginPath();
-          ctx.arc(op.x, op.y, op.r, 0, Math.PI * 2);
-          ctx.fill();
-          break;
-        case 'checkbox':
-          // filled when ticked, outlined when not - same two states the CSS has
-          roundedPath(ctx, op.x, op.y, op.w, op.h, op.r);
-          if(op.checked){
-            ctx.fillStyle = op.color;
-            ctx.fill();
-          } else {
-            ctx.strokeStyle = op.color;
-            ctx.lineWidth = op.lineWidth;
-            ctx.stroke();
-          }
-          break;
-        case 'logo':
-          drawLogo(ctx, op);
-          break;
-        case 'text':
-          drawText(ctx, op);
-          break;
-      }
-    }
-    return canvas;
-  }
-
-  /* ---- delivery ---- */
-  const fileName = () => {
-    const headline = (parse(location.hash).h || 'export').toLowerCase();
-    const stem = headline.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50);
-    return `${stem || 'export'}.png`;
-  };
-
-  const toBlob = canvas =>
-    new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-
-  function download(file){
-    const url = URL.createObjectURL(file);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = file.name;
-    document.body.append(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
-  }
-
-  function bind(){
-    const btn = document.getElementById('shareBtn');
-    if(!btn) return;
-
-    btn.addEventListener('click', async () => {
-      const label = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = 'Rendering';
-      try {
-        // measuring before the faces are ready would wrap against fallback
-        // metrics, and the image would not match the page
-        await document.fonts.ready;
-        const blob = await toBlob(paint(layout()));
-        if(!blob) throw new Error('canvas produced no blob');
-
-        const file = new File([blob], fileName(), {type: 'image/png'});
-        // native share sheet on phones, so it can go straight to any app
-        if(navigator.canShare?.({files: [file]})){
-          await navigator.share({files: [file]});
-        } else {
-          download(file);
-        }
-        btn.textContent = label;
-      } catch(e){
-        if(e?.name === 'AbortError'){   // user dismissed the share sheet
-          btn.textContent = label;
-          return;
-        }
-        btn.textContent = 'Could not render';
-        setTimeout(() => { btn.textContent = label; }, 2500);
-      } finally {
-        btn.disabled = false;
-      }
-    });
-  }
-
-  return {bind, layout, paint};
-})();
-
-draw();
-window.addEventListener('hashchange', draw);
-
-</script>
 </body>
 </html>

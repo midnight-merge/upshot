@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>upshot - broken link</title>
+<meta name="robots" content="noindex">
+<style>
+/* the card commits to one look in both themes - it is an object, not a document */
+:root{
+  --card:#12131A;
+  --ink:#F7F7F4;
+  --dim:#B4B6C2;
+  --faint:#8E91A6;
+  --accent:#C8FF3D;
+  --hair:rgba(247,247,244,.12);
+  /* the platform's own faces - nothing to download, and none of the
+     Google-Fonts pairings that read as templated */
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--card);
+  color:var(--ink);
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+  /* export content is arbitrary AI text with no length guarantee - never let
+     one long unbroken token overflow the card and trigger mobile auto-zoom */
+  overflow-wrap:anywhere;
+  /* Trailing space at the end of the document. Chrome on iOS stops the scroll
+     with the last of the page still under its bottom toolbar - you can drag
+     past it, but it rubber-bands straight back. Ordinary sites do not show
+     this because they have slack down there; this card ended 30px after the
+     credit line. Static, because the moment the two viewport heights diverge
+     is not one that fires any event to measure at. */
+  padding-bottom:160px;
+
+  /* an ordinary scrolling document - no viewport lock, no nested scrollport,
+     and deliberately no min-height:100vh. On iOS, 100vh is the LARGE viewport
+     (the height with the address bar retracted), so it stretches the body
+     past the visible area and even a two-line card scrolls. Nothing needs it:
+     the body's background propagates to the canvas, so the page paints edge
+     to edge however short the card is. */
+}
+
+.sheet{
+  width:100%;
+  max-width:430px;
+  background:var(--card);
+  padding:40px 26px 30px;
+}
+
+/* head - brand on the homepage, the scope line on a card */
+.head{padding-bottom:22px}
+/* a card with no scope line has nothing up top - take the gap with it */
+.head:empty{padding-bottom:0}
+/* foot - the hairline and spacing live HERE, not on .meta, so the homepage
+   (credit only) and a card (signature + credit) open the same way */
+.foot{
+  margin-top:34px;
+  padding-top:18px;
+  border-top:1px solid var(--hair);
+}
+.foot > :first-child{margin-top:0}
+
+/* the page scrolls, not this - ordinary flow */
+main > :last-child{margin-bottom:0}
+
+/* ONE header line, used by both the homepage and a card. Only the text
+   inside it ever differs - so the header does not change size, weight or
+   colour when you go from one to the other. */
+.brand{
+  font-family:var(--mono);
+  font-size:12.5px;
+  line-height:1.5;
+  letter-spacing:.01em;
+  color:var(--faint);
+}
+.brand::after{content:"";display:block;clear:both}
+
+/* the mark: lines of text distilling down to a single point - the upshot.
+   Floated, not a flex child, so only the FIRST line clears it - wrapped
+   lines run back to the full width instead of the whole block indenting. */
+.logo{
+  float:left;
+  width:12px;
+  height:10px;
+  margin:4px 8px 0 0;   /* top nudge sits it on the first line */
+  fill:var(--accent);
+}
+
+h1{
+  font-weight:700;
+  font-size:35px;
+  line-height:1.06;
+  letter-spacing:-.032em;
+  text-wrap:balance;
+  margin:0 0 22px;
+}
+
+.verdict{
+  font-size:19.5px;
+  font-weight:400;
+  line-height:1.42;
+  letter-spacing:-.008em;
+  color:var(--dim);
+  margin:0 0 34px;
+  padding-left:15px;
+  border-left:2px solid var(--accent);
+}
+
+p{margin:0 0 15px;font-size:15px;color:var(--dim)}
+
+footer{
+  margin-top:14px;
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--faint);
+}
+footer .frow{display:none}
+/* same hairline-to-accent treatment as the share control */
+a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--hair)}
+a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;text-wrap:pretty}
+.cmd{color:var(--accent)}
+
+/* the column the sheet sits in */
+.wrap{display:flex;flex-direction:column;align-items:center;width:100%}
+
+/* metadata sits at the bottom like a signature, not a footer bar */
+.meta{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  font-family:var(--mono);
+  font-size:10.5px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--faint);
+}
+.meta .sig{display:flex;flex-direction:column;gap:5px;min-width:0}
+.meta .r1{line-height:1.5}
+.meta .r1::after{content:"";display:block;clear:both}
+.meta .r2{color:var(--faint)}
+/* same mark, scaled to the signature's smaller type */
+.meta .logo{width:10px;height:8px;margin:2px 7px 0 0}
+.meta .sep{opacity:.5}
+.meta .model{color:var(--dim);margin-left:6px}
+.meta .by{color:var(--faint)}
+
+</style>
+</head>
+<body>
+<!-- Static copy, start to finish. An export is a different document at
+     /v1/, so nothing here is ever replaced and this page never changes
+     height after it is laid out. -->
+<div class="wrap"><div class="sheet">
+
+  <div class="head">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 12 10" aria-hidden="true">
+        <rect x="0" y="0" width="12" height="2" rx="1"/>
+        <rect x="0" y="4" width="7" height="2" rx="1"/>
+        <circle cx="1.5" cy="8.5" r="1.5"/>
+      </svg>
+      <span>upshot.fyi</span>
+    </div>
+  </div>
+
+  <main>
+    <h1>This link looks incomplete</h1>
+    <p>The export is missing its content. This usually means the link got cut
+      short when it was copied, or the AI that wrote it slipped on the format.</p>
+    <p>Ask the AI to export it again, and send the whole link this time.</p>
+  </main>
+
+  <div class="foot">
+    <div class="meta"><div class="sig"><div class="r1"><svg class="logo" viewBox="0 0 12 10" aria-hidden="true">
+      <rect x="0" y="0" width="12" height="2" rx="1"/>
+      <rect x="0" y="4" width="7" height="2" rx="1"/>
+      <circle cx="1.5" cy="8.5" r="1.5"/>
+    </svg><span class="model">Nothing to show</span></div></div></div>
+    <footer><div class="how">Make your own. Tell your AI to
+      <span class="cmd">read upshot.fyi</span> and export this</div></footer>
+  </div>
+
+</div>
+
+</div>
+
+</div>
+
+
+</body>
+</html>
