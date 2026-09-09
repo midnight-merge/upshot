@@ -63,12 +63,41 @@ is dropped.
      one.
 - n  figure, written `Value~Label`, e.g. `n=42%25~fewer+timeouts`. Set at
      headline size, so keep the value under 6 characters.
+- i  input, written `Name~Label~Starting+value`, e.g. `i=seats~Seats~4`. A box
+     the reader can type in, so the card becomes a small tool rather than a
+     fixed answer. Use 2 to 4. Their numbers are written into the link they
+     hold, so a card they have adjusted can be passed on.
+     Do not send `w=`. The page writes it as people type.
+- r  result, written `Name~Label~Formula`, e.g. `r=t~Total~seats*price`. The card
+     works the number out and prints the formula beside it - with every name
+     replaced by what it held - so the reader can check it. A formula may use
+     digits, `+ - * / ( )`, any `i=` name on the card, the names of earlier
+     `r=` rows, a comparison (`< > <= >= == !=`), `a?b:c`, and
+     `min max round abs sqrt pow floor ceil` - nothing else.
+     Leave the label empty for a working step you do not want drawn:
+     `r=sub~~seats*price`. A full stop inside a number is encoded like any
+     other: `4%2E5`, never `4.5`.
+
+For both `i` and `r` the first field is always the name, even when it is empty:
+`r=~Per+year~t*12` is a result with no name of its own. The name is what a
+formula refers to, so keep it to a single word.
 
 ## Choosing blocks
 
 One block is usually right. Reach for `p` unless something else clearly fits:
 the user was following instructions (`o`), has things to do (`c`), wanted
 figures at a glance (`f`), or the whole point is two or three numbers (`n`).
+
+Use `r` when the answer is arithmetic the reader would otherwise do by hand - a
+total, a split, a rate, two costs compared. Put the numbers the user gave you
+into the formulas rather than working them out yourself, so the card shows its
+working instead of a figure nobody can check.
+
+Add `i` when the reader's own numbers would differ from the sender's - then the
+card is a tool, not an answer. Send `i` and `r` together, `i` first:
+
+    &g=Your+numbers&i=seats~Seats~4&i=price~Price+per+seat~18
+    &g=What+it+costs&r=m~~seats*price&r=~Per+month~m&r=~Per+year~m*12
 
 Only add a second or third block when it says something the first cannot. Three
 blocks of prose is worse than one good one.
@@ -84,10 +113,12 @@ The same trick covers pros and cons: `g=Pros` then `g=Cons`.
 ## Rules
 
 - Every space becomes `+`. The URL must contain no spaces at all.
-- Escape inside values: `,` %2C, `.` %2E, `&` %26, `=` %3D, `#` %23, `+` %2B,
-  `%` %25, `?` %3F, `"` %22
-- Commas and full stops MUST be encoded. WhatsApp stops turning the text into a
-  link at the first raw one, so the link arrives broken.
+- Escape inside values: `,` %2C, `.` %2E, `(` %28, `)` %29, `&` %26, `=` %3D,
+  `#` %23, `+` %2B, `%` %25, `?` %3F, `"` %22
+- Commas, full stops and brackets MUST be encoded. WhatsApp stops turning the
+  text into a link at the first raw comma or full stop, and at a closing
+  bracket that ends a nested pair - so a formula like `round(w*(1+r/30))`
+  cuts the link in half. Write it `round%28w*%281%2Br%2F30%29%29`.
 - Plain sentences only. No markdown, no bullets, no line breaks inside values.
 - Keep it short enough to read on one phone screen. Staying inside the word
   limits above does this. Hard ceiling is 2000 characters of URL, but a good

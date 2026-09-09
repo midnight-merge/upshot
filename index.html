@@ -235,6 +235,21 @@ f  fact, written Label~Value, e.g. f=Cold+start~180ms. A spec sheet, one row
    per line. Keep both halves short - a row that wraps stops looking like one.
 n  figure, written Value~Label, e.g. n=42%25~fewer+timeouts. Set at headline
    size, so keep the value under 6 characters.
+i  input, written Name~Label~Starting+value, e.g. i=seats~Seats~4. A box the
+   reader can type in. Use 2 to 4.
+   Do not send w= - the page writes that as people type.
+r  result, written Name~Label~Formula, e.g. r=t~Total~seats*price. The card
+   works the number out and shows the formula beside it, with every name
+   replaced by what it held. A formula may use digits, + - * / ( ), any i=
+   name on the card, the names of earlier r= rows, a comparison
+   (&lt; &gt; &lt;= &gt;= == !=), a?b:c, and min max round abs sqrt pow floor
+   ceil. Leave the label empty for a working step you do not want drawn:
+   r=sub~~seats*price. Numbers need their full stop encoded like any other -
+   4%2E5, never 4.5.
+
+For both, the first field is always the name, even when it is empty:
+r=~Per+year~t*12 is a result with no name of its own. The name is what
+formulas refer to; keep it to a word.
 
 
 CHOOSING
@@ -242,6 +257,17 @@ CHOOSING
 One block is usually right. Reach for p unless something else clearly fits:
 the user was following instructions (o), has things to do (c), wanted figures
 at a glance (f), or the whole point is two or three numbers (n).
+
+Use r when the answer is arithmetic the reader would otherwise do themselves -
+a total, a split, a rate, a comparison of two costs. Write the numbers the user
+gave you into the formulas, so the card shows its working rather than a figure
+nobody can check.
+
+Add i when the reader's own numbers would differ from the sender's. Then the
+card is a small tool rather than an answer: whoever opens it types their
+situation in, the results follow, and the link they end up holding carries
+their numbers - so they can pass it on and the next person sees what they saw.
+Send i and r together, i first.
 
 Only use a second or third block when it says something the first cannot.
 Three blocks of prose is worse than one good one.
@@ -254,7 +280,7 @@ The same trick covers pros and cons - g=Pros then g=Cons.
 RULES
 
 Every space becomes + . The URL must contain no spaces.
-Encode inside values:  , %2C   . %2E   &amp; %26   = %3D   # %23   + %2B   % %25   ? %3F   " %22
+Encode inside values:  , %2C   . %2E   ( %28   ) %29   &amp; %26   = %3D   # %23   + %2B   % %25   ? %3F   " %22
 Commas and full stops MUST be encoded or WhatsApp breaks the link.
 Plain sentences only. No markdown, no line breaks inside values.
 Keep it readable on one phone screen. The word limits above do this.
@@ -266,10 +292,13 @@ Reply with the URL and nothing else.</pre>
     <h2>Privacy</h2>
     <p class="fine">Everything after the <span class="cmd">#</span> stays in
       your browser. Browsers never send it to a server, so this site receives no
-      part of an export. Nothing to store, nothing to delete.</p>
-    <p class="fine">GitHub Pages logs IPs to serve the page. Nothing else is
-      fetched from anywhere - no third-party scripts, no fonts, no cookies, no
-      analytics. Share image is drawn in your browser and never uploaded.</p>
+      part of an export, and everything this page does, it does on your own
+      device. Nothing to store, nothing to delete.</p>
+    <p class="fine">GitHub Pages logs IPs to serve the page - a legitimate
+      interest, and the only personal data involved. GitHub holds those logs;
+      Midnight Merge holds nothing. Nothing is kept on your device and nothing
+      is fetched from anywhere: no cookies, no third-party scripts, no fonts,
+      no analytics.</p>
     <p class="fine">The export rides inside the link, so anyone holding the link
       can read it, as can your chat history. Private from us is not private in
       general.</p>

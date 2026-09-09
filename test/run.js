@@ -45,6 +45,58 @@ const MAX_AREA = 16777216;
 const POINT = 'A key point with enough words in it that it will wrap to two or three lines inside the card body';
 const WORDY = 'word '.repeat(90);
 
+/* The evaluator is the first thing here that is right or wrong on its own
+   terms rather than by how tall it draws - and a wrong formula fails silently,
+   which makes this the cheapest test in the file and probably the most
+   valuable. It runs inside the page because that is where evaluate() lives;
+   the alternative is loading a script that expects a document. */
+const EXPRS = [
+  ['1+2*3',           {},           7],
+  ['(1+2)*3',         {},           9],
+  ['10/4',            {},           2.5],
+  ['-4+1',            {},           -3],
+  ['2*-3',            {},           -6],
+  ['a+b',             {a: 2, b: 3}, 5],
+  // a leading + is allowed to mean nothing, so arithmetic a model might
+  // reasonably write does not cost a card its number
+  ['a++b',            {a: 2, b: 3}, 5],
+  ['+5',              {},           5],
+  ['2*+3',            {},           6],
+  ['round(10/3,2)',   {},           3.33],
+  ['round(10/3)',     {},           3],
+  ['min(3,9)+max(1,2)', {},         5],
+  ['pow(2,10)',       {},           1024],
+  ['sqrt(16)',        {},           4],
+  ['a>b?1:2',         {a: 5, b: 1}, 1],
+  ['a>b?1:2',         {a: 0, b: 1}, 2],
+  ['a>=b?a:b',        {a: 3, b: 7}, 7],
+
+  // everything below must come back as null, and draw as a dash
+  ['1/0',             {},           null],
+  ['sqrt(0-1)',       {},           null],
+  ['missing+1',       {a: 1},       null],
+  ['1+',              {},           null],
+  ['(1+2',            {},           null],
+  ['1 2',             {},           null],
+  ['',                {},           null],
+  // the whole reason this is a parser and not eval()
+  ['alert(1)',        {},           null],
+  ['constructor',     {},           null],
+  ['toString',        {},           null],
+  ['__proto__',       {},           null],
+  ['a.b',             {a: 1},       null]
+];
+
+const NUMS = [
+  [240000,   '240,000'],
+  [1234567,  '1,234,567'],
+  [0,        '0'],
+  [10.5,     '10.5'],
+  [3.333,    '3.33'],
+  [-4200.5,  '-4,200.5'],
+  [null,     '\u2014']
+];
+
 const CASES = [
   // the frame on its own, and one block of each kind
   ['bare',       `#h=Just a headline and a verdict&v=No blocks at all&m=GPT-5&d=2026-09-08`],
@@ -54,6 +106,21 @@ const CASES = [
   ['checksTicked', `#m=GPT-5&d=2026-09-08&h=Half done&v=Progress&c=First item&c=Second item&c=Third item&k=101`],
   ['facts',      `#m=Claude Opus 5&d=2026-09-08&a=What the new service costs&h=Runtime and cost&v=Cheaper at every tier we measured&f=Runtime~Node 20&f=Cold start~180ms&f=Cost~$0.40 per million requests&f=Region~eu-west-2&f=A very long label that will wrap~and a value long enough to push it onto another line`],
   ['stats',      `#m=GPT-5&d=2026-09-08&a=What the migration bought us&h=What the migration cost&v=Worth it, but not for the reasons we expected&n=42%~fewer timeouts&n=3.1x~faster cold start&n=6 wks~of engineer time`],
+
+  ['inputs',     `#m=GPT-5&d=2026-09-08&a=What four more seats would cost&h=Four seats fit&v=Change the numbers and the card follows&g=Your numbers&i=s~Seats~4&i=p~Price per seat~18&g=What it costs&r=m~~s*p&r=~Per month~m&r=~Per year~m*12`],
+  // the same card as someone else left it: w= is what they typed
+  ['inputsWritten', `#h=Passed on half-filled&v=The numbers came with the link&i=s~Seats~4&i=p~Price~18&r=~Per year~s*p*12&w=10~25`],
+  ['inputsBare', `#h=An input with no default&v=Empty reads as zero&i=n~How many&r=~Doubled~n*2`],
+  ['results',    `#m=GPT-5&d=2026-09-08&a=What the new seats will cost&h=Adding four seats&v=Under the quarter budget, with room to spare&g=What it costs&r=y~~4*12&r=~Per year~y*18&r=~Per seat~18*12&r=~Spare~9000-y*18`],
+  // an unlabelled row is a working step: it feeds the rows below and is not
+  // drawn, so this card must come out exactly as tall as one with two rows
+  ['resultsHidden', `#h=One row, one hidden step&v=The step is not drawn&r=n~~12*3&r=~Total~n*5&r=~Half~n*5/2`],
+  ['resultsBroken', `#h=Broken formulas&v=Every one of these draws a dash&g=Nothing computable&r=~Divided by zero~1/0&r=~Unknown name~nope*2&r=~Not a formula~1+&r=~Not code~alert(1)`],
+  // a model that writes "2 + 3" instead of 2%2B3 is the common slip, and the
+  // restored form has to be right in both places: the arithmetic and the
+  // formula printed under it, which is the whole point of printing it
+  ['resultsSpaced', `#h=Formulas written with spaces&v=Both halves have to survive it&r=~Sum~2 + 3&r=~Rate~(1000 + 250) * 4%2E5&r=~Rounded~round(10 / 3, 2)`],
+  ['resultsWrap',  `#h=A result that wraps&v=Long labels and long formulas still measure&r=base~~1000&r=~A label long enough that the row has to wrap onto a second line~base*3+base/7-base*0.5`],
 
   // composition: labels, several blocks, the cap
   ['labelled',   `#m=GPT-5&d=2026-09-08&h=One labelled block&v=The label sits above it&g=What changed&p=First point&p=Second point`],
@@ -112,6 +179,15 @@ function staticChecks(raw){
   // scrolled with its header behind the browser chrome.
   check(/<main id="main"><\/main>/.test(raw), '/v1/ ships an empty <main>',
         'copy here means a card link lays out a tall page and then shrinks it');
+
+  // The two actions are icons, so the glyph is the only thing naming them on
+  // screen. Without these they are two unlabelled squares to a screen reader.
+  for(const id of ['copyBtn', 'shareBtn']){
+    const btn = new RegExp(`id="${id}"[^>]*`).exec(src);
+    check(btn && /aria-label="/.test(btn[0]) && /title="/.test(btn[0]),
+          `${id} carries a title and an aria-label`,
+          'an icon-only control has no accessible name of its own');
+  }
 }
 
 /* ---- the other two documents ---- */
@@ -187,6 +263,7 @@ const PROBE = `
 <script>
 addEventListener('load', () => {
   document.fonts.ready.then(() => {
+   try {
     const cases = __CASES__;
     const out = cases.map(([name, hash]) => {
       try {
@@ -209,19 +286,87 @@ addEventListener('load', () => {
         return {name, error: e && e.message ? e.message : String(e)};
       }
     });
-    const el = document.createElement('div');
-    el.id = '__RESULT__';
-    el.textContent = btoa(JSON.stringify(out));
-    document.body.appendChild(el);
+
+    /* The formula is on the card so the number can be checked, which makes how
+       it reads part of what it is for. Restoring + from a space produces
+       "2+++3" before it is collapsed - correct arithmetic, and a formula that
+       looks like a typo. */
+    location.hash = '#h=x&v=y&r=~Sum~2 + 3&r=~Nested~(1 + 2) * 3' +
+                    '&r=~Args~min(3, 9)&r=~Minus~10 - 4&r=~Tight~2+3';
+    draw();
+    out.push({
+      name: 'formulaText',
+      shown: [...document.querySelectorAll('.fx')].map(el => el.textContent),
+      values: [...document.querySelectorAll('.calc .fv')].map(el => el.textContent)
+    });
+
+    /* Typing has to move three things at once: the results on the card, the
+       w= in the link, and - because the link is the state - what a reader sees
+       when the card is passed on and opened fresh. */
+    location.hash = '#h=x&v=y&i=s~Seats~4&i=p~Price~18&r=m~~s*p&r=~Per year~m*12';
+    draw();
+    const shown = () => [...document.querySelectorAll('.calc .fv')].map(el => el.textContent).join(' ');
+    const sent = shown();
+    const boxes = [...document.querySelectorAll('.ins input')];
+    boxes[0].value = '10';
+    boxes[0].dispatchEvent(new Event('input'));
+    const typed = shown();
+    const written = (/w=([^&]*)/.exec(location.hash) || [, ''])[1];
+    const passedOn = location.hash;
+    location.hash = '#h=reset&v=reset';
+    draw();
+    location.hash = passedOn;
+    draw();
+    out.push({
+      name: 'roundTrip', sent, typed, written, reopened: shown(),
+      values: [...document.querySelectorAll('.ins input')].map(el => el.value).join(' ')
+    });
+
+    // the evaluator and the number formatter, checked directly
+    out.push({
+      name: 'expressions',
+      // concatenated, not a template: this text is itself inside PROBE's
+      // template literal, so a dollar-brace here would interpolate one level early
+      bad: __EXPRS__.filter(([src, env, want]) => evaluate(src, env) !== want)
+                    .map(([src, env, want]) => src + ' -> ' + evaluate(src, env) + ', wanted ' + want),
+      badNums: __NUMS__.filter(([v, want]) => showNumber(v) !== want)
+                       .map(([v, want]) => v + ' -> ' + showNumber(v) + ', wanted ' + want)
+    });
+
+    /* Confirming an action swaps the glyph inside a button the renderer never
+       sees. If that swap changes the card's height, every share image taken
+       during those two seconds is the wrong size - and nothing else here
+       would notice, because layout() would still agree with itself. */
+    const sheetH = () => Math.round(document.getElementById('sheet').getBoundingClientRect().height);
+    const settled = sheetH();
+    actionResult(document.getElementById('copyBtn'), true, 'Copied');
+    const confirmed = sheetH();
+    actionResult(document.getElementById('shareBtn'), false, 'Failed');
+    const failed = sheetH();
+    out.push({name: 'actionFeedback', settled, confirmed, failed,
+              said: document.getElementById('said').textContent});
+    report(out);
+   } catch(e){
+     report([{name: 'probe', error: String(e && e.stack || e)}]);
+   }
   });
 });
+
+function report(out){
+  const el = document.createElement('div');
+  el.id = '__RESULT__';
+  el.textContent = btoa(unescape(encodeURIComponent(JSON.stringify(out))));
+  document.body.appendChild(el);
+}
 </script>
 `;
 
 function renderAll(chrome, src){
   const harness = path.join(os.tmpdir(), `upshot-harness-${process.pid}.html`);
   fs.writeFileSync(harness, src.replace('</body>',
-    PROBE.replace('__CASES__', JSON.stringify(CASES)) + '</body>'));
+    PROBE.replace('__CASES__', JSON.stringify(CASES))
+         .replace('__EXPRS__', JSON.stringify(EXPRS))
+         .replace('__NUMS__', JSON.stringify(NUMS)) + '</body>'));
   let dom;
   try {
     dom = execFileSync(chrome, [
@@ -240,7 +385,7 @@ function renderAll(chrome, src){
     console.error('The page produced no result. Did layout()/paint() throw before reporting?');
     process.exit(2);
   }
-  return JSON.parse(Buffer.from(m[1], 'base64').toString('utf8'));
+  return JSON.parse(decodeURIComponent(escape(Buffer.from(m[1], 'base64').toString('binary'))));
 }
 
 /* ---- 4. compare ---- */
@@ -266,6 +411,36 @@ function main(){
   console.log('\nrender');
   for(const r of results){
     if(r.error){ check(false, r.name, 'threw: ' + r.error); continue; }
+    if(r.name === 'roundTrip'){
+      check(r.sent === '864', 'a card arrives showing the sender numbers', r.sent);
+      check(r.typed === '2,160', 'typing recomputes the results', r.typed);
+      check(r.written === '10~18', 'and writes what was typed into the link', r.written);
+      check(r.reopened === '2,160' && r.values === '10 18',
+            'so the link reopens as the reader left it',
+            `${r.reopened} from ${r.values}`);
+      continue;
+    }
+    if(r.name === 'formulaText'){
+      check(r.shown.join(' ') === '2+3 (1+2)*3 min(3,9) 10-4 2+3',
+            'a formula written with spaces prints back cleanly', r.shown.join(' '));
+      check(r.values.join(' ') === '5 9 3 6 5',
+            'and evaluates to the same thing either way', r.values.join(' '));
+      continue;
+    }
+    if(r.name === 'expressions'){
+      check(!r.bad.length, 'every expression evaluates as expected',
+            r.bad.length ? r.bad.join('; ') : `${EXPRS.length} cases`);
+      check(!r.badNums.length, 'numbers format the same on every machine',
+            r.badNums.length ? r.badNums.join('; ') : `${NUMS.length} cases`);
+      continue;
+    }
+    if(r.name === 'actionFeedback'){
+      check(r.settled === r.confirmed && r.settled === r.failed,
+            'the tick and the cross do not move the card',
+            `${r.settled} settled, ${r.confirmed} confirmed, ${r.failed} failed`);
+      check(!!r.said, 'the result is announced, not only drawn', r.said);
+      continue;
+    }
     const underCap = r.canvasWidth <= MAX_SIDE && r.canvasHeight <= MAX_SIDE &&
                      r.canvasWidth * r.canvasHeight <= MAX_AREA;
     check(underCap, `${r.name}: canvas within the size cap`,
@@ -281,7 +456,7 @@ function main(){
 
   if(update){
     const baselines = {};
-    for(const r of results) if(!r.error) baselines[r.name] = r.imageHeight;
+    for(const r of results) if(!r.error && r.imageHeight) baselines[r.name] = r.imageHeight;
     fs.writeFileSync(BASELINES, JSON.stringify(baselines, null, 2) + '\n');
     console.log(`\nwrote ${path.relative(ROOT, BASELINES)}`);
   } else if(fs.existsSync(BASELINES)){
@@ -292,7 +467,7 @@ function main(){
     console.log('\nbaselines');
     const baselines = JSON.parse(fs.readFileSync(BASELINES, 'utf8'));
     for(const r of results){
-      if(r.error) continue;
+      if(r.error || !r.imageHeight) continue;
       const want = baselines[r.name];
       if(want === undefined){ note(`--    ${r.name}: no baseline yet`); continue; }
       check(r.imageHeight === want, `${r.name}: image height unchanged`,
