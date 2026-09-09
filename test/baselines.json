@@ -6,6 +6,15 @@
   "checksTicked": 500,
   "facts": 617,
   "stats": 671,
+  "inputs": 621,
+  "inputsEncoded": 621,
+  "inputsWritten": 493,
+  "inputsBare": 456,
+  "results": 573,
+  "resultsHidden": 481,
+  "resultsBroken": 548,
+  "resultsSpaced": 520,
+  "resultsWrap": 452,
   "labelled": 491,
   "comparison": 654,
   "threeBlocks": 819,
@@ -16,5 +25,6 @@
   "bareFacts": 444,
   "absurd": 2605,
   "gigantic": 10309,
-  "workedExample": 584
+  "workedExample": 584,
+  "calculatorExample": 686
 }

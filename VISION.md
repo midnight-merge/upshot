@@ -111,6 +111,19 @@ punctuation itself, it cuts earlier, so it looks random until you bisect it.
 Fix: encode `,` as %2C and `.` as %2E. Confirmed working on the full 806 character
 Clancy link.
 
+**Brackets, found 9 Sep 2026.** Same failure, different character. WhatsApp
+matches parentheses so that a URL written inside brackets in prose does not
+swallow the closing one. A balanced single pair is fine - `round%28p%2F2%2E5%29`
+stayed blue through a whole card - but the closing bracket of a nested pair
+ends the link, and everything after it arrives as plain text. Tested by sending
+two real calculator cards: one cut at `round(w*(1%2Br%2F30)`**`)`**, the other
+at `min(max(e-100000%2C0)%2F2%2C12570`**`)`**. Both are the outer bracket of a
+nest.
+
+Prose almost never nests brackets, so this was invisible until formulas went in
+the URL - arithmetic nests constantly. Fix: encode `(` as %28 and `)` as %29.
+About 5% longer, and it removes the class rather than the case.
+
 **What this means for the format.** Every sentence has a full stop. So the AI now
 has to encode punctuation on every single sentence it writes, in a URL it can't
 see rendered, with silent failure if it slips once. That's a big reliability ask
