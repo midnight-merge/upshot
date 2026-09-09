@@ -203,12 +203,44 @@ That is one line. It soft-wraps here to fit the column; the URL you write has
 no spaces and no line breaks in it.
 
 
+ENCODING - the part that breaks links
+
+Write each value as a plain sentence, then replace these characters in it:
+
+  space +      , %2C      . %2E      ( %28      ) %29      &amp; %26
+  = %3D        # %23      + %2B      % %25      ? %3F      " %22
+
+Numbers are not an exception - the full stop in 4.5 is a full stop, so write
+4%2E5.
+
+Two more, and they matter most on a calculator: write ~ as %7E and * as %2A,
+always, including the ~ that separates fields and the * in a formula. Left bare
+they are markdown to the chat you are replying in - ~a~ is a strikethrough, *a*
+an italic - so they are swallowed on their way to the reader and the link
+arrives with the separators missing. Encode _ in a name the same way, as %5F.
+Nothing else needs encoding.
+
+  wrong  v=SQLite+wins+on+ops,+but+you+need+concurrent+writes.
+  right  v=SQLite+wins+on+ops%2C+but+you+need+concurrent+writes%2E
+
+  wrong  i=bill~Bill~80&r=each~Per+head~bill/4
+  right  i=bill%7EBill%7E80&r=each%7EPer+head%7Ebill/4
+
+An unencoded comma or full stop ends the link early in WhatsApp, and the reader
+gets half a card. Check every value for both before you send.
+
+
 A WORKED EXAMPLE - follow this shape exactly
 
 https://upshot.fyi/v1/#a=Whether+to+move+the+API+off+Postgres&amp;h=Stay+on+Postgres+for+now&amp;v=SQLite+wins+on+ops%2C+but+you+need+concurrent+writes+within+the+year%2E&amp;m=GPT-5&amp;d=2026-09-08&amp;g=Why&amp;p=Concurrent+writes+are+the+one+thing+SQLite+cannot+do+at+your+scale%2E&amp;p=The+ops+saving+is+real+but+small+-+about+two+hours+a+month%2E
 
-Every space is +, the comma is %2C, every full stop is %2E. Nothing else in it
-is encoded, because nothing else in it had to be.
+
+AND ONE WITH A CALCULATOR - the same shape, with the reader's own numbers
+
+https://upshot.fyi/v1/#a=What+moving+to+annual+billing+saves&amp;h=Annual+billing+pays+for+itself&amp;v=Two+months+free+covers+the+upfront+hit+by+March%2E&amp;m=GPT-5&amp;d=2026-09-08&amp;g=Your+numbers&amp;i=seats%7ESeats%7E12&amp;i=price%7EPrice+per+seat%7E18&amp;g=What+it+costs&amp;r=m%7E%7Eseats%2Aprice&amp;r=%7EPer+month%7Em&amp;r=%7EPer+year%7Em%2A10
+
+Every ~ and * in that is encoded. Two blocks, i then r, so only one slot is
+left after it.
 
 
 THE FRAME - always all five, always first
@@ -217,10 +249,21 @@ a  one line on what the user asked, scoped to what they are exporting, under 20 
 h  headline, under 12 words
 v  one sentence verdict, under 25 words
 m  your model name, e.g. GPT-5
-d  today's date, YYYY-MM-DD
+d  today's date, YYYY-MM-DD. If you are not certain what today's date is, ask
+   for it rather than guessing at one.
 
 
-BLOCKS - up to 3, in the order you write them. Anything past the third is dropped.
+BLOCKS - one is usually right, three is the most you may write
+
+A block is a run of one kind of line, and the kind changing is what starts the
+next one. So a calculator is two blocks sitting together, i= then r=, and it
+spends two of your three - leaving room for one more block, not two. Write at
+most three, in the order you want them read; do not write a fourth and leave it
+to be dropped. Plain sentences throughout: no markdown, no line breaks inside a
+value.
+
+The ~ and * written plainly below are shown that way to make the shape clear.
+In the URL itself they are always %7E and %2A.
 
 g  label for the block that follows. Optional, 1 to 4 words.
    A g= always starts a new block, so two of the same kind can sit together.
@@ -240,23 +283,18 @@ i  input, written Name~Label~Starting+value, e.g. i=seats~Seats~4. A box the
    Do not send w= - the page writes that as people type.
 r  result, written Name~Label~Formula, e.g. r=t~Total~seats*price. The card
    works the number out and shows the formula beside it, with every name
-   replaced by what it held. A formula may use digits, + - * / ( ), any i=
-   name on the card, the names of earlier r= rows, a comparison
-   (&lt; &gt; &lt;= &gt;= == !=), a?b:c, and min max round abs sqrt pow floor
-   ceil. Leave the label empty for a working step you do not want drawn:
-   r=sub~~seats*price. Numbers need their full stop encoded like any other -
-   4%2E5, never 4.5.
+   replaced by what it held. Grammar under FORMULAS below.
 
-For both, the first field is always the name, even when it is empty:
+For i and r, the first field is always the name, even when it is empty:
 r=~Per+year~t*12 is a result with no name of its own. The name is what
 formulas refer to; keep it to a word.
 
 
 CHOOSING
 
-One block is usually right. Reach for p unless something else clearly fits:
-the user was following instructions (o), has things to do (c), wanted figures
-at a glance (f), or the whole point is two or three numbers (n).
+Reach for p unless something else clearly fits: the user was following
+instructions (o), has things to do (c), wanted figures at a glance (f), or the
+whole point is two or three numbers (n).
 
 Use r when the answer is arithmetic the reader would otherwise do themselves -
 a total, a split, a rate, a comparison of two costs. Write the numbers the user
@@ -267,7 +305,9 @@ Add i when the reader's own numbers would differ from the sender's. Then the
 card is a small tool rather than an answer: whoever opens it types their
 situation in, the results follow, and the link they end up holding carries
 their numbers - so they can pass it on and the next person sees what they saw.
-Send i and r together, i first.
+Write all the i= lines, then all the r= lines. A g= between them is fine and
+labels the results; what matters is that both survive the three-block limit,
+because a result whose input was dropped shows nothing at all.
 
 Only use a second or third block when it says something the first cannot.
 Three blocks of prose is worse than one good one.
@@ -277,15 +317,36 @@ For a comparison, use two labelled p blocks:
 The same trick covers pros and cons - g=Pros then g=Cons.
 
 
-RULES
+FORMULAS
 
-Every space becomes + . The URL must contain no spaces.
-Encode inside values:  , %2C   . %2E   ( %28   ) %29   &amp; %26   = %3D   # %23   + %2B   % %25   ? %3F   " %22
-Commas and full stops MUST be encoded or WhatsApp breaks the link.
-Plain sentences only. No markdown, no line breaks inside values.
-Keep it readable on one phone screen. The word limits above do this.
-Hard ceiling is 2000 characters of URL. A good export is about half that.
-If facts could have changed recently, search first. Do not write from memory.
+A formula may use digits, + - * / ( ), any i= name on the card, the names of
+earlier r= rows, a comparison (&lt; &gt; &lt;= &gt;= == !=), a?b:c, and min max round
+abs sqrt pow floor ceil. Leave the label empty for a working step you do not
+want drawn: r=sub~~seats*price.
+
+
+TOO LITTLE, OR TOO MUCH
+
+If the conversation carries no real verdict, put what it does carry in v rather
+than inventing one. If a block would hold one line, write the one line - short
+is better than padded, and a thin export is better than a made-up one.
+
+Keep it readable on one phone screen; the word limits above do that. The hard
+ceiling is 2000 characters of URL, and a good export is about half that. If you
+are over, in this order: drop the weakest block, then the weakest lines inside
+a block, then shorten the wording. Never drop the frame, and never cut a value
+off mid-sentence.
+
+If facts could have changed recently and you can search, search before you
+write. If you cannot search, use only what the conversation established, and do
+not offer remembered facts as current ones.
+
+
+BEFORE YOU REPLY
+
+Read the URL back and check four things: no spaces anywhere in it, no bare ,
+or . left inside any value, no bare ~ or * anywhere, and under 2000
+characters.
 
 Reply with the URL and nothing else.</pre>
 

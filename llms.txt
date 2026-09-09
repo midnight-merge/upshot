@@ -31,6 +31,15 @@ https://upshot.fyi/v1/#a=Whether+to+move+the+API+off+Postgres&h=Stay+on+Postgres
 Every space is `+`, the comma is `%2C`, every full stop is `%2E`. Nothing else
 in it is encoded, because nothing else in it had to be.
 
+## A worked example with a calculator
+
+The same shape, with the reader's own numbers in it:
+
+https://upshot.fyi/v1/#a=What+moving+to+annual+billing+saves&h=Annual+billing+pays+for+itself&v=Two+months+free+covers+the+upfront+hit+by+March%2E&m=GPT-5&d=2026-09-08&g=Your+numbers&i=seats%7ESeats%7E12&i=price%7EPrice+per+seat%7E18&g=What+it+costs&r=m%7E%7Eseats%2Aprice&r=%7EPer+month%7Em&r=%7EPer+year%7Em%2A10
+
+Every `~` and `*` in that is encoded. Two blocks, `i` then `r`, so only one
+slot is left after it.
+
 ## The frame
 
 Always all five, always first.
@@ -42,12 +51,18 @@ Always all five, always first.
 - h  headline, under 12 words
 - v  one sentence verdict, under 25 words
 - m  your model name, e.g. GPT-5
-- d  today's date, YYYY-MM-DD
+- d  today's date, YYYY-MM-DD. If you are not certain what today's date is,
+     ask for it rather than guessing at one.
 
 ## The blocks
 
-Up to three. They appear in the order you write them; anything past the third
-is dropped.
+Up to three, and the kind changing is what starts the next one - so a
+calculator is two blocks sitting together, `i=` then `r=`, and it spends two of
+your three. They appear in the order you write them. Do not write a fourth and
+leave it to be dropped.
+
+The `~` and `*` written plainly below are shown that way to make the shape
+clear. In the URL itself they are always %7E and %2A.
 
 - g  label for the block that follows. Optional, 1 to 4 words. A `g=` always
      starts a new block, so two blocks of the same kind can sit together.
@@ -94,7 +109,10 @@ into the formulas rather than working them out yourself, so the card shows its
 working instead of a figure nobody can check.
 
 Add `i` when the reader's own numbers would differ from the sender's - then the
-card is a tool, not an answer. Send `i` and `r` together, `i` first:
+card is a tool, not an answer. Write all the `i=` lines, then all the `r=`
+lines. A `g=` between them is fine and labels the results; what matters is that
+both survive the three-block cap, because a result whose input was dropped
+shows nothing at all:
 
     &g=Your+numbers&i=seats~Seats~4&i=price~Price+per+seat~18
     &g=What+it+costs&r=m~~seats*price&r=~Per+month~m&r=~Per+year~m*12
@@ -115,16 +133,38 @@ The same trick covers pros and cons: `g=Pros` then `g=Cons`.
 - Every space becomes `+`. The URL must contain no spaces at all.
 - Escape inside values: `,` %2C, `.` %2E, `(` %28, `)` %29, `&` %26, `=` %3D,
   `#` %23, `+` %2B, `%` %25, `?` %3F, `"` %22
+- Also escape `~` as %7E, `*` as %2A, and `_` in a name as %5F - always,
+  including the `~` that separates fields and the `*` in a formula. Left bare
+  they are markdown to the chat you are replying in: `~a~` is a strikethrough
+  and `*a*` an italic, so they are swallowed before the reader ever copies the
+  link, and it arrives with its separators missing. Write
+  `i=bill%7EBill%7E80`, never `i=bill~Bill~80`.
 - Commas, full stops and brackets MUST be encoded. WhatsApp stops turning the
   text into a link at the first raw comma or full stop, and at a closing
   bracket that ends a nested pair - so a formula like `round(w*(1+r/30))`
-  cuts the link in half. Write it `round%28w*%281%2Br%2F30%29%29`.
+  cuts the link in half. Write it `round%28w%2A%281%2Br/30%29%29`.
+- Numbers are not an exception: the full stop in 4.5 is a full stop, so write
+  `4%2E5`, never `4.5`.
 - Plain sentences only. No markdown, no bullets, no line breaks inside values.
+- If the conversation carries no real verdict, put what it does carry in `v`
+  rather than inventing one. A block with one line in it is better than a block
+  padded out to three.
 - Keep it short enough to read on one phone screen. Staying inside the word
   limits above does this. Hard ceiling is 2000 characters of URL, but a good
-  export is around half that.
-- If facts could have changed recently, search before summarising. Do not write
-  from memory alone.
+  export is around half that. If you are over, in this order: drop the weakest
+  block, then the weakest lines inside a block, then shorten the wording. Never
+  drop the frame, and never cut a value off mid-sentence.
+- If facts could have changed recently and you can search, search before
+  summarising. If you cannot search, use only what the conversation
+  established, and do not offer remembered facts as current ones.
+
+## Before you reply
+
+Read the URL back and check four things: no spaces anywhere in it, no bare `,`
+or `.` left inside any value, no bare `~` or `*` anywhere, and under 2000
+characters.
+
+Reply with the URL and nothing else.
 
 ## Version
 

@@ -108,6 +108,11 @@ const CASES = [
   ['stats',      `#m=GPT-5&d=2026-09-08&a=What the migration bought us&h=What the migration cost&v=Worth it, but not for the reasons we expected&n=42%~fewer timeouts&n=3.1x~faster cold start&n=6 wks~of engineer time`],
 
   ['inputs',     `#m=GPT-5&d=2026-09-08&a=What four more seats would cost&h=Four seats fit&v=Change the numbers and the card follows&g=Your numbers&i=s~Seats~4&i=p~Price per seat~18&g=What it costs&r=m~~s*p&r=~Per month~m&r=~Per year~m*12`],
+  // the separators themselves arrive encoded, which is what the spec now asks
+  // for: bare ~ and * are markdown to the chat the model is replying in, and
+  // are eaten before the link is ever copied. decodeAll unwraps them ahead of
+  // the split, so this has to come out identical to 'inputs' above.
+  ['inputsEncoded', `#m=GPT-5&d=2026-09-08&a=What four more seats would cost&h=Four seats fit&v=Change the numbers and the card follows&g=Your numbers&i=s%7ESeats%7E4&i=p%7EPrice per seat%7E18&g=What it costs&r=m%7E%7Es%2Ap&r=%7EPer month%7Em&r=%7EPer year%7Em%2A12`],
   // the same card as someone else left it: w= is what they typed
   ['inputsWritten', `#h=Passed on half-filled&v=The numbers came with the link&i=s~Seats~4&i=p~Price~18&r=~Per year~s*p*12&w=10~25`],
   ['inputsBare', `#h=An input with no default&v=Empty reads as zero&i=n~How many&r=~Doubled~n*2`],
@@ -222,8 +227,12 @@ function siblingChecks(){
      broken, silently, in WhatsApp. */
   const llms = fs.readFileSync(path.join(ROOT, 'llms.txt'), 'utf8');
   const codes = t => [...new Set(t.match(/%[0-9A-F]{2}/g) || [])].sort().join(' ');
-  const pageEscapes = codes(/Encode inside values:(.*)/.exec(landing)[1]);
-  const llmsEscapes = codes(/Escape inside values:([\s\S]*?)\n- /.exec(llms)[1]);
+  // Whole sections, not one line each: the escapes outgrew a single list the
+  // day ~ and * joined them, and a rule the two files state in different
+  // places is still a rule that can drift.
+  const section = (t, from, to) => (t.split(from)[1] || '').split(to)[0];
+  const pageEscapes = codes(section(landing, 'ENCODING', 'A WORKED EXAMPLE'));
+  const llmsEscapes = codes(section(llms, '## Rules', '## Before you reply'));
   check(pageEscapes === llmsEscapes && pageEscapes.length > 0,
         'the page and llms.txt escape the same characters',
         pageEscapes === llmsEscapes ? pageEscapes : `page ${pageEscapes} vs llms ${llmsEscapes}`);
@@ -237,6 +246,18 @@ function siblingChecks(){
   if(example){
     check(landing.includes(example[1].replace(/&/g, '&amp;')),
           'the page carries the same worked example, byte for byte');
+  }
+
+  // The calculator example is the one models get wrong, so it is held to the
+  // same rule - and to one more: every separator in it is encoded, because an
+  // example that contradicts the encoding rule teaches louder than the rule.
+  const calc = /(https:\/\/upshot\.fyi\/v1\/#a=What\+moving[^\s<]*)/.exec(llms);
+  check(!!calc, 'llms.txt carries the calculator example');
+  if(calc){
+    check(landing.includes(calc[1].replace(/&/g, '&amp;')),
+          'the page carries the same calculator example, byte for byte');
+    check(!/[~*]/.test(calc[1]),
+          'the calculator example has no bare ~ or *');
   }
 
   check(!/<script/.test(brokenPage), '/broken/ is static HTML');
@@ -402,9 +423,11 @@ function main(){
      here - it is the one URL the whole site tells models to copy, so an
      example that has quietly drifted out of the grammar is worse than no
      example at all. */
-  const ex = /https:\/\/upshot\.fyi\/v1\/(#a=Whether[^\s<]*)/
-    .exec(fs.readFileSync(path.join(ROOT, 'llms.txt'), 'utf8'));
+  const spec = fs.readFileSync(path.join(ROOT, 'llms.txt'), 'utf8');
+  const ex = /https:\/\/upshot\.fyi\/v1\/(#a=Whether[^\s<]*)/.exec(spec);
   if(ex) CASES.push(['workedExample', ex[1]]);
+  const cx = /https:\/\/upshot\.fyi\/v1\/(#a=What\+moving[^\s<]*)/.exec(spec);
+  if(cx) CASES.push(['calculatorExample', cx[1]]);
 
   const results = renderAll(chrome, src);
 

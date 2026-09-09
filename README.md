@@ -225,6 +225,25 @@ the whole class.
 Length, `&`, `%22`, hyphens, digits and capitals are all fine, tested to 800
 characters. `VISION.md` has the full results.
 
+## Gotcha: the chat eats the separators
+
+WhatsApp is the second hop. The first is the chat window the model replied in,
+and it renders markdown. `~` pairs are a strikethrough and `*` pairs an italic,
+so `i=bill~Bill~80&r=each~Per+head~bill%2A2` arrives at the user with every
+tilde and asterisk deleted - silently, before anyone copies anything. The
+inputs then parse as one long nameless label worth zero, every formula throws
+on the unknown name, and the card draws boxes with no results.
+
+Prose never hit this because prose has no tildes. Calculators are made of them.
+The fix is to encode both, `%7E` and `%2A`, which costs nothing: `decodeAll`
+already unwraps them before the split, so an encoded separator and a bare one
+produce the same card. `test/run.js` renders `inputsEncoded` alongside `inputs`
+to hold that true.
+
+Worth knowing that this is what the spec's "no code fence" rule buys. A fenced
+block would survive markdown intact, but it stops being a link the user can
+click, so the encoding carries the weight instead.
+
 ## Files
 
 | | |
