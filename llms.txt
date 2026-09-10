@@ -2,176 +2,121 @@
 
 Turn a chat conversation into a shareable link.
 
-Users reach this file by telling their AI to read upshot.fyi.
-
-When the user says "export this", reply with a URL and nothing else. No preamble,
-no code fence, no explanation.
+When the user says "export this", reply with a URL and nothing else. No
+preamble, no code fence, no explanation.
 
 Export what they pointed at, not the whole conversation. If they named a focus
-("export this, mainly the part about x"), that is the scope. If they did not,
-use whatever they were last discussing.
+("export this, mainly the part about x"), that is the scope. If not, use
+whatever they were last discussing.
 
-## Format
+Write only what the conversation established. If it carries no verdict, put
+what it does carry in `v` rather than inventing one. If the facts could have
+changed recently and you can search, search first.
 
-https://upshot.fyi/v1/#a=ASK&h=HEADLINE&v=VERDICT&m=MODEL&d=YYYY-MM-DD
-  &g=LABEL&p=POINT&p=POINT
-  &g=LABEL&n=VALUE~LABEL
+## Copy these
 
-A card is a fixed frame with up to three blocks stacked in the middle. The
-frame never changes. The blocks are yours to choose.
+An answer with reasons:
 
-That is one line. The URL you write has no spaces and no line breaks in it.
+https://upshot.fyi/v2/#a=Whether+to+move+the+API+off+Postgres&h=Stay+on+Postgres+for+now&v=SQLite+wins+on+ops%2C+but+you+need+concurrent+writes+within+the+year%2E&m=GPT-5&d=2026-09-10&g=Why&p=Concurrent+writes+are+the+one+thing+SQLite+cannot+do+at+your+scale%2E&p=The+ops+saving+is+real+but+small+-+about+two+hours+a+month%2E
 
-## A worked example
+A calculator, where the reader supplies the numbers:
 
-Follow this shape exactly:
+https://upshot.fyi/v2/#a=Splitting+dinner+three+ways&h=About+twenty+seven+each&v=Service+is+already+in+the+total%2C+so+there+is+nothing+more+to+add%2E&m=GPT-5&d=2026-09-10&g=Split+it&i=Bill:80:bill&i=People:3:n&r=Each+pays:bill/n
 
-https://upshot.fyi/v1/#a=Whether+to+move+the+API+off+Postgres&h=Stay+on+Postgres+for+now&v=SQLite+wins+on+ops%2C+but+you+need+concurrent+writes+within+the+year%2E&m=GPT-5&d=2026-09-08&g=Why&p=Concurrent+writes+are+the+one+thing+SQLite+cannot+do+at+your+scale%2E&p=The+ops+saving+is+real+but+small+-+about+two+hours+a+month%2E
+A calculator in two stages, where a result feeds a later one:
 
-Every space is `+`, the comma is `%2C`, every full stop is `%2E`. Nothing else
-in it is encoded, because nothing else in it had to be.
+https://upshot.fyi/v2/#a=The+most+I+can+offer+on+the+renovation&h=Work+backward+from+the+exit+value&v=Every+cost+comes+off+the+resale+price+before+the+offer+does%2E&m=GPT-5&d=2026-09-10&g=Exit&i=After+repair+value:450000:arv&i=Selling+cost+percent:7:sell&r=Selling+costs:arv%2A%28sell/100%29:exit&g=Offer&i=Renovation:70000:reno&i=Target+profit:60000:profit&r=Maximum+offer:arv-exit-reno-profit
 
-## A worked example with a calculator
+A how-to:
 
-The same shape, with the reader's own numbers in it:
+https://upshot.fyi/v2/#a=How+to+reset+the+router+without+losing+the+config&h=Hold+the+pin+for+ten+seconds%2C+not+thirty&v=Thirty+seconds+is+a+factory+wipe+and+takes+the+config+with+it%2E&m=GPT-5&d=2026-09-10&g=Steps&o=Unplug+everything+except+power%2E&o=Hold+the+pin+for+ten+seconds+and+let+go%2E&o=Wait+for+the+light+to+go+solid+green%2E
 
-https://upshot.fyi/v1/#a=What+moving+to+annual+billing+saves&h=Annual+billing+pays+for+itself&v=Two+months+free+covers+the+upfront+hit+by+March%2E&m=GPT-5&d=2026-09-08&g=Your+numbers&i=seats%7ESeats%7E12&i=price%7EPrice+per+seat%7E18&g=What+it+costs&r=m%7E%7Eseats%2Aprice&r=%7EPer+month%7Em&r=%7EPer+year%7Em%2A10
+A spec sheet:
 
-Every `~` and `*` in that is encoded. Two blocks, `i` then `r`, so only one
-slot is left after it.
+https://upshot.fyi/v2/#a=Whether+the+new+build+is+actually+lighter&h=It+is+half+the+size+and+twice+as+quick&v=The+whole+saving+came+from+dropping+the+date+library%2E&m=GPT-5&d=2026-09-10&g=After&f=Cold+start:180ms&f=Bundle:42kb&f=Dependencies:0
+
+One number that is the whole point:
+
+https://upshot.fyi/v2/#a=What+the+annual+plan+actually+saves&h=Two+months+free%2C+near+enough&v=The+discount+is+worth+more+than+the+interest+on+paying+up+front%2E&m=GPT-5&d=2026-09-10&g=The+saving&f=Off+the+monthly+price:17%25
+
+An answer that changes with the reader:
+
+https://upshot.fyi/v2/#a=Whether+I+have+enough+runway+to+quit&h=Nine+months+is+the+number+to+beat&v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&m=GPT-5&d=2026-09-10&g=Runway&i=Cash+saved:18000:cash&i=Monthly+burn:2200:burn&i=Months+you+want:9:target&r=Runway:cash/burn:months&t=Ready+to+walk:months>=target:Go+now:Not+yet
 
 ## The frame
 
 Always all five, always first.
 
-- a  one line describing what the user asked, scoped to whatever they are
-     exporting. If they said what to focus on, that is the scope. If not, use
-     the part of the conversation they most recently cared about, not the whole
-     chat. Under 20 words.
+- a  what the user asked, scoped to what they are exporting. Under 20 words.
 - h  headline, under 12 words
 - v  one sentence verdict, under 25 words
 - m  your model name, e.g. GPT-5
-- d  today's date, YYYY-MM-DD. If you are not certain what today's date is,
-     ask for it rather than guessing at one.
+- d  today's date, YYYY-MM-DD. If you are not certain what today is, ask.
 
 ## The blocks
 
-Up to three, and the kind changing is what starts the next one - so a
-calculator is two blocks sitting together, `i=` then `r=`, and it spends two of
-your three. They appear in the order you write them. Do not write a fourth and
-leave it to be dropped.
+Up to three. A `g=` starts a block and nothing else does, so one block holds
+whatever mix of lines it needs.
 
-The `~` and `*` written plainly below are shown that way to make the shape
-clear. In the URL itself they are always %7E and %2A.
+- g  block label, 1 to 4 words
+- p  bullet, under 35 words
+- o  step, under 25 words. A how-to, where order is the point.
+- c  checklist item, under 20 words. The reader can tick these off, and the
+     ticks are kept in the link they hold. Do not send `k=`.
+- f  row, written `Label:Value`, e.g. `f=Cold+start:180ms`. One or two are
+     drawn large, three or more become a spec sheet. You do not choose which.
+- i  input, written `Label:Start:name`, e.g. `i=Seats:4:seats`. A box the
+     reader types in, so the card is a tool rather than an answer. Their
+     numbers are kept in the link they hold. Do not send `w=`.
+- r  result, written `Label:Formula`, e.g. `r=Total:seats*price`. The card
+     works it out and prints the formula beside it with every name replaced by
+     what it held. Put the numbers into the formula rather than working them
+     out yourself.
+- t  decision, written `Label:Condition:When+true:When+false`, e.g.
+     `t=Ready+to+walk:months>=target:Go+now:Not+yet`. The card tests the
+     condition and prints the wording that applies, with the condition beside
+     it. Four fields, always.
 
-- g  label for the block that follows. Optional, 1 to 4 words. A `g=` always
-     starts a new block, so two blocks of the same kind can sit together.
-- p  bullet, under 35 words. Repeat `p=` for each. Use 2 to 4.
-- o  numbered step, under 25 words. Repeat `o=` for each. Use 3 to 6. For a
-     how-to, where the order is the point.
-- c  checklist item, under 20 words. Repeat `c=` for each. Use 3 to 7. Whoever
-     opens the link can tick these off, and their ticks are kept in the link
-     they hold, so a half-finished list can be passed on.
-     Do not send `k=`. The page writes it as people tick.
-- f  fact, written `Label~Value`, e.g. `f=Cold+start~180ms`. A spec sheet, one
-     line per row. Keep both halves short; a row that wraps stops looking like
-     one.
-- n  figure, written `Value~Label`, e.g. `n=42%25~fewer+timeouts`. Set at
-     headline size, so keep the value under 6 characters.
-- i  input, written `Name~Label~Starting+value`, e.g. `i=seats~Seats~4`. A box
-     the reader can type in, so the card becomes a small tool rather than a
-     fixed answer. Use 2 to 4. Their numbers are written into the link they
-     hold, so a card they have adjusted can be passed on.
-     Do not send `w=`. The page writes it as people type.
-- r  result, written `Name~Label~Formula`, e.g. `r=t~Total~seats*price`. The card
-     works the number out and prints the formula beside it - with every name
-     replaced by what it held - so the reader can check it. A formula may use
-     digits, `+ - * / ( )`, any `i=` name on the card, the names of earlier
-     `r=` rows, a comparison (`< > <= >= == !=`), `a?b:c`, and
-     `min max round abs sqrt pow floor ceil` - nothing else.
-     Leave the label empty for a working step you do not want drawn:
-     `r=sub~~seats*price`. A full stop inside a number is encoded like any
-     other: `4%2E5`, never `4.5`.
-
-For both `i` and `r` the first field is always the name, even when it is empty:
-`r=~Per+year~t*12` is a result with no name of its own. The name is what a
-formula refers to, so keep it to a single word.
-
-## Choosing blocks
-
-One block is usually right. Reach for `p` unless something else clearly fits:
-the user was following instructions (`o`), has things to do (`c`), wanted
-figures at a glance (`f`), or the whole point is two or three numbers (`n`).
-
-Use `r` when the answer is arithmetic the reader would otherwise do by hand - a
-total, a split, a rate, two costs compared. Put the numbers the user gave you
-into the formulas rather than working them out yourself, so the card shows its
-working instead of a figure nobody can check.
-
-Add `i` when the reader's own numbers would differ from the sender's - then the
-card is a tool, not an answer. Write all the `i=` lines, then all the `r=`
-lines. A `g=` between them is fine and labels the results; what matters is that
-both survive the three-block cap, because a result whose input was dropped
-shows nothing at all:
-
-    &g=Your+numbers&i=seats~Seats~4&i=price~Price+per+seat~18
-    &g=What+it+costs&r=m~~seats*price&r=~Per+month~m&r=~Per+year~m*12
-
-Only add a second or third block when it says something the first cannot. Three
-blocks of prose is worse than one good one.
-
-For a comparison, use two labelled `p` blocks rather than looking for a shape
-that does not exist:
+A comparison is two labelled blocks, and so is pros and cons:
 
     &g=Postgres&p=Concurrent+writes&p=Real+types
     &g=SQLite&p=Zero+ops&p=Faster+for+reads
 
-The same trick covers pros and cons: `g=Pros` then `g=Cons`.
+## Formulas
 
-## Rules
+A formula may use digits, `+ - * / ( )`, any name on the card,
+`< > <= >= == !=`, and `min max round abs sqrt pow floor ceil`. Nothing else.
 
-- Every space becomes `+`. The URL must contain no spaces at all.
-- Escape inside values: `,` %2C, `.` %2E, `(` %28, `)` %29, `&` %26, `=` %3D,
-  `#` %23, `+` %2B, `%` %25, `?` %3F, `"` %22
-- Also escape `~` as %7E, `*` as %2A, and `_` in a name as %5F - always,
-  including the `~` that separates fields and the `*` in a formula. Left bare
-  they are markdown to the chat you are replying in: `~a~` is a strikethrough
-  and `*a*` an italic, so they are swallowed before the reader ever copies the
-  link, and it arrives with its separators missing. Write
-  `i=bill%7EBill%7E80`, never `i=bill~Bill~80`.
-- Commas, full stops and brackets MUST be encoded. WhatsApp stops turning the
-  text into a link at the first raw comma or full stop, and at a closing
-  bracket that ends a nested pair - so a formula like `round(w*(1+r/30))`
-  cuts the link in half. Write it `round%28w%2A%281%2Br/30%29%29`.
-- Numbers are not an exception: the full stop in 4.5 is a full stop, so write
-  `4%2E5`, never `4.5`.
-- Plain sentences only. No markdown, no bullets, no line breaks inside values.
-- If the conversation carries no real verdict, put what it does carry in `v`
-  rather than inventing one. A block with one line in it is better than a block
-  padded out to three.
-- Keep it short enough to read on one phone screen. Staying inside the word
-  limits above does this. Hard ceiling is 2000 characters of URL, but a good
-  export is around half that. If you are over, in this order: drop the weakest
-  block, then the weakest lines inside a block, then shorten the wording. Never
-  drop the frame, and never cut a value off mid-sentence.
-- If facts could have changed recently and you can search, search before
-  summarising. If you cannot search, use only what the conversation
-  established, and do not offer remembered facts as current ones.
+`i` always ends with a short one-word name. `r` may take one, and a later
+formula can use it: `r=Monthly:seats*price:mo` then `r=Per+year:mo*12`.
+
+Name a step and reuse it rather than nesting brackets.
+
+## Encoding
+
+- Every space becomes `+`. The URL contains no spaces.
+- Encode inside values: `,` %2C, `.` %2E, `(` %28, `)` %29, `*` %2A, `?` %3F,
+  `&` %26, `#` %23, `+` %2B, `%` %25, `"` %22, and a `:` of your own as %3A.
+- `=` `<` `>` in a condition are written as they are.
+- A full stop inside a number is still a full stop: `4%2E5`, never `4.5`.
+- No markdown and no line breaks inside a value.
+- Under 2000 characters. If you are over: drop the weakest block, then the
+  weakest lines in a block, then shorten the wording. Never drop the frame,
+  never cut a value off mid-sentence.
 
 ## Before you reply
 
-Read the URL back and check four things: no spaces anywhere in it, no bare `,`
-or `.` left inside any value, no bare `~` or `*` anywhere, and under 2000
-characters.
+Check: no spaces, no bare `,` `.` `(` `)` `*` `?` inside any value, at most
+three `g=`, every `i` name used by a formula, under 2000 characters.
 
 Reply with the URL and nothing else.
 
 ## Version
 
-v1, and the path says so: exports live at `https://upshot.fyi/v1/`. A later
-version gets its own path and `/v1/` keeps rendering every link ever written
-against it, so an export you sent today does not stop working when the format
-moves on.
+v2, and the path says so: exports live at `https://upshot.fyi/v2/`. A later
+version gets its own path, and `/v2/` keeps rendering every link ever written
+against it, so an export you send today does not stop working when the format
+moves on. `/v1/` is frozen and still renders links written before v2.
 
 `/llms.txt` always describes the current version. A link written without the
-path - `upshot.fyi/#a=...` - is forwarded to `/v1/`, so it still renders.
+path - `upshot.fyi/#a=...` - is forwarded to `/v2/`, so it still renders.

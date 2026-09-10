@@ -11,7 +11,7 @@
    <body>, so the landing copy is never laid out for a reader on their way to a
    card. The fragment survives the replace untouched, ticks and all. */
 if(location.hash.replace(/^#/, '')){
-  location.replace('/v1/' + location.hash);
+  location.replace('/v2/' + location.hash);
 }
 </script>
 <style>
@@ -160,7 +160,7 @@ pre{
 </head>
 <body>
 <!-- Static copy, start to finish. An export is a different document at
-     /v1/, so nothing here is ever replaced and this page never changes
+     /v2/, so nothing here is ever replaced and this page never changes
      height after it is laid out. -->
 <div class="wrap"><div class="sheet">
 
@@ -176,12 +176,13 @@ pre{
   </div>
 
   <main>
-    <h1>Turn a chat into a link you can send</h1>
+    <h1>Turn a chat into something you can use</h1>
 
-    <p class="verdict">Tell your AI: <span class="cmd">read upshot.fyi
+    <p class="verdict">Tell your AI: <span class="cmd">read https://upshot.fyi
       and export this</span></p>
 
-    <p>No account, nothing to install. The whole export lives in the link.</p>
+    <p>No account, nothing to install. It does the sums, keeps the checklist,
+      makes the call - and the whole thing is the link.</p>
 
     <h2>Format</h2>
     <p class="note">For any AI reading this page.</p>
@@ -191,182 +192,148 @@ When the user says "export this", reply with the URL and nothing else. No
 preamble, no code fence, no explanation.
 
 Export what they pointed at, not the whole conversation. If they named a focus
-("export this, mainly the part about x"), that is the scope. If they did not,
-use whatever they were last discussing.
+("export this, mainly the part about x"), that is the scope. If not, use
+whatever they were last discussing.
+
+Write only what the conversation established. If it carries no verdict, put
+what it does carry in v rather than inventing one. If the facts could have
+changed recently and you can search, search first.
 
 
-THE SHAPE
+COPY THESE
 
-https://upshot.fyi/v1/#a=ASK&amp;h=HEADLINE&amp;v=VERDICT&amp;m=MODEL&amp;d=YYYY-MM-DD&amp;g=LABEL&amp;p=POINT&amp;p=POINT
+An answer with reasons:
 
-That is one line. It soft-wraps here to fit the column; the URL you write has
-no spaces and no line breaks in it.
+https://upshot.fyi/v2/#a=Whether+to+move+the+API+off+Postgres&amp;h=Stay+on+Postgres+for+now&amp;v=SQLite+wins+on+ops%2C+but+you+need+concurrent+writes+within+the+year%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Why&amp;p=Concurrent+writes+are+the+one+thing+SQLite+cannot+do+at+your+scale%2E&amp;p=The+ops+saving+is+real+but+small+-+about+two+hours+a+month%2E
 
+A calculator, where the reader supplies the numbers:
 
-ENCODING - the part that breaks links
+https://upshot.fyi/v2/#a=Splitting+dinner+three+ways&amp;h=About+twenty+seven+each&amp;v=Service+is+already+in+the+total%2C+so+there+is+nothing+more+to+add%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Split+it&amp;i=Bill:80:bill&amp;i=People:3:n&amp;r=Each+pays:bill/n
 
-Write each value as a plain sentence, then replace these characters in it:
+A calculator in two stages, where a result feeds a later one:
 
-  space +      , %2C      . %2E      ( %28      ) %29      &amp; %26
-  = %3D        # %23      + %2B      % %25      ? %3F      " %22
+https://upshot.fyi/v2/#a=The+most+I+can+offer+on+the+renovation&amp;h=Work+backward+from+the+exit+value&amp;v=Every+cost+comes+off+the+resale+price+before+the+offer+does%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Exit&amp;i=After+repair+value:450000:arv&amp;i=Selling+cost+percent:7:sell&amp;r=Selling+costs:arv%2A%28sell/100%29:exit&amp;g=Offer&amp;i=Renovation:70000:reno&amp;i=Target+profit:60000:profit&amp;r=Maximum+offer:arv-exit-reno-profit
 
-Numbers are not an exception - the full stop in 4.5 is a full stop, so write
-4%2E5.
+A how-to:
 
-Two more, and they matter most on a calculator: write ~ as %7E and * as %2A,
-always, including the ~ that separates fields and the * in a formula. Left bare
-they are markdown to the chat you are replying in - ~a~ is a strikethrough, *a*
-an italic - so they are swallowed on their way to the reader and the link
-arrives with the separators missing. Encode _ in a name the same way, as %5F.
-Nothing else needs encoding.
+https://upshot.fyi/v2/#a=How+to+reset+the+router+without+losing+the+config&amp;h=Hold+the+pin+for+ten+seconds%2C+not+thirty&amp;v=Thirty+seconds+is+a+factory+wipe+and+takes+the+config+with+it%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Steps&amp;o=Unplug+everything+except+power%2E&amp;o=Hold+the+pin+for+ten+seconds+and+let+go%2E&amp;o=Wait+for+the+light+to+go+solid+green%2E
 
-  wrong  v=SQLite+wins+on+ops,+but+you+need+concurrent+writes.
-  right  v=SQLite+wins+on+ops%2C+but+you+need+concurrent+writes%2E
+A spec sheet:
 
-  wrong  i=bill~Bill~80&r=each~Per+head~bill/4
-  right  i=bill%7EBill%7E80&r=each%7EPer+head%7Ebill/4
+https://upshot.fyi/v2/#a=Whether+the+new+build+is+actually+lighter&amp;h=It+is+half+the+size+and+twice+as+quick&amp;v=The+whole+saving+came+from+dropping+the+date+library%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=After&amp;f=Cold+start:180ms&amp;f=Bundle:42kb&amp;f=Dependencies:0
 
-An unencoded comma or full stop ends the link early in WhatsApp, and the reader
-gets half a card. Check every value for both before you send.
+One number that is the whole point:
 
+https://upshot.fyi/v2/#a=What+the+annual+plan+actually+saves&amp;h=Two+months+free%2C+near+enough&amp;v=The+discount+is+worth+more+than+the+interest+on+paying+up+front%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=The+saving&amp;f=Off+the+monthly+price:17%25
 
-A WORKED EXAMPLE - follow this shape exactly
+An answer that changes with the reader:
 
-https://upshot.fyi/v1/#a=Whether+to+move+the+API+off+Postgres&amp;h=Stay+on+Postgres+for+now&amp;v=SQLite+wins+on+ops%2C+but+you+need+concurrent+writes+within+the+year%2E&amp;m=GPT-5&amp;d=2026-09-08&amp;g=Why&amp;p=Concurrent+writes+are+the+one+thing+SQLite+cannot+do+at+your+scale%2E&amp;p=The+ops+saving+is+real+but+small+-+about+two+hours+a+month%2E
-
-
-AND ONE WITH A CALCULATOR - the same shape, with the reader's own numbers
-
-https://upshot.fyi/v1/#a=What+moving+to+annual+billing+saves&amp;h=Annual+billing+pays+for+itself&amp;v=Two+months+free+covers+the+upfront+hit+by+March%2E&amp;m=GPT-5&amp;d=2026-09-08&amp;g=Your+numbers&amp;i=seats%7ESeats%7E12&amp;i=price%7EPrice+per+seat%7E18&amp;g=What+it+costs&amp;r=m%7E%7Eseats%2Aprice&amp;r=%7EPer+month%7Em&amp;r=%7EPer+year%7Em%2A10
-
-Every ~ and * in that is encoded. Two blocks, i then r, so only one slot is
-left after it.
+https://upshot.fyi/v2/#a=Whether+I+have+enough+runway+to+quit&amp;h=Nine+months+is+the+number+to+beat&amp;v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Runway&amp;i=Cash+saved:18000:cash&amp;i=Monthly+burn:2200:burn&amp;i=Months+you+want:9:target&amp;r=Runway:cash/burn:months&amp;t=Ready+to+walk:months>=target:Go+now:Not+yet
 
 
 THE FRAME - always all five, always first
 
-a  one line on what the user asked, scoped to what they are exporting, under 20 words
+a  what the user asked, scoped to what they are exporting. Under 20 words.
 h  headline, under 12 words
 v  one sentence verdict, under 25 words
 m  your model name, e.g. GPT-5
-d  today's date, YYYY-MM-DD. If you are not certain what today's date is, ask
-   for it rather than guessing at one.
+d  today's date, YYYY-MM-DD. If you are not certain what today is, ask.
 
 
-BLOCKS - one is usually right, three is the most you may write
+THE BLOCKS - three at most
 
-A block is a run of one kind of line, and the kind changing is what starts the
-next one. So a calculator is two blocks sitting together, i= then r=, and it
-spends two of your three - leaving room for one more block, not two. Write at
-most three, in the order you want them read; do not write a fourth and leave it
-to be dropped. Plain sentences throughout: no markdown, no line breaks inside a
-value.
+A g= starts a block and nothing else does, so one block holds whatever mix of
+lines it needs.
 
-The ~ and * written plainly below are shown that way to make the shape clear.
-In the URL itself they are always %7E and %2A.
+g  block label, 1 to 4 words
+p  bullet, under 35 words
+o  step, under 25 words. A how-to, where order is the point.
+c  checklist item, under 20 words. The reader can tick these off, and the
+   ticks are kept in the link they hold. Do not send k=.
+f  row, written Label:Value, e.g. f=Cold+start:180ms. One or two are drawn
+   large, three or more become a spec sheet. You do not choose which.
+i  input, written Label:Start:name, e.g. i=Seats:4:seats. A box the reader
+   types in, so the card is a tool rather than an answer. Their numbers are
+   kept in the link they hold. Do not send w=.
+r  result, written Label:Formula, e.g. r=Total:seats*price. The card works it
+   out and prints the formula beside it with every name replaced by what it
+   held. Put the numbers into the formula rather than working them out
+   yourself.
+t  decision, written Label:Condition:When+true:When+false, e.g.
+   t=Ready+to+walk:months&gt;=target:Go+now:Not+yet. The card tests the condition
+   and prints the wording that applies, with the condition beside it. Four
+   fields, always.
 
-g  label for the block that follows. Optional, 1 to 4 words.
-   A g= always starts a new block, so two of the same kind can sit together.
-p  bullet, under 35 words. Repeat p= for each. Use 2 to 4.
-o  numbered step, under 25 words. Repeat o= for each. Use 3 to 6.
-   For a how-to, where the order is the point.
-c  checklist item, under 20 words. Repeat c= for each. Use 3 to 7.
-   Whoever opens the link can tick these off, and their ticks are kept in the
-   link they hold, so a half-finished list can be passed on.
-   Do not send k= - the page writes that as people tick.
-f  fact, written Label~Value, e.g. f=Cold+start~180ms. A spec sheet, one row
-   per line. Keep both halves short - a row that wraps stops looking like one.
-n  figure, written Value~Label, e.g. n=42%25~fewer+timeouts. Set at headline
-   size, so keep the value under 6 characters.
-i  input, written Name~Label~Starting+value, e.g. i=seats~Seats~4. A box the
-   reader can type in. Use 2 to 4.
-   Do not send w= - the page writes that as people type.
-r  result, written Name~Label~Formula, e.g. r=t~Total~seats*price. The card
-   works the number out and shows the formula beside it, with every name
-   replaced by what it held. Grammar under FORMULAS below.
-
-For i and r, the first field is always the name, even when it is empty:
-r=~Per+year~t*12 is a result with no name of its own. The name is what
-formulas refer to; keep it to a word.
-
-
-CHOOSING
-
-Reach for p unless something else clearly fits: the user was following
-instructions (o), has things to do (c), wanted figures at a glance (f), or the
-whole point is two or three numbers (n).
-
-Use r when the answer is arithmetic the reader would otherwise do themselves -
-a total, a split, a rate, a comparison of two costs. Write the numbers the user
-gave you into the formulas, so the card shows its working rather than a figure
-nobody can check.
-
-Add i when the reader's own numbers would differ from the sender's. Then the
-card is a small tool rather than an answer: whoever opens it types their
-situation in, the results follow, and the link they end up holding carries
-their numbers - so they can pass it on and the next person sees what they saw.
-Write all the i= lines, then all the r= lines. A g= between them is fine and
-labels the results; what matters is that both survive the three-block limit,
-because a result whose input was dropped shows nothing at all.
-
-Only use a second or third block when it says something the first cannot.
-Three blocks of prose is worse than one good one.
-
-For a comparison, use two labelled p blocks:
-  &amp;g=Postgres&amp;p=...&amp;p=...&amp;g=SQLite&amp;p=...&amp;p=...
-The same trick covers pros and cons - g=Pros then g=Cons.
+A comparison is two labelled blocks, and so is pros and cons:
+  &amp;g=Postgres&amp;p=Concurrent+writes&amp;p=Real+types
+  &amp;g=SQLite&amp;p=Zero+ops&amp;p=Faster+for+reads
 
 
 FORMULAS
 
-A formula may use digits, + - * / ( ), any i= name on the card, the names of
-earlier r= rows, a comparison (&lt; &gt; &lt;= &gt;= == !=), a?b:c, and min max round
-abs sqrt pow floor ceil. Leave the label empty for a working step you do not
-want drawn: r=sub~~seats*price.
+A formula may use digits, + - * / ( ), any name on the card,
+&lt; &gt; &lt;= &gt;= == !=, and min max round abs sqrt pow floor ceil. Nothing else.
+
+i always ends with a short one-word name. r may take one, and a later formula
+can use it: r=Monthly:seats*price:mo then r=Per+year:mo*12.
+
+Name a step and reuse it rather than nesting brackets.
 
 
-TOO LITTLE, OR TOO MUCH
+ENCODING - the part that breaks links
 
-If the conversation carries no real verdict, put what it does carry in v rather
-than inventing one. If a block would hold one line, write the one line - short
-is better than padded, and a thin export is better than a made-up one.
+Every space becomes +. The URL contains no spaces.
 
-Keep it readable on one phone screen; the word limits above do that. The hard
-ceiling is 2000 characters of URL, and a good export is about half that. If you
-are over, in this order: drop the weakest block, then the weakest lines inside
-a block, then shorten the wording. Never drop the frame, and never cut a value
-off mid-sentence.
+Encode inside values:
 
-If facts could have changed recently and you can search, search before you
-write. If you cannot search, use only what the conversation established, and do
-not offer remembered facts as current ones.
+  , %2C     . %2E     ( %28     ) %29     * %2A
+  ? %3F     &amp; %26     # %23     + %2B     % %25     " %22
+
+A : of your own goes as %3A. The = &lt; &gt; in a condition are written as they are.
+
+A full stop inside a number is still a full stop: 4%2E5, never 4.5.
+
+  wrong  v=SQLite+wins+on+ops,+but+you+need+concurrent+writes.
+  right  v=SQLite+wins+on+ops%2C+but+you+need+concurrent+writes%2E
+
+An unencoded comma or full stop ends the link early in WhatsApp, and the reader
+gets half a card.
+
+No markdown and no line breaks inside a value.
+
+Under 2000 characters. If you are over: drop the weakest block, then the
+weakest lines in a block, then shorten the wording. Never drop the frame, never
+cut a value off mid-sentence.
 
 
 BEFORE YOU REPLY
 
-Read the URL back and check four things: no spaces anywhere in it, no bare ,
-or . left inside any value, no bare ~ or * anywhere, and under 2000
-characters.
+Check: no spaces, no bare , . ( ) * ? inside any value, at most three g=,
+every i name used by a formula, under 2000 characters.
 
 Reply with the URL and nothing else.</pre>
 
     <h2>Privacy</h2>
     <p class="fine">Everything after the <span class="cmd">#</span> stays in
       your browser. Browsers never send it to a server, so this site receives no
-      part of an export, and everything this page does, it does on your own
-      device. Nothing to store, nothing to delete.</p>
+      part of a card, and everything this page does, it does on your own device.
+      Numbers you type into one are no exception: they are worked out here and
+      written back into your own link, and never sent anywhere. Nothing to
+      store, nothing to delete.</p>
     <p class="fine">GitHub Pages logs IPs to serve the page - a legitimate
       interest, and the only personal data involved. GitHub holds those logs;
       Midnight Merge holds nothing. Nothing is kept on your device and nothing
       is fetched from anywhere: no cookies, no third-party scripts, no fonts,
       no analytics.</p>
-    <p class="fine">The export rides inside the link, so anyone holding the link
+    <p class="fine">The card rides inside the link, so anyone holding the link
       can read it, as can your chat history. Private from us is not private in
       general.</p>
 
     <h2>Terms</h2>
-    <p class="fine">Exports are written by whichever AI you asked. They can be
-      wrong. Check anything that matters.</p>
+    <p class="fine">Cards are written by whichever AI you asked. They can be
+      wrong, and a formula is no safer than a sentence - a card shows its
+      working, which proves the sum and not the reasoning behind it. Check
+      anything that matters.</p>
     <p class="fine">Anyone can put any text in a link, so text on this domain is
       not published or endorsed by Midnight Merge, and never reaches us to
       moderate or remove.</p>
