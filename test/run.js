@@ -1,31 +1,27 @@
 #!/usr/bin/env node
 /*
- * Regression tests for upshot.fyi.
+ * upshot regression tests - no dependencies, drives whatever Chrome is here.
  *
- * The page and the share image are two independent implementations of the
- * same design: the browser lays out the card from CSS, and layout() in
- * index.html re-derives it in canvas ops. They can drift silently - a
- * position:fixed on .foot once shortened every PNG by 34px, because
- * getComputedStyle hands back the USED margin of a positioned element. These
- * tests exist to make that kind of drift loud.
+ *   node test/run.js
  *
- *   node test/run.js            check against test/baselines.json
- *   node test/run.js --update   rewrite the baselines from current output
+ * v1 had to check that two implementations of the design agreed: the browser
+ * laid the card out from CSS, and layout() re-derived it in canvas ops for the
+ * share image. That is gone in v2 - the link is what gets shared - so these
+ * check what the page actually renders instead, which is the same on every
+ * machine. There are no baselines to keep any more.
  *
- * No dependencies. Drives the Chrome that is already on the machine.
+ * /v1/ is frozen. It is not tested here: nothing new is written against it,
+ * and its renderer is the one this file stopped covering.
  */
-'use strict';
-
 const {execFileSync} = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const CARD = path.join(ROOT, 'v1', 'index.html');
+const CARD = path.join(ROOT, 'v2', 'index.html');
 const LANDING = path.join(ROOT, 'index.html');
 const BROKEN = path.join(ROOT, 'broken', 'index.html');
-const BASELINES = path.join(__dirname, 'baselines.json');
 
 const CHROME_CANDIDATES = [
   process.env.CHROME,
@@ -36,112 +32,108 @@ const CHROME_CANDIDATES = [
   '/usr/bin/chromium-browser'
 ].filter(Boolean);
 
-/* Canvas dimension ceilings. iOS Safari is the tight one, and going past it
-   throws nothing - you get a truncated bitmap. This is what used to clip long
-   exports, so every case is checked against it. */
-const MAX_SIDE = 4096;
-const MAX_AREA = 16777216;
-
 const POINT = 'A key point with enough words in it that it will wrap to two or three lines inside the card body';
 const WORDY = 'word '.repeat(90);
 
-/* The evaluator is the first thing here that is right or wrong on its own
-   terms rather than by how tall it draws - and a wrong formula fails silently,
-   which makes this the cheapest test in the file and probably the most
-   valuable. It runs inside the page because that is where evaluate() lives;
-   the alternative is loading a script that expects a document. */
-const EXPRS = [
-  ['1+2*3',           {},           7],
-  ['(1+2)*3',         {},           9],
-  ['10/4',            {},           2.5],
-  ['-4+1',            {},           -3],
-  ['2*-3',            {},           -6],
-  ['a+b',             {a: 2, b: 3}, 5],
-  // a leading + is allowed to mean nothing, so arithmetic a model might
-  // reasonably write does not cost a card its number
-  ['a++b',            {a: 2, b: 3}, 5],
-  ['+5',              {},           5],
-  ['2*+3',            {},           6],
-  ['round(10/3,2)',   {},           3.33],
-  ['round(10/3)',     {},           3],
-  ['min(3,9)+max(1,2)', {},         5],
-  ['pow(2,10)',       {},           1024],
-  ['sqrt(16)',        {},           4],
-  ['a>b?1:2',         {a: 5, b: 1}, 1],
-  ['a>b?1:2',         {a: 0, b: 1}, 2],
-  ['a>=b?a:b',        {a: 3, b: 7}, 7],
+/* Cases carry what they should come out as. `blocks` is how many sections the
+   card draws, `values` every figure in it in document order - which together
+   pin down both the parse and the arithmetic. */
+const CASES = [
+  ['bare', `#h=Just a headline and a verdict&v=No blocks at all&m=GPT-5&d=2026-09-10`,
+   {blocks: 0, values: []}],
 
-  // everything below must come back as null, and draw as a dash
-  ['1/0',             {},           null],
-  ['sqrt(0-1)',       {},           null],
-  ['missing+1',       {a: 1},       null],
-  ['1+',              {},           null],
-  ['(1+2',            {},           null],
-  ['1 2',             {},           null],
-  ['',                {},           null],
-  // the whole reason this is a parser and not eval()
-  ['alert(1)',        {},           null],
-  ['constructor',     {},           null],
-  ['toString',        {},           null],
-  ['__proto__',       {},           null],
-  ['a.b',             {a: 1},       null]
+  ['bullets', `#m=GPT-5&d=2026-09-10&a=Short one&h=A short headline&v=One sentence verdict&g=Why&p=First point&p=Second point`,
+   {blocks: 1, values: []}],
+
+  ['steps', `#m=GPT-5&d=2026-09-10&h=Vendoring the library&v=About an hour, no downtime&g=Steps&o=Vendor the library into the repo&o=Swap the script tag for a local path&o=${POINT}`,
+   {blocks: 1, values: []}],
+
+  ['checks', `#m=GPT-5&d=2026-09-10&h=What is left to do&v=Two of these block the release&g=Before launch&c=Vendor the library&c=Swap the script tag&c=${POINT}`,
+   {blocks: 1, values: []}],
+
+  ['checksTicked', `#m=GPT-5&d=2026-09-10&h=Half done&v=Progress&g=List&c=First item&c=Second item&c=Third item&k=101`,
+   {blocks: 1, values: [], ticked: '101'}],
+
+  // one or two rows are figures, three or more a spec sheet - the card picks,
+  // which is the whole reason n= was cut
+  ['rowsOne', `#m=GPT-5&d=2026-09-10&h=One number&v=That is the point&g=The saving&f=Off the monthly price:17%25`,
+   {blocks: 1, values: ['17%'], stats: 1, facts: 0}],
+  ['rowsThree', `#m=GPT-5&d=2026-09-10&h=Runtime and cost&v=Cheaper at every tier&g=After&f=Cold start:180ms&f=Bundle:42kb&f=Dependencies:0`,
+   {blocks: 1, values: ['180ms', '42kb', '0'], stats: 0, facts: 3}],
+
+  // a block holds whatever mix it needs - inputs and their results together,
+  // which in v1 would have cost two of the three slots
+  ['calculator', `#m=GPT-5&d=2026-09-10&h=About twenty seven each&v=Service is in the total&g=Split it&i=Bill:80:bill&i=People:3:n&r=Each pays:bill/n`,
+   {blocks: 1, values: ['26.67']}],
+
+  ['twoStage', `#m=GPT-5&d=2026-09-10&h=Work backward&v=Costs come off first&g=Exit&i=After repair value:450000:arv&i=Selling cost percent:7:sell&r=Selling costs:arv%2A%28sell/100%29:exit&g=Offer&i=Renovation:70000:reno&r=Maximum offer:arv-exit-reno`,
+   {blocks: 2, values: ['31,500', '348,500']}],
+
+  // a step with no label feeds the rows below and is not drawn
+  ['hiddenStep', `#h=One row, one hidden step&v=The step is not drawn&g=Sums&r=:12*3:n&r=Total:n*5`,
+   {blocks: 1, values: ['180']}],
+
+  ['brokenFormulas', `#h=Broken formulas&v=Every one draws a dash&g=Nothing computable&r=Divided by zero:1/0&r=Unknown name:nope*2&r=Not a formula:1+`,
+   {blocks: 1, values: ['—', '—', '—']}],
+
+  // a model that writes "2 + 3" instead of 2%2B3 is the common slip
+  ['spacedFormulas', `#h=Formulas with spaces&v=Both halves survive&g=Sums&r=Sum:2 + 3&r=Rate:(1000 + 250) * 4%2E5`,
+   {blocks: 1, values: ['5', '5,625']}],
+
+  // the decision key: same row, wording the card chose
+  ['decisionTrue', `#h=Enough runway&v=Nine months is the number&g=Runway&i=Cash:18000:cash&i=Burn:1000:burn&i=Target:9:target&r=Runway:cash/burn:months&t=Ready to walk:months>=target:Go now:Not yet`,
+   {blocks: 1, values: ['18', 'Go now']}],
+  ['decisionFalse', `#h=Not yet&v=Nine months is the number&g=Runway&i=Cash:18000:cash&i=Burn:2200:burn&i=Target:9:target&r=Runway:cash/burn:months&t=Ready to walk:months>=target:Go now:Not yet`,
+   {blocks: 1, values: ['8.18', 'Not yet']}],
+
+  /* A model that writes + where & was needed leaves the next key inside the
+     label before it, and every formula downstream of the lost key dies. The
+     card recovers it, so this has to come out identical to 'calculator'. */
+  ['swallowedKey', `#m=GPT-5&d=2026-09-10&h=About twenty seven each&v=Service is in the total&g=Split it+i=Bill:80:bill&i=People:3:n&r=Each pays:bill/n`,
+   {blocks: 1, values: ['26.67'], label: 'Split it'}],
+
+  // composition and the cap
+  ['comparison', `#m=GPT-5&d=2026-09-10&h=Postgres or SQLite&v=Postgres, unless you ship to the edge&g=Postgres&p=Concurrent writes&p=Real types&g=SQLite&p=Zero ops&p=Faster for reads`,
+   {blocks: 2, values: []}],
+  ['threeBlocks', `#h=Three blocks stacked&v=The maximum the card allows&g=One&p=a&p=b&g=Two&o=c&o=d&g=Three&c=e&c=f`,
+   {blocks: 3, values: []}],
+  ['overCap', `#h=Four blocks, one dropped&v=Only the first three render&g=One&p=a&g=Two&o=b&g=Three&f=e:f&g=Four&p=should not appear`,
+   {blocks: 3, values: ['f']}],
+  ['everyKind', `#h=One block holding every kind&v=Only a g= starts a block&g=All of it&p=A bullet&o=A step&c=A tick&f=Key:Value&i=Salary:62000:pay&r=Monthly:pay/12`,
+   // the lone f= here is a row, not a headline figure: it shares the block
+   {blocks: 1, values: ['Value', '5,166.67'], stats: 0, facts: 2}],
+
+  // shapes of failure
+  ['unknownKey', `#s=explainer&h=An unknown key&v=s= is not in the grammar&g=Why&p=Anything not in the grammar is ignored`,
+   {blocks: 1, values: []}],
+  ['longtoken', `#h=${'A'.repeat(120)}&v=ok&g=x&p=fine`, {blocks: 1, values: []}],
+  ['absurd', `#h=Tall&v=v&g=Many${`&p=${WORDY}`.repeat(9)}`, {blocks: 1, values: []}]
+];
+
+/* evaluate() and showNumber(), checked directly rather than through a card */
+const EXPRS = [
+  ['2+3', {}, 5],
+  ['2 + 3', {}, 5],
+  ['(1+2)*3', {}, 9],
+  ['10-4', {}, 6],
+  ['min(3,9)', {}, 3],
+  ['round(10/3)', {}, 3],
+  ['a*b', {a: 4, b: 18}, 72],
+  ['a>b', {a: 4, b: 18}, 0],
+  ['a<=b', {a: 4, b: 18}, 1],
+  ['1/0', {}, null],
+  ['nope*2', {}, null],
+  ['1+', {}, null],
+  ['alert(1)', {}, null]
 ];
 
 const NUMS = [
-  [240000,   '240,000'],
-  [1234567,  '1,234,567'],
-  [0,        '0'],
-  [10.5,     '10.5'],
-  [3.333,    '3.33'],
-  [-4200.5,  '-4,200.5'],
-  [null,     '\u2014']
-];
-
-const CASES = [
-  // the frame on its own, and one block of each kind
-  ['bare',       `#h=Just a headline and a verdict&v=No blocks at all&m=GPT-5&d=2026-09-08`],
-  ['bullets',    `#m=GPT-5&d=2026-09-08&a=Short one&h=A short headline&v=One sentence verdict&p=First point&p=Second point`],
-  ['steps',      `#m=GPT-5&d=2026-09-08&a=Moving off the CDN build&h=Vendoring the library&v=About an hour, no downtime needed&o=Vendor the library into the repo&o=Swap the script tag for a local path&o=${POINT}&o=Drop the CSP exception`],
-  ['checks',     `#m=GPT-5&d=2026-09-08&a=Before the launch&h=What is left to do&v=Two of these block the release&c=Vendor the library into the repo&c=Swap the script tag for a local path&c=Drop the CSP exception&c=${POINT}`],
-  ['checksTicked', `#m=GPT-5&d=2026-09-08&h=Half done&v=Progress&c=First item&c=Second item&c=Third item&k=101`],
-  ['facts',      `#m=Claude Opus 5&d=2026-09-08&a=What the new service costs&h=Runtime and cost&v=Cheaper at every tier we measured&f=Runtime~Node 20&f=Cold start~180ms&f=Cost~$0.40 per million requests&f=Region~eu-west-2&f=A very long label that will wrap~and a value long enough to push it onto another line`],
-  ['stats',      `#m=GPT-5&d=2026-09-08&a=What the migration bought us&h=What the migration cost&v=Worth it, but not for the reasons we expected&n=42%~fewer timeouts&n=3.1x~faster cold start&n=6 wks~of engineer time`],
-
-  ['inputs',     `#m=GPT-5&d=2026-09-08&a=What four more seats would cost&h=Four seats fit&v=Change the numbers and the card follows&g=Your numbers&i=s~Seats~4&i=p~Price per seat~18&g=What it costs&r=m~~s*p&r=~Per month~m&r=~Per year~m*12`],
-  // the separators themselves arrive encoded, which is what the spec now asks
-  // for: bare ~ and * are markdown to the chat the model is replying in, and
-  // are eaten before the link is ever copied. decodeAll unwraps them ahead of
-  // the split, so this has to come out identical to 'inputs' above.
-  ['inputsEncoded', `#m=GPT-5&d=2026-09-08&a=What four more seats would cost&h=Four seats fit&v=Change the numbers and the card follows&g=Your numbers&i=s%7ESeats%7E4&i=p%7EPrice per seat%7E18&g=What it costs&r=m%7E%7Es%2Ap&r=%7EPer month%7Em&r=%7EPer year%7Em%2A12`],
-  // the same card as someone else left it: w= is what they typed
-  ['inputsWritten', `#h=Passed on half-filled&v=The numbers came with the link&i=s~Seats~4&i=p~Price~18&r=~Per year~s*p*12&w=10~25`],
-  ['inputsBare', `#h=An input with no default&v=Empty reads as zero&i=n~How many&r=~Doubled~n*2`],
-  ['results',    `#m=GPT-5&d=2026-09-08&a=What the new seats will cost&h=Adding four seats&v=Under the quarter budget, with room to spare&g=What it costs&r=y~~4*12&r=~Per year~y*18&r=~Per seat~18*12&r=~Spare~9000-y*18`],
-  // an unlabelled row is a working step: it feeds the rows below and is not
-  // drawn, so this card must come out exactly as tall as one with two rows
-  ['resultsHidden', `#h=One row, one hidden step&v=The step is not drawn&r=n~~12*3&r=~Total~n*5&r=~Half~n*5/2`],
-  ['resultsBroken', `#h=Broken formulas&v=Every one of these draws a dash&g=Nothing computable&r=~Divided by zero~1/0&r=~Unknown name~nope*2&r=~Not a formula~1+&r=~Not code~alert(1)`],
-  // a model that writes "2 + 3" instead of 2%2B3 is the common slip, and the
-  // restored form has to be right in both places: the arithmetic and the
-  // formula printed under it, which is the whole point of printing it
-  ['resultsSpaced', `#h=Formulas written with spaces&v=Both halves have to survive it&r=~Sum~2 + 3&r=~Rate~(1000 + 250) * 4%2E5&r=~Rounded~round(10 / 3, 2)`],
-  ['resultsWrap',  `#h=A result that wraps&v=Long labels and long formulas still measure&r=base~~1000&r=~A label long enough that the row has to wrap onto a second line~base*3+base/7-base*0.5`],
-
-  // composition: labels, several blocks, the cap
-  ['labelled',   `#m=GPT-5&d=2026-09-08&h=One labelled block&v=The label sits above it&g=What changed&p=First point&p=Second point`],
-  ['comparison', `#m=Claude Opus 5&d=2026-09-08&a=Picking a database&h=Postgres or SQLite&v=Postgres, unless you are shipping to the edge&g=Postgres&p=Concurrent writes without a global lock&p=Real types, extensions, a planner worth trusting&g=SQLite&p=Zero ops - it is one file on disk&p=Faster for read-heavy work at small scale`],
-  ['threeBlocks', `#m=GPT-5&d=2026-09-08&a=Everything at once&h=Three blocks stacked&v=The maximum the card allows&g=The numbers&n=42%~fewer timeouts&n=3.1x~faster cold start&g=What changed&p=The renderer draws the card itself now&p=Nothing is fetched from a third party&g=Still to do&c=Check it on a real phone&c=Merge the branch`],
-  ['overCap',    `#h=Four blocks, one dropped&v=Only the first three render&g=One&p=a&p=b&g=Two&o=c&o=d&g=Three&f=e~f&g=Four&n=9~should not appear`],
-  ['mixedNoLabels', `#h=Blocks without labels&v=Still stack in order&p=A bullet&f=Key~Value&n=7~things`],
-
-  // shapes of failure. A fragment with nothing renderable in it is not here:
-  // /v1/ redirects it to /broken/ rather than drawing a card that says it is
-  // not a card, and a redirect is checked statically below.
-  ['unknownKey', `#s=explainer&m=GPT-5&d=2026-09-08&h=An unknown key&v=s= is not in the grammar, so parse() drops it and the card renders&p=Anything not in the grammar is ignored, never fatal`],
-  ['longtoken',  `#h=${'A'.repeat(120)}&v=ok&p=fine`],
-  ['bareFacts',  `#h=Rows with no value&v=Should not break&f=Just a label&f=Another~with a value`],
-  ['absurd',     `#h=Tall&v=v${`&p=${WORDY}`.repeat(9)}`],
-  ['gigantic',   `#h=Tall&v=v${`&p=${WORDY}`.repeat(40)}`]
+  [1234.5, '1,234.5'],
+  [1234.567, '1,234.57'],
+  [180, '180'],
+  [0, '0'],
+  [-2.5, '-2.5'],
+  [null, '—']
 ];
 
 const fail = [];
@@ -152,16 +144,15 @@ const check = (ok, label, detail) => {
 };
 
 function findChrome(){
-  for(const c of CHROME_CANDIDATES) if(fs.existsSync(c)) return c;
-  console.error('No Chrome found. Set CHROME=/path/to/chrome');
-  process.exit(2);
+  for(const p of CHROME_CANDIDATES) if(fs.existsSync(p)) return p;
+  return null;
 }
 
-/* ---- 1. static checks: regressions that need no browser ---- */
+/* ---- 1. properties of the document itself ---- */
 function staticChecks(raw){
   console.log('\nstatic');
-  // Comments explain why some of these rules exist and name the very patterns
-  // being banned, so strip them before matching or the docs fail the tests.
+  // Comments name the very patterns being banned, so strip them before
+  // matching or the docs fail the tests.
   const src = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
   check(!/<script[^>]+src=/i.test(src), 'no external script tags',
         'the page must fetch nothing from a third party');
@@ -169,20 +160,11 @@ function staticChecks(raw){
   check(!/min-height\s*:\s*[^;]*\b\d+vh/i.test(src), 'no vh units',
         'on iOS 100vh is the large viewport and scrolls every page');
 
-  // The renderer reads .foot's computed margin-top. Positioning rewrites that
-  // to its USED value, which the abspos algorithm resolves to 0.
-  const foot = /\.foot\s*\{([^}]*)\}/.exec(src);
-  check(foot && /margin-top/.test(foot[1]), '.foot still declares margin-top',
-        'layout() reads it to place the signature');
-  check(!/\.foot\s*\{[^}]*position\s*:\s*(fixed|absolute|sticky)/.test(src),
-        '.foot is not positioned',
-        'positioning silently zeroes the margin the renderer reads');
-
   // The card ships no copy of its own. This is the whole reason the site is
   // three documents: a card link that carries the landing page with it lays
   // out a tall page and then shrinks it, and on iOS that page comes up
   // scrolled with its header behind the browser chrome.
-  check(/<main id="main"><\/main>/.test(raw), '/v1/ ships an empty <main>',
+  check(/<main id="main"><\/main>/.test(raw), '/v2/ ships an empty <main>',
         'copy here means a card link lays out a tall page and then shrinks it');
 
   // The two actions are icons, so the glyph is the only thing naming them on
@@ -193,78 +175,78 @@ function staticChecks(raw){
           `${id} carries a title and an aria-label`,
           'an icon-only control has no accessible name of its own');
   }
+
+  // The share button hands over the URL. Anything that draws the card into a
+  // canvas is the v1 path coming back, and it cannot survive mixed blocks.
+  check(!/canvas|toBlob/i.test(src), 'nothing draws the card into a canvas',
+        'the link is what gets shared - there is no second implementation');
+  check(/navigator\.share/.test(src), 'the share button opens the native sheet');
 }
 
-/* ---- the other two documents ---- */
+/* ---- 2. the other two documents ---- */
 function siblingChecks(){
   console.log('\nlanding + broken');
   const landing = fs.readFileSync(LANDING, 'utf8');
   const brokenPage = fs.readFileSync(BROKEN, 'utf8');
+  const llms = fs.readFileSync(path.join(ROOT, 'llms.txt'), 'utf8');
 
   // A fragment never reaches GitHub Pages, so nothing but the page itself can
   // send an unversioned link to the card. Head script, ahead of <body>, or the
-  // landing copy lays out first for a reader who is on their way to a card.
-  check(/location\.replace\(['"]\/v1\/['"]\s*\+\s*location\.hash\)/.test(landing),
-        'the landing page forwards unversioned #links to /v1/');
+  // landing copy lays out first for a reader on their way to a card.
+  check(/location\.replace\(['"]\/v2\/['"]\s*\+\s*location\.hash\)/.test(landing),
+        'the landing page forwards unversioned #links to /v2/');
   check(landing.indexOf('<script>') < landing.indexOf('<body'),
         'that redirect is in the head, ahead of the landing copy');
 
-  // The spec itself stays static: fetchers do not run JS, and a spec built by
-  // JS would be invisible to the thing it exists for. Matching on the
-  // renderer's identifiers is no good here - the page teaches the format, so
-  // its prose says "BLOCKS" and "p=". Match on the shape: that one script, and
-  // no function declared anywhere.
+  // The spec stays static: fetchers do not run JS, and a spec built by JS
+  // would be invisible to the thing it exists for.
   check((landing.match(/<script/g) || []).length === 1 && !/\bfunction\b/.test(landing),
         'the landing page carries nothing but that redirect',
         'it is the document AIs fetch - the spec may not depend on JS');
-  check(/upshot\.fyi\/v1\/#a=ASK/.test(landing),
-        'the landing page teaches the versioned URL');
 
   /* The spec exists twice - on the page and in /llms.txt - and most models
-     only ever read the page. So the page is the authoritative one, and these
-     check the copy in llms.txt has not drifted away from it. Encoding is
-     where drift actually bites: a missing escape is a link that arrives
-     broken, silently, in WhatsApp. */
-  const llms = fs.readFileSync(path.join(ROOT, 'llms.txt'), 'utf8');
+     only ever read one of them. Every worked example has to appear in both,
+     byte for byte: an example that has drifted is worse than none, because a
+     model copies the example and skims the rule. */
+  const examples = llms.match(/https:\/\/upshot\.fyi\/v2\/#\S+/g) || [];
+  check(examples.length >= 5, 'llms.txt carries the worked examples',
+        `${examples.length} of them`);
+  const missing = examples.filter(e => !landing.includes(e.replace(/&/g, '&amp;')));
+  check(missing.length === 0, 'the page carries every one of them, byte for byte',
+        missing.length ? missing[0].slice(0, 60) + '...' : '');
+
+  // An example that contradicts the encoding rule teaches louder than the
+  // rule does, so no example may carry a character the rule bans.
+  const bare = examples.filter(e => /[~*]/.test(e.split('#')[1] || ''));
+  check(bare.length === 0, 'no example carries a bare ~ or *',
+        bare.length ? bare[0].slice(0, 60) + '...' : '');
+
+  // Both documents must escape the same set, or a link written from one of
+  // them arrives broken in WhatsApp and the other never sees why.
   const codes = t => [...new Set(t.match(/%[0-9A-F]{2}/g) || [])].sort().join(' ');
-  // Whole sections, not one line each: the escapes outgrew a single list the
-  // day ~ and * joined them, and a rule the two files state in different
-  // places is still a rule that can drift.
   const section = (t, from, to) => (t.split(from)[1] || '').split(to)[0];
-  const pageEscapes = codes(section(landing, 'ENCODING', 'A WORKED EXAMPLE'));
-  const llmsEscapes = codes(section(llms, '## Rules', '## Before you reply'));
+  const pageEscapes = codes(section(landing, 'ENCODING', 'BEFORE YOU REPLY'));
+  const llmsEscapes = codes(section(llms, '## Encoding', '## Before you reply'));
   check(pageEscapes === llmsEscapes && pageEscapes.length > 0,
         'the page and llms.txt escape the same characters',
         pageEscapes === llmsEscapes ? pageEscapes : `page ${pageEscapes} vs llms ${llmsEscapes}`);
 
-  // One real URL, byte-identical in both, that a model can copy the shape of.
-  // Rules alone have never been enough here - see the WhatsApp findings in
-  // VISION.md - and an example that has drifted from the grammar is worse
-  // than none, so the render tests below cover this exact URL too.
-  const example = /(https:\/\/upshot\.fyi\/v1\/#a=Whether[^\s<]*)/.exec(llms);
-  check(!!example, 'llms.txt carries the worked example');
-  if(example){
-    check(landing.includes(example[1].replace(/&/g, '&amp;')),
-          'the page carries the same worked example, byte for byte');
-  }
-
-  // The calculator example is the one models get wrong, so it is held to the
-  // same rule - and to one more: every separator in it is encoded, because an
-  // example that contradicts the encoding rule teaches louder than the rule.
-  const calc = /(https:\/\/upshot\.fyi\/v1\/#a=What\+moving[^\s<]*)/.exec(llms);
-  check(!!calc, 'llms.txt carries the calculator example');
-  if(calc){
-    check(landing.includes(calc[1].replace(/&/g, '&amp;')),
-          'the page carries the same calculator example, byte for byte');
-    check(!/[~*]/.test(calc[1]),
-          'the calculator example has no bare ~ or *');
+  // Every key the card renders has to be taught, or it may as well not exist.
+  const card = fs.readFileSync(CARD, 'utf8');
+  const keys = /var BLOCK_KEYS = \[([^\]]*)\]/.exec(card);
+  check(!!keys, 'the card declares its block keys');
+  if(keys){
+    const declared = keys[1].match(/'([a-z])'/g).map(s => s.replace(/'/g, ''));
+    const untaught = declared.filter(k => !new RegExp(`^- ${k}  `, 'm').test(llms));
+    check(untaught.length === 0, 'llms.txt documents every block key',
+          untaught.length ? 'missing ' + untaught.join(' ') : declared.join(' '));
   }
 
   check(!/<script/.test(brokenPage), '/broken/ is static HTML');
   check(/Make your own/.test(brokenPage), '/broken/ still says how to make one');
 }
 
-/* ---- 2. the page's own JavaScript parses ---- */
+/* ---- 3. the page's own JavaScript parses ---- */
 function syntaxCheck(src){
   console.log('\nsyntax');
   const js = /<script>([\s\S]*)<\/script>/.exec(src);
@@ -279,29 +261,29 @@ function syntaxCheck(src){
   } finally { fs.unlinkSync(tmp); }
 }
 
-/* ---- 3. render every case in a real browser ---- */
+/* ---- 4. render every case in a real browser ---- */
 const PROBE = `
 <script>
 addEventListener('load', () => {
   document.fonts.ready.then(() => {
    try {
-    const cases = __CASES__;
-    const out = cases.map(([name, hash]) => {
+    const text = sel => [...document.querySelectorAll(sel)].map(el => el.textContent);
+    const out = __CASES__.map(([name, hash]) => {
       try {
         location.hash = hash;
         draw();
-        const L = shareImage.layout();
-        const canvas = shareImage.paint(L);
-        // what the browser actually laid the card out as, for comparison
-        const sheet = document.getElementById('sheet').getBoundingClientRect();
         return {
           name,
-          imageHeight: L.height,
-          imageWidth: L.width,
-          canvasWidth: canvas.width,
-          canvasHeight: canvas.height,
-          ops: L.ops.length,
-          domHeight: Math.round(sheet.height)
+          blocks: document.querySelectorAll('#main section.block').length,
+          // every figure the card drew, in document order: the spec-sheet and
+          // headline registers both, since which one is used is the card's
+          // choice and worth pinning
+          values: text('#main .fv').concat(text('#main .sv')),
+          facts: document.querySelectorAll('#main .facts .fact').length,
+          stats: document.querySelectorAll('#main .stat').length,
+          label: (document.querySelector('#main .bl') || {}).textContent || '',
+          ticked: [...document.querySelectorAll('.checks input')]
+                    .map(b => b.checked ? '1' : '0').join('')
         };
       } catch(e){
         return {name, error: e && e.message ? e.message : String(e)};
@@ -312,21 +294,16 @@ addEventListener('load', () => {
        it reads part of what it is for. Restoring + from a space produces
        "2+++3" before it is collapsed - correct arithmetic, and a formula that
        looks like a typo. */
-    location.hash = '#h=x&v=y&r=~Sum~2 + 3&r=~Nested~(1 + 2) * 3' +
-                    '&r=~Args~min(3, 9)&r=~Minus~10 - 4&r=~Tight~2+3';
+    location.hash = '#h=x&v=y&g=s&r=Sum:2 + 3&r=Nested:(1 + 2) * 3&r=Args:min(3, 9)&r=Minus:10 - 4';
     draw();
-    out.push({
-      name: 'formulaText',
-      shown: [...document.querySelectorAll('.fx')].map(el => el.textContent),
-      values: [...document.querySelectorAll('.calc .fv')].map(el => el.textContent)
-    });
+    out.push({name: 'formulaText', shown: text('#main .fx')});
 
     /* Typing has to move three things at once: the results on the card, the
        w= in the link, and - because the link is the state - what a reader sees
        when the card is passed on and opened fresh. */
-    location.hash = '#h=x&v=y&i=s~Seats~4&i=p~Price~18&r=m~~s*p&r=~Per year~m*12';
+    location.hash = '#h=x&v=y&g=n&i=Seats:4:s&i=Price:18:p&r=Monthly:s*p:m&r=Per year:m*12';
     draw();
-    const shown = () => [...document.querySelectorAll('.calc .fv')].map(el => el.textContent).join(' ');
+    const shown = () => text('#main .fv').join(' ');
     const sent = shown();
     const boxes = [...document.querySelectorAll('.ins input')];
     boxes[0].value = '10';
@@ -338,34 +315,32 @@ addEventListener('load', () => {
     draw();
     location.hash = passedOn;
     draw();
-    out.push({
-      name: 'roundTrip', sent, typed, written, reopened: shown(),
-      values: [...document.querySelectorAll('.ins input')].map(el => el.value).join(' ')
-    });
+    out.push({name: 'roundTrip', sent, typed, written, reopened: shown(),
+              values: [...document.querySelectorAll('.ins input')].map(el => el.value).join(' ')});
+
+    // ticking rewrites the fragment the same way typing does
+    location.hash = '#h=x&v=y&g=l&c=One&c=Two&c=Three';
+    draw();
+    const ticks = [...document.querySelectorAll('.checks input')];
+    ticks[1].checked = true;
+    ticks[1].dispatchEvent(new Event('change'));
+    out.push({name: 'tickRoundTrip', written: (/k=([^&]*)/.exec(location.hash) || [, ''])[1]});
 
     // the evaluator and the number formatter, checked directly
     out.push({
       name: 'expressions',
-      // concatenated, not a template: this text is itself inside PROBE's
-      // template literal, so a dollar-brace here would interpolate one level early
       bad: __EXPRS__.filter(([src, env, want]) => evaluate(src, env) !== want)
                     .map(([src, env, want]) => src + ' -> ' + evaluate(src, env) + ', wanted ' + want),
       badNums: __NUMS__.filter(([v, want]) => showNumber(v) !== want)
                        .map(([v, want]) => v + ' -> ' + showNumber(v) + ', wanted ' + want)
     });
 
-    /* Confirming an action swaps the glyph inside a button the renderer never
-       sees. If that swap changes the card's height, every share image taken
-       during those two seconds is the wrong size - and nothing else here
-       would notice, because layout() would still agree with itself. */
-    const sheetH = () => Math.round(document.getElementById('sheet').getBoundingClientRect().height);
-    const settled = sheetH();
-    actionResult(document.getElementById('copyBtn'), true, 'Copied');
-    const confirmed = sheetH();
-    actionResult(document.getElementById('shareBtn'), false, 'Failed');
-    const failed = sheetH();
-    out.push({name: 'actionFeedback', settled, confirmed, failed,
-              said: document.getElementById('said').textContent});
+    // copy-for-AI is the other way off the card, and it has its own view of
+    // every block - a key added to the renderer alone copies out as raw text
+    location.hash = '#h=x&v=y&m=GPT-5&d=2026-09-10&g=All&f=Key:Value&i=Salary:1200:pay&r=Monthly:pay/12:mo&t=Verdict:mo>50:Fine:Tight&c=A tick';
+    draw();
+    out.push({name: 'copyForAI', text: copyText(parse(location.hash))});
+
     report(out);
    } catch(e){
      report([{name: 'probe', error: String(e && e.stack || e)}]);
@@ -385,123 +360,91 @@ function report(out){
 function renderAll(chrome, src){
   const harness = path.join(os.tmpdir(), `upshot-harness-${process.pid}.html`);
   fs.writeFileSync(harness, src.replace('</body>',
-    PROBE.replace('__CASES__', JSON.stringify(CASES))
+    PROBE.replace('__CASES__', JSON.stringify(CASES.map(c => [c[0], c[1]])))
          .replace('__EXPRS__', JSON.stringify(EXPRS))
          .replace('__NUMS__', JSON.stringify(NUMS)) + '</body>'));
   let dom;
   try {
     dom = execFileSync(chrome, [
       '--headless', '--disable-gpu', '--hide-scrollbars', '--no-sandbox',
-      '--force-device-scale-factor=2',
       '--virtual-time-budget=20000',
       '--window-size=500,900',
-      // draw() runs at parse time and sends an unrenderable link to /broken/,
-      // which would navigate the harness away before the probe reports
+      // draw() runs at parse time and would send an unrenderable link to
+      // /broken/, navigating the harness away before the probe reports
       '--dump-dom', 'file://' + harness + '#h=harness&v=ready'
     ], {encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 64 * 1024 * 1024});
-  } finally { fs.unlinkSync(harness); }
-
-  const m = /<div id="__RESULT__">([A-Za-z0-9+/=]*)<\/div>/.exec(dom);
-  if(!m){
-    console.error('The page produced no result. Did layout()/paint() throw before reporting?');
-    process.exit(2);
+  } finally {
+    fs.unlinkSync(harness);
   }
-  return JSON.parse(decodeURIComponent(escape(Buffer.from(m[1], 'base64').toString('binary'))));
+  const payload = /<div id="__RESULT__">([^<]*)<\/div>/.exec(dom);
+  if(!payload) throw new Error('the probe never reported - the page may have thrown at load');
+  return JSON.parse(Buffer.from(payload[1], 'base64').toString('utf8'));
 }
 
-/* ---- 4. compare ---- */
 function main(){
-  const update = process.argv.includes('--update');
-  const src = fs.readFileSync(CARD, 'utf8');
   const chrome = findChrome();
+  const src = fs.readFileSync(CARD, 'utf8');
 
   staticChecks(src);
   siblingChecks();
   syntaxCheck(src);
 
-  /* Render the worked example itself, taken from llms.txt rather than retyped
-     here - it is the one URL the whole site tells models to copy, so an
-     example that has quietly drifted out of the grammar is worse than no
-     example at all. */
-  const spec = fs.readFileSync(path.join(ROOT, 'llms.txt'), 'utf8');
-  const ex = /https:\/\/upshot\.fyi\/v1\/(#a=Whether[^\s<]*)/.exec(spec);
-  if(ex) CASES.push(['workedExample', ex[1]]);
-  const cx = /https:\/\/upshot\.fyi\/v1\/(#a=What\+moving[^\s<]*)/.exec(spec);
-  if(cx) CASES.push(['calculatorExample', cx[1]]);
-
-  const results = renderAll(chrome, src);
+  if(!chrome){
+    console.log('\nno Chrome found - set CHROME=/path/to/chrome for the render tests');
+    process.exit(fail.length ? 1 : 0);
+  }
 
   console.log('\nrender');
-  for(const r of results){
-    if(r.error){ check(false, r.name, 'threw: ' + r.error); continue; }
-    if(r.name === 'roundTrip'){
-      check(r.sent === '864', 'a card arrives showing the sender numbers', r.sent);
-      check(r.typed === '2,160', 'typing recomputes the results', r.typed);
-      check(r.written === '10~18', 'and writes what was typed into the link', r.written);
-      check(r.reopened === '2,160' && r.values === '10 18',
-            'so the link reopens as the reader left it',
-            `${r.reopened} from ${r.values}`);
-      continue;
-    }
-    if(r.name === 'formulaText'){
-      check(r.shown.join(' ') === '2+3 (1+2)*3 min(3,9) 10-4 2+3',
-            'a formula written with spaces prints back cleanly', r.shown.join(' '));
-      check(r.values.join(' ') === '5 9 3 6 5',
-            'and evaluates to the same thing either way', r.values.join(' '));
-      continue;
-    }
-    if(r.name === 'expressions'){
-      check(!r.bad.length, 'every expression evaluates as expected',
-            r.bad.length ? r.bad.join('; ') : `${EXPRS.length} cases`);
-      check(!r.badNums.length, 'numbers format the same on every machine',
-            r.badNums.length ? r.badNums.join('; ') : `${NUMS.length} cases`);
-      continue;
-    }
-    if(r.name === 'actionFeedback'){
-      check(r.settled === r.confirmed && r.settled === r.failed,
-            'the tick and the cross do not move the card',
-            `${r.settled} settled, ${r.confirmed} confirmed, ${r.failed} failed`);
-      check(!!r.said, 'the result is announced, not only drawn', r.said);
-      continue;
-    }
-    const underCap = r.canvasWidth <= MAX_SIDE && r.canvasHeight <= MAX_SIDE &&
-                     r.canvasWidth * r.canvasHeight <= MAX_AREA;
-    check(underCap, `${r.name}: canvas within the size cap`,
-          `${r.canvasWidth}x${r.canvasHeight}`);
+  const results = renderAll(chrome, src);
+  const byName = Object.fromEntries(results.map(r => [r.name, r]));
 
-    // The renderer and the browser should agree on how tall the card is.
-    // A few px of slack for half-leading and sub-pixel rounding; anything
-    // larger means the two implementations have drifted apart.
-    const drift = Math.abs(r.imageHeight - r.domHeight);
-    check(drift <= 8, `${r.name}: image height agrees with the DOM`,
-          `image ${r.imageHeight} vs dom ${r.domHeight} (${drift}px)`);
+  for(const [name, , want] of CASES){
+    const got = byName[name];
+    if(!got){ check(false, name, 'no result'); continue; }
+    if(got.error){ check(false, name, got.error); continue; }
+    const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+    let ok = got.blocks === want.blocks && same(got.values, want.values);
+    let detail = `${got.blocks} block(s)` + (got.values.length ? '  ' + got.values.join(' ') : '');
+    for(const k of ['facts', 'stats', 'label', 'ticked']){
+      if(want[k] === undefined) continue;
+      if(got[k] !== want[k]){ ok = false; detail += `  ${k}=${got[k]} wanted ${want[k]}`; }
+    }
+    if(!ok && got.blocks !== want.blocks) detail += `  wanted ${want.blocks} block(s)`;
+    if(!ok && !same(got.values, want.values)) detail += `  wanted ${want.values.join(' ') || 'no values'}`;
+    check(ok, name, detail);
   }
 
-  if(update){
-    const baselines = {};
-    for(const r of results) if(!r.error && r.imageHeight) baselines[r.name] = r.imageHeight;
-    fs.writeFileSync(BASELINES, JSON.stringify(baselines, null, 2) + '\n');
-    console.log(`\nwrote ${path.relative(ROOT, BASELINES)}`);
-  } else if(fs.existsSync(BASELINES)){
-    /* Exact heights, which catch changes the DOM comparison is too loose to
-       see. Font metrics differ between operating systems, so these are only
-       meaningful on the machine that generated them - rerun with --update
-       after an intentional design change, or when moving machines. */
-    console.log('\nbaselines');
-    const baselines = JSON.parse(fs.readFileSync(BASELINES, 'utf8'));
-    for(const r of results){
-      if(r.error || !r.imageHeight) continue;
-      const want = baselines[r.name];
-      if(want === undefined){ note(`--    ${r.name}: no baseline yet`); continue; }
-      check(r.imageHeight === want, `${r.name}: image height unchanged`,
-            r.imageHeight === want ? `${want}px` : `expected ${want}, got ${r.imageHeight}`);
-    }
-  } else {
-    console.log('\nNo baselines yet. Run: node test/run.js --update');
-  }
+  console.log('\nbehaviour');
+  const f = byName.formulaText;
+  check(same2(f.shown, ['2+3', '(1+2)*3', 'min(3,9)', '10-4']),
+        'a formula written with spaces prints back tidy', f.shown.join('  '));
 
-  console.log(fail.length ? `\n${fail.length} failed\n` : '\nall passed\n');
+  const rt = byName.roundTrip;
+  check(rt.sent === '72 864', 'results follow the numbers they were sent', rt.sent);
+  check(rt.typed === '180 2,160', 'and follow what the reader types', rt.typed);
+  check(rt.written === '10~18', 'typing writes every input into the link', rt.written);
+  check(rt.reopened === rt.typed, 'reopening the link shows what the reader saw', rt.reopened);
+  check(rt.values === '10 18', 'and the boxes come back filled in', rt.values);
+
+  check(byName.tickRoundTrip.written === '010', 'ticking writes the link too',
+        byName.tickRoundTrip.written);
+
+  const ex = byName.expressions;
+  check(ex.bad.length === 0, 'the evaluator agrees on every expression', ex.bad.join('; '));
+  check(ex.badNums.length === 0, 'showNumber agrees on every number', ex.badNums.join('; '));
+
+  const copy = byName.copyForAI.text;
+  for(const [label, want] of [['a row', 'Key: Value'], ['an input', 'Salary: 1,200'],
+                              ['a result', 'Monthly: 100'], ['a decision', 'Verdict: Fine'],
+                              ['a checklist', '[ ] A tick']]){
+    check(copy.includes(want), `copy for AI carries ${label}`, want);
+  }
+  check(!/:[a-z]+$/m.test(copy), 'copy for AI leaks no raw field separators');
+
+  console.log(fail.length ? `\n${fail.length} failed` : '\nall passed');
   process.exit(fail.length ? 1 : 0);
 }
+
+const same2 = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 main();
