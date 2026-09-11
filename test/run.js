@@ -201,6 +201,10 @@ function staticChecks(raw){
   check(!/canvas|toBlob/i.test(src), 'nothing draws the card into a canvas',
         'the link is what gets shared - there is no second implementation');
   check(/navigator\.share/.test(src), 'the share button opens the native sheet');
+
+  // the mark is the way back to the site from someone else's card, and every
+  // other document here does the same
+  check(/<a class="brand mark" href="\/">/.test(src), 'the card mark links home');
 }
 
 /* ---- 2. the other two documents ---- */
