@@ -859,6 +859,12 @@ function computeAll(blocks, written){
 const listHTML = (cls, items, row) =>
   '<ul class="' + cls + '">' + items.map(row).join('') + '</ul>';
 
+/* Which rows each of these actually draws. bindInputs() repaints them in
+   place without redrawing the card, so it has to select exactly the rows the
+   body put there - two lists that drifted apart is the bug this stops. */
+const computedRows = block => (block.computed || []).filter(c => c.label);
+const decidedRows  = block => (block.decided  || []).filter(c => c.label);
+
 const BLOCKS = {
   p: {
     body: items => listHTML('points', items, pt =>
@@ -941,11 +947,11 @@ const BLOCKS = {
     /* The same row as f and r - given, worked out, decided. A reader sees one
        kind of line whichever way the card arrived at it. */
     body(items, _, block){
-      const rows = (block.decided || []).filter(c => c.label && c.text);
+      const rows = decidedRows(block);
       if(!rows.length) return '';
-      return '<div class="facts calc">' + rows.map(c =>
+      return '<div class="facts calc" data-rows="t">' + rows.map(c =>
         '<div class="fact"><span class="fk">' + esc(c.label) + '</span>' +
-        '<span class="fv">' + esc(c.text) + '</span>' +
+        '<span class="fv">' + esc(c.text || '\u2014') + '</span>' +
         (c.expr ? '<span class="fx">' + esc(c.expr) + '</span>' : '') +
         '</div>'
       ).join('') + '</div>';
@@ -958,9 +964,9 @@ const BLOCKS = {
        exists for the formulas below it and is not drawn, which is what keeps
        a long calculation from arriving as one unreadable line. */
     body(items, _, block){
-      const rows = (block.computed || []).filter(c => c.label);
+      const rows = computedRows(block);
       if(!rows.length) return '';
-      return '<div class="facts calc">' + rows.map(c =>
+      return '<div class="facts calc" data-rows="r">' + rows.map(c =>
         '<div class="fact"><span class="fk">' + esc(c.label) + '</span>' +
         '<span class="fv">' + esc(showNumber(c.value)) + '</span>' +
         (c.expr ? '<span class="fx">' + esc(c.expr) + '</span>' : '') +
@@ -1133,11 +1139,13 @@ function toClipboard(text){
   });
 }
 
-function bindCopy(d){
+function bindCopy(){
   var btn = document.getElementById('copyBtn');
   if(!btn) return;
   btn.addEventListener('click', function(){
-    toClipboard(copyText(d)).then(function(){
+    // read the link at click time, not at draw time: typing and ticking
+    // rewrite the fragment without redrawing, so a captured card goes stale
+    toClipboard(copyText(parse(location.hash))).then(function(){
       actionResult(btn, true, 'Copied. Paste it into any AI');
     }, function(){
       actionResult(btn, false, 'Could not copy');
@@ -1210,7 +1218,21 @@ function bindInputs(){
   var boxes = [].slice.call(document.querySelectorAll('.ins input'));
   if(!boxes.length) return;
 
-  var rows = [].slice.call(document.querySelectorAll('.calc .fact'));
+  var resultRows  = [].slice.call(document.querySelectorAll('[data-rows="r"] .fact'));
+  var decisionRows = [].slice.call(document.querySelectorAll('[data-rows="t"] .fact'));
+
+  /* A decision is recomputed by exactly the same numbers a result is, so a
+     card that repaints one and not the other tells the reader two different
+     stories about the same inputs. */
+  var repaint = function(nodes, rows, value){
+    nodes.forEach(function(node, i){
+      var c = rows[i];
+      if(!c) return;
+      node.querySelector('.fv').textContent = value(c);
+      var fx = node.querySelector('.fx');
+      if(fx) fx.textContent = c.expr;
+    });
+  };
 
   boxes.forEach(function(box){
     box.addEventListener('input', function(){
@@ -1225,18 +1247,13 @@ function bindInputs(){
          and the numbers in the link cannot disagree - the link is the state,
          and this is just what it looks like. */
       var d = parse(location.hash);
-      var computed = [];
+      var computed = [], decided = [];
       d.blocks.forEach(function(b){
-        if(b.type !== 'r') return;
-        (b.computed || []).forEach(function(c){ if(c.label) computed.push(c); });
+        if(b.type === 'r') computed = computed.concat(computedRows(b));
+        if(b.type === 't') decided  = decided.concat(decidedRows(b));
       });
-      rows.forEach(function(row, i){
-        var c = computed[i];
-        if(!c) return;
-        row.querySelector('.fv').textContent = showNumber(c.value);
-        var fx = row.querySelector('.fx');
-        if(fx) fx.textContent = c.expr;
-      });
+      repaint(resultRows,   computed, function(c){ return showNumber(c.value); });
+      repaint(decisionRows, decided,  function(c){ return c.text || '\u2014'; });
     });
   });
 }
@@ -1256,7 +1273,7 @@ function draw(){
   document.getElementById('main').innerHTML = r.main;
   document.getElementById('foot').innerHTML = r.foot;
   bindShare();
-  bindCopy(d);
+  bindCopy();
   bindChecks();
   bindInputs();
   window.scrollTo(0, 0);

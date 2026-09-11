@@ -318,6 +318,25 @@ addEventListener('load', () => {
     out.push({name: 'roundTrip', sent, typed, written, reopened: shown(),
               values: [...document.querySelectorAll('.ins input')].map(el => el.value).join(' ')});
 
+    /* A decision is recomputed by the same numbers a result is, and both are
+       repainted in place rather than redrawn - so the card can tell the reader
+       two different stories about one set of inputs if only one is updated. */
+    location.hash = '#h=x&v=y&g=Runway&i=Cash saved:18000:cash&i=Monthly burn:2200:burn' +
+                    '&i=Months you want:9:target&r=Runway:cash/burn:months' +
+                    '&t=Ready to walk:months>=target:Go now:Not yet';
+    draw();
+    const card = () => text('#main .fv').concat(text('#main .fx'));
+    const target = () => [...document.querySelectorAll('.ins input')][2];
+    const setTarget = v => { const el = target(); el.value = v; el.dispatchEvent(new Event('input')); };
+    const live = {before: card()};
+    setTarget('8');
+    live.crossed = card();
+    live.link = (/w=([^&]*)/.exec(location.hash) || [, ''])[1];
+    live.copied = copyText(parse(location.hash));
+    setTarget('9');
+    live.back = card();
+    out.push({name: 'decisionLive', ...live});
+
     // ticking rewrites the fragment the same way typing does
     location.hash = '#h=x&v=y&g=l&c=One&c=Two&c=Three';
     draw();
@@ -428,6 +447,18 @@ function main(){
 
   check(byName.tickRoundTrip.written === '010', 'ticking writes the link too',
         byName.tickRoundTrip.written);
+
+  const live = byName.decisionLive;
+  check(same2(live.before, ['8.18', 'Not yet', '18000/2200', '8.18>=9']),
+        'a decision draws with the numbers it was sent', live.before.join('  '));
+  check(same2(live.crossed, ['8.18', 'Go now', '18000/2200', '8.18>=8']),
+        'and flips the moment the reader crosses the threshold', live.crossed.join('  '));
+  check(live.link === '18000~2200~8', 'the link follows it', live.link);
+  check(live.copied.includes('Ready to walk: Go now'),
+        'copy for AI reads the card as it stands, not as it was drawn',
+        (/Ready to walk:[^\n]*/.exec(live.copied) || [''])[0]);
+  check(same2(live.back, live.before), 'and it goes back when the number does',
+        live.back.join('  '));
 
   const ex = byName.expressions;
   check(ex.bad.length === 0, 'the evaluator agrees on every expression', ex.bad.join('; '));
