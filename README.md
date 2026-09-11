@@ -85,7 +85,7 @@ the characters.
 
 **The spec is examples first.** A model copies a worked example far more
 reliably than it applies a rule, and every rule is a branch that can go wrong.
-Seven complete cards come before any prose, and the prose that survives is the
+Eight complete cards come before any prose, and the prose that survives is the
 part that breaks links if ignored.
 
 ## The card
