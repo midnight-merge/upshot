@@ -92,6 +92,15 @@ const CASES = [
   ['swallowedKey', `#m=GPT-5&d=2026-09-10&h=About twenty seven each&v=Service is in the total&g=Split it+i=Bill:80:bill&i=People:3:n&r=Each pays:bill/n`,
    {blocks: 1, values: ['26.67'], label: 'Split it'}],
 
+  // ticks and boxes: the checklist as two numbers a formula can use
+  ['scoredEmpty', `#h=How exposed are you&v=Tick what applies&g=How many apply&c=A mortgage&c=Dependants&c=Higher earner&c=Self employed&r=Score:ticks/boxes*100:pct&t=Verdict:ticks>=2:Get cover:Probably fine`,
+   {blocks: 1, values: ['0', 'Probably fine']}],
+  ['scoredTicked', `#h=How exposed are you&v=Tick what applies&g=How many apply&c=A mortgage&c=Dependants&c=Higher earner&c=Self employed&r=Score:ticks/boxes*100:pct&t=Verdict:ticks>=2:Get cover:Probably fine&k=1101`,
+   {blocks: 1, values: ['75', 'Get cover'], ticked: '1101'}],
+  // an input may not quietly redefine what the spec says the word means
+  ['reservedName', `#h=Reserved&v=The built-in wins&g=x&i=Ticks:99:ticks&c=One&c=Two&r=Count:ticks`,
+   {blocks: 1, values: ['0']}],
+
   // composition and the cap
   ['comparison', `#m=GPT-5&d=2026-09-10&h=Postgres or SQLite&v=Postgres, unless you ship to the edge&g=Postgres&p=Concurrent writes&p=Real types&g=SQLite&p=Zero ops&p=Faster for reads`,
    {blocks: 2, values: []}],
@@ -337,13 +346,22 @@ addEventListener('load', () => {
     live.back = card();
     out.push({name: 'decisionLive', ...live});
 
-    // ticking rewrites the fragment the same way typing does
-    location.hash = '#h=x&v=y&g=l&c=One&c=Two&c=Three';
+    // ticking rewrites the fragment the same way typing does - and now moves
+    // the same numbers, so it has to repaint the same rows
+    location.hash = '#h=x&v=y&g=l&c=One&c=Two&c=Three&c=Four' +
+                    '&r=Score:ticks/boxes*100:pct&t=Verdict:ticks>=2:Get cover:Probably fine';
     draw();
     const ticks = [...document.querySelectorAll('.checks input')];
-    ticks[1].checked = true;
-    ticks[1].dispatchEvent(new Event('change'));
-    out.push({name: 'tickRoundTrip', written: (/k=([^&]*)/.exec(location.hash) || [, ''])[1]});
+    const tickState = () => text('#main .fv').concat(text('#main .fx'));
+    const tick = i => { ticks[i].checked = !ticks[i].checked; ticks[i].dispatchEvent(new Event('change')); };
+    const ticked = {empty: tickState()};
+    tick(0); tick(1);
+    ticked.two = tickState();
+    ticked.written = (/k=([^&]*)/.exec(location.hash) || [, ''])[1];
+    ticked.copied = copyText(parse(location.hash));
+    tick(1);
+    ticked.back = tickState();
+    out.push({name: 'tickRoundTrip', ...ticked});
 
     // the evaluator and the number formatter, checked directly
     out.push({
@@ -445,8 +463,17 @@ function main(){
   check(rt.reopened === rt.typed, 'reopening the link shows what the reader saw', rt.reopened);
   check(rt.values === '10 18', 'and the boxes come back filled in', rt.values);
 
-  check(byName.tickRoundTrip.written === '010', 'ticking writes the link too',
-        byName.tickRoundTrip.written);
+  const tk = byName.tickRoundTrip;
+  check(tk.written === '1100', 'ticking writes the link too', tk.written);
+  check(same2(tk.empty, ['0', 'Probably fine', '0/4*100', '0>=2']),
+        'an untouched checklist scores zero', tk.empty.join('  '));
+  check(same2(tk.two, ['50', 'Get cover', '2/4*100', '2>=2']),
+        'and every tick moves the score and the verdict with it', tk.two.join('  '));
+  check(tk.copied.includes('Verdict: Get cover'),
+        'copy for AI reads the ticks too',
+        (/Verdict:[^\n]*/.exec(tk.copied) || [''])[0]);
+  check(same2(tk.back, ['25', 'Probably fine', '1/4*100', '1>=2']),
+        'and unticking takes it back down', tk.back.join('  '));
 
   const live = byName.decisionLive;
   check(same2(live.before, ['8.18', 'Not yet', '18000/2200', '8.18>=9']),
