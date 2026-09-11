@@ -82,6 +82,13 @@ main > :last-child{margin-bottom:0}
   color:var(--faint);
 }
 .brand::after{content:"";display:block;clear:both}
+/* The mark is the way back to the site from someone else's card, the same as
+   it is on every other page here. Block, because an anchor is inline by
+   default and the floated mark would clear differently. */
+a.brand{display:block;border-bottom:0;color:var(--faint)}
+a.brand:hover{color:var(--accent)}
+a.brand:hover .logo{fill:var(--accent)}
+a.brand:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
 
 /* the mark: lines of text distilling down to a single point - the upshot.
    Floated, not a flex child, so only the FIRST line clears it - wrapped
@@ -1030,7 +1037,7 @@ function render(d){
      anything above, so the reader does not know to scroll - a silent loss of
      the line that frames the whole card. Branding survives being clipped.
      The scope line does not. */
-  var head = '<div class="brand mark">' + LOGO + '<span>upshot.fyi</span></div>';
+  var head = '<a class="brand mark" href="/">' + LOGO + '<span>upshot.fyi</span></a>';
   if(d.a){
     head += '<div class="brand scope"><span>' + esc(d.a) + '</span></div>';
   }
