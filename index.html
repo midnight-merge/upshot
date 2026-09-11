@@ -138,6 +138,10 @@ a:hover{color:var(--accent);border-bottom-color:var(--accent)}
 a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;text-wrap:pretty}
 .cmd{color:var(--accent)}
+.demo{margin:0 0 14px}
+.demo a{display:inline-block;font-size:15px;color:var(--ink);border-bottom-color:var(--hair)}
+.demo a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+.demo .why{font-size:12px;line-height:1.6;color:var(--faint);margin:3px 0 0}
 
 /* the column the sheet sits in */
 .wrap{display:flex;flex-direction:column;align-items:center;width:100%}
@@ -150,6 +154,7 @@ h2{font-weight:600;font-size:13px;margin:30px 0 3px;padding-top:20px;border-top:
 .fine{font-size:12px;line-height:1.6;color:var(--faint);margin:0 0 10px;text-wrap:pretty}
 /* :first-of-type would mean "first <p>", which is the verdict - not this */
 h2 + .fine{margin-top:11px}
+h2 + .demo{margin-top:13px}
 pre{
   font-family:var(--mono);
   font-size:11px;line-height:1.7;color:var(--faint);
@@ -183,6 +188,16 @@ pre{
 
     <p>No account, nothing to install. It does the sums, keeps the checklist,
       makes the call - and the whole thing is the link.</p>
+
+    <h2>See one</h2>
+    <div class="demo"><a href="/v2/#a=Whether+I+have+enough+runway+to+quit&amp;h=Nine+months+is+the+number+to+beat&amp;v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=Runway&amp;i=Cash+saved:18000:cash&amp;i=Monthly+burn:2200:burn&amp;i=Months+you+want:9:target&amp;r=Runway:cash/burn:months&amp;t=Ready+to+walk:months%3E=target:Go+now:Not+yet">Can I afford to quit my job?</a>
+      <p class="why">Three numbers and a verdict that flips the moment you cross your own threshold.</p></div>
+    <div class="demo"><a href="/v2/#a=The+pace+that+gets+me+under+four+hours&amp;h=Five+forty+one+per+kilometre%2C+start+to+finish&amp;v=Bank+nothing+early+-+the+four+hour+wall+is+paid+for+in+the+first+ten+kilometres%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=The+target&amp;i=Target+hours:4:hours&amp;i=Distance+in+km:42%2E2:dist&amp;r=Minutes+to+play+with:hours%2A60:mins&amp;r=Per+kilometre:mins/dist:pace&amp;r=Per+mile:pace%2A1%2E609">What pace do I need to break four hours?</a>
+      <p class="why">One target, worked down into the number you actually run to.</p></div>
+    <div class="demo"><a href="/v2/#a=Whether+tonight+is+worth+dragging+the+scope+outside&amp;h=The+eyepiece+is+usually+the+thing+holding+you+back&amp;v=Past+twice+the+aperture+in+millimetres+you+are+magnifying+blur%2C+not+detail%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=Your+kit&amp;i=Telescope+focal+length+mm:900:focal&amp;i=Eyepiece+mm:10:eye&amp;i=Aperture+mm:130:ap&amp;r=Magnification:focal/eye:mag&amp;r=Most+this+scope+can+use:ap%2A2:cap&amp;g=Tonight&amp;c=The+moon+is+below+half+full&amp;c=Clear+for+two+hours+or+more&amp;c=You+can+get+away+from+street+lights&amp;c=Twenty+minutes+to+let+your+eyes+adapt&amp;g=So&amp;r=:mag%3C=cap:sharp&amp;r=:ticks%3E=3:dark&amp;t=Verdict:sharp%2Bdark%3E1:Set+it+up:Leave+it+tonight">Is tonight worth dragging the telescope out?</a>
+      <p class="why">Type your kit in, tick what the sky is doing - the verdict needs both.</p></div>
+
+    <p class="note"><a href="/made/">More of them</a></p>
 
     <h2>Format</h2>
     <p class="note">For any AI reading this page.</p>
@@ -225,6 +240,10 @@ https://upshot.fyi/v2/#a=Whether+the+new+build+is+actually+lighter&amp;h=It+is+h
 One number that is the whole point:
 
 https://upshot.fyi/v2/#a=What+the+annual+plan+actually+saves&amp;h=Two+months+free%2C+near+enough&amp;v=The+discount+is+worth+more+than+the+interest+on+paying+up+front%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=The+saving&amp;f=Off+the+monthly+price:17%25
+
+An answer with boxes a formula can read:
+
+https://upshot.fyi/v2/#a=What+the+ticket+actually+costs+me&amp;h=The+railcard+pays+for+itself+on+this+trip&amp;v=Two+discounts+stack+here%2C+which+is+the+part+people+miss%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=Your+ticket&amp;i=Full+fare:84:fare&amp;c=You+have+a+railcard:card&amp;c=Travelling+off+peak:offpeak&amp;r=Discount:card%2A0%2E34%2Boffpeak%2A0%2E1:cut&amp;r=You+pay:fare-fare%2Acut
 
 An answer the reader ticks their way to:
 
@@ -283,6 +302,10 @@ Two names are always there when the card has a checklist on it: ticks is how
 many boxes are ticked, boxes how many there are. So a list the reader works
 through can drive a score or a verdict - r=Score:ticks/boxes*100 - and it
 follows every tick. Do not name an input ticks or boxes.
+
+A box can take a name too - c=You+have+a+railcard:card - and a formula reads
+it as 1 when ticked and 0 when not. Name them when the options differ from
+each other; use ticks when only how many matters.
 
 i always ends with a short one-word name. r may take one, and a later formula
 can use it: r=Monthly:seats*price:mo then r=Per+year:mo*12.

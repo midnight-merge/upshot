@@ -112,7 +112,7 @@ holds whatever mix of lines it needs:
 |---|---|
 | `p` | bullets |
 | `o` | numbered steps, where order is the point |
-| `c` | checklist, tappable. Ticks are written back into the fragment, so a viewer ends up holding a link to their own half-finished version and can pass it on. A formula can read them: `ticks` and `boxes` |
+| `c` | checklist, tappable. Ticks are written back into the fragment, so a viewer ends up holding a link to their own half-finished version and can pass it on. A formula can read them: `ticks`, `boxes`, or a box's own name |
 | `f` | `Label:Value` rows. One or two on their own are set as headline figures, three or more become a spec sheet |
 | `i` | an input box. What the reader types is written back into the fragment, the same bargain the checklist makes |
 | `r` | `Label:Formula`. The card works it out and prints the formula beside it, every name replaced by what it held |
@@ -128,8 +128,10 @@ Three blocks is the cap. Not a technical limit - a card that needs four blocks
 is two cards. There is no cap on the lines inside one, because how many boxes a
 tool needs is part of the tool.
 
-Two names are always in scope for a formula: `ticks`, how many boxes are
-ticked, and `boxes`, how many there are. That is the whole of "referenceable
+A box can carry a name - `c=You have a railcard:card` - which a formula reads
+as 1 when ticked and 0 when not. Two more names are always in scope: `ticks`,
+how many boxes are ticked, and `boxes`, how many there are. Name the boxes when
+the options differ from each other, count them when only how many matters. That is the whole of "referenceable
 checkboxes" - no name per item, no change to `c=` or `k=`, nothing new in the
 grammar - and it buys the shape a static list cannot do: tick what applies, get
 a score and a verdict. `ticks/boxes` rather than a hardcoded total, so the card

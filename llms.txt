@@ -47,6 +47,10 @@ An answer the reader ticks their way to:
 
 https://upshot.fyi/v2/#a=Whether+I+need+income+protection&h=Two+of+these+and+it+is+worth+the+premium&v=Cover+costs+little+when+nothing+depends+on+you+and+a+lot+when+things+do%2E&m=GPT-5&d=2026-09-11&g=How+many+apply&c=You+have+a+mortgage&c=You+have+dependants&c=You+are+the+higher+earner&c=You+are+self+employed&r=Score:ticks/boxes%2A100:pct&t=Verdict:ticks%3E=2:Get+cover:Probably+fine
 
+An answer with boxes a formula can read:
+
+https://upshot.fyi/v2/#a=What+the+ticket+actually+costs+me&h=The+railcard+pays+for+itself+on+this+trip&v=Two+discounts+stack+here%2C+which+is+the+part+people+miss%2E&m=GPT-5&d=2026-09-11&g=Your+ticket&i=Full+fare:84:fare&c=You+have+a+railcard:card&c=Travelling+off+peak:offpeak&r=Discount:card%2A0%2E34%2Boffpeak%2A0%2E1:cut&r=You+pay:fare-fare%2Acut
+
 ## The frame
 
 Always all five, always first.
@@ -96,6 +100,10 @@ Two names are always there when the card has a checklist on it: `ticks` is how
 many boxes are ticked, `boxes` how many there are. So a list the reader works
 through can drive a score or a verdict - `r=Score:ticks/boxes*100` - and it
 follows every tick. Do not name an input `ticks` or `boxes`.
+
+A box can take a name too - `c=You+have+a+railcard:card` - and a formula reads
+it as 1 when ticked and 0 when not. Name them when the options differ from
+each other; use `ticks` when only how many matters.
 
 `i` always ends with a short one-word name. `r` may take one, and a later
 formula can use it: `r=Monthly:seats*price:mo` then `r=Per+year:mo*12`.

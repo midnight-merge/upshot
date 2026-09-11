@@ -786,24 +786,42 @@ function readInputs(blocks, written){
    environment the next can see - so a formula too long to read on one line
    breaks into named steps instead. A result may only name results defined
    above it, which makes a cycle impossible rather than something to detect. */
-/* The checklist, as two numbers a formula can use. One k= covers every
+/* c=Label or c=Label:name. A trailing single word after a colon is a name;
+   anything with a space in it is still part of the label, which is what keeps
+   "Bring ID: passport" prose and "Be there by 9:30" a time. */
+function checkField(item){
+  var m = /^(.*):([A-Za-z_][A-Za-z0-9_]*)$/.exec(String(item == null ? '' : item));
+  return m ? {label: m[1], name: m[2]} : {label: String(item == null ? '' : item), name: ''};
+}
+
+/* The checklist, as numbers a formula can use. One k= covers every
    checklist on the card in document order, so the count runs across blocks
    exactly as the ticks do.
 
    Seeded AFTER the inputs, so an input that happens to be called `ticks`
    cannot quietly redefine what the spec says the word means. */
 function readTicks(blocks, ticked){
-  var boxes = 0;
-  blocks.forEach(function(b){ if(b.type === 'c') boxes += b.items.length; });
   var marks = String(ticked == null ? '' : ticked);
-  var ticks = 0;
-  for(var i = 0; i < boxes; i++) if(marks.charAt(i) === '1') ticks++;
-  return {ticks: ticks, boxes: boxes};
+  var names = {}, boxes = 0, ticks = 0;
+  blocks.forEach(function(b){
+    if(b.type !== 'c') return;
+    b.items.forEach(function(item){
+      var on = marks.charAt(boxes) === '1' ? 1 : 0;
+      var name = checkField(item).name;
+      if(name) names[name] = on;
+      ticks += on;
+      boxes++;
+    });
+  });
+  return {ticks: ticks, boxes: boxes, names: names};
 }
 
 function computeAll(blocks, written, ticked){
   var env = readInputs(blocks, written);
   var counted = readTicks(blocks, ticked);
+  for(var name in counted.names){
+    if(Object.prototype.hasOwnProperty.call(counted.names, name)) env[name] = counted.names[name];
+  }
   env.ticks = counted.ticks;
   env.boxes = counted.boxes;
   blocks.forEach(function(b){
@@ -907,7 +925,7 @@ const BLOCKS = {
     body: (items, ticked) => listHTML('checks', items, (item, i) =>
       '<li><label><input type="checkbox"' +
       (String(ticked || '')[i] === '1' ? ' checked' : '') +
-      '><span>' + esc(item) + '</span></label></li>'),
+      '><span>' + esc(checkField(item).label) + '</span></label></li>'),
 
   },
 
@@ -1006,6 +1024,12 @@ function render(d){
      every page it opens from another app (example.com and Wikipedia's own
      articles included, so this is not ours to fix). Something has to live in
      that strip. Branding survives being clipped; the scope line does not. */
+  /* The mark is sacrificial, and re-confirmed as such on 11 Sep 2026: with it
+     removed, a card opened from WhatsApp on iOS arrives with the scope line
+     already up behind the browser chrome. Nothing on screen says there is
+     anything above, so the reader does not know to scroll - a silent loss of
+     the line that frames the whole card. Branding survives being clipped.
+     The scope line does not. */
   var head = '<div class="brand mark">' + LOGO + '<span>upshot.fyi</span></div>';
   if(d.a){
     head += '<div class="brand scope"><span>' + esc(d.a) + '</span></div>';
@@ -1120,7 +1144,7 @@ function copyText(d){
       var a = cut < 0 ? item : item.slice(0, cut);
       var z = cut < 0 ? ''   : item.slice(cut + 1);
       if(b.type === 'o')      lines.push((i + 1) + '. ' + item);
-      else if(b.type === 'c') lines.push('[' + (String(d.k || '')[tick++] === '1' ? 'x' : ' ') + '] ' + item);
+      else if(b.type === 'c') lines.push('[' + (String(d.k || '')[tick++] === '1' ? 'x' : ' ') + '] ' + checkField(item).label);
       else if(b.type === 'f') lines.push(a + (z ? ': ' + z : ''));
       else                    lines.push('- ' + item);
     });

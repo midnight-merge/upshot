@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>upshot - broken link</title>
-<meta name="robots" content="noindex">
+<title>upshot - made with it</title>
 <style>
 /* the card commits to one look in both themes - it is an object, not a document */
 :root{
@@ -80,8 +79,8 @@ main > :last-child{margin-bottom:0}
   color:var(--faint);
 }
 .brand::after{content:"";display:block;clear:both}
-/* This page is where a truncated link lands, so the mark is the way out of
-   it rather than decoration. Still has to read as the wordmark. */
+/* the mark is the way home from here - a link, but it still has to read as
+   the wordmark rather than as a link in prose */
 /* a <div> on the other pages, so it has to stay a block here: an anchor is
    inline by default, which changes how the floated mark clears and drops
    the whole line below where it sits everywhere else. */
@@ -89,11 +88,6 @@ a.brand{display:block;border-bottom:0;color:var(--faint)}
 a.brand:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
 a.brand:hover{color:var(--accent)}
 a.brand:hover .logo{fill:var(--accent)}
-/* The same line is not a link on the homepage or on a card, so a border
-   under it here would sit it lower than everywhere else it appears. The
-   accent is the affordance. */
-.how a{border-bottom:0}
-.how a:hover .cmd{color:var(--ink)}
 
 /* the mark: lines of text distilling down to a single point - the upshot.
    Floated, not a flex child, so only the FIRST line clears it - wrapped
@@ -143,37 +137,48 @@ a:hover{color:var(--accent);border-bottom-color:var(--accent)}
 a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;text-wrap:pretty}
 .cmd{color:var(--accent)}
+/* A library row, not a link in prose. One shape repeated: the question, and
+   underneath it what the card is made of - so a hundred of these read as one
+   list rather than a hundred separate things. */
+.lib{margin:22px 0 0}
+.lib a{
+  display:block;padding:15px 0;
+  border-top:1px solid var(--hair);border-bottom:0;
+  color:var(--ink);
+}
+.lib a:hover{border-bottom:0}
+.lib a:hover .q{color:var(--accent)}
+.lib .q{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.01em}
+.lib .d{display:block;margin-top:4px;font-size:12.5px;line-height:1.5;color:var(--dim)}
+.lib .attrs{
+  display:block;margin-top:6px;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--faint);
+}
+.lib .attrs b{font-weight:400;color:var(--dim)}
 
 /* the column the sheet sits in */
 .wrap{display:flex;flex-direction:column;align-items:center;width:100%}
 
-/* metadata sits at the bottom like a signature, not a footer bar */
-.meta{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:16px;
+/* landing page only */
+h2{font-weight:600;font-size:13px;margin:30px 0 3px;padding-top:20px;border-top:1px solid var(--hair)}
+.note{font-size:12px;color:var(--faint);margin-bottom:11px}
+/* fine print - sits in the same quiet register as .note and pre, so it
+   recedes instead of competing with the pitch above it */
+.fine{font-size:12px;line-height:1.6;color:var(--faint);margin:0 0 10px;text-wrap:pretty}
+/* :first-of-type would mean "first <p>", which is the verdict - not this */
+h2 + .fine{margin-top:11px}
+pre{
   font-family:var(--mono);
-  font-size:10.5px;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  color:var(--faint);
+  font-size:11px;line-height:1.7;color:var(--faint);
+  background:transparent;margin:0;padding:0;
+  white-space:pre-wrap;word-break:break-word;
 }
-.meta .sig{display:flex;flex-direction:column;gap:5px;min-width:0}
-.meta .r1{line-height:1.5}
-.meta .r1::after{content:"";display:block;clear:both}
-.meta .r2{color:var(--faint)}
-/* same mark, scaled to the signature's smaller type */
-.meta .logo{width:10px;height:8px;margin:2px 7px 0 0}
-.meta .sep{opacity:.5}
-.meta .model{color:var(--dim);margin-left:6px}
-.meta .by{color:var(--faint)}
-
 </style>
 </head>
 <body>
 <!-- Static copy, start to finish. An export is a different document at
-     /v1/, so nothing here is ever replaced and this page never changes
+     /v2/, so nothing here is ever replaced and this page never changes
      height after it is laid out. -->
 <div class="wrap"><div class="sheet">
 
@@ -189,23 +194,25 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
   </div>
 
   <main>
-    <h1>This link looks incomplete</h1>
-    <p>The card is missing its content. This usually means the link got cut
-      short when it was copied, or the AI that wrote it slipped on the format.</p>
-    <p>Ask the AI to export it again, and send the whole link this time.</p>
+    <h1>Made with upshot</h1>
+
+    <div class="lib">
+      <a href="/v2/#a=UK+take-home+pay+calculator+with+student+loan&amp;h=Calculate+your+2026%2F27+take-home+pay&amp;v=Enter+salary%2C+tick+one+student+loan+plan%2C+and+optionally+Postgraduate+Loan%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-11&amp;g=Pay&amp;i=Annual+salary:40000:salary&amp;r=Personal+allowance:max%280%2C12570-max%280%2Csalary-100000%29%2F2%29:allowance&amp;r=Taxable+income:max%280%2Csalary-allowance%29:taxable&amp;r=Income+tax:min%28taxable%2C37700%29%2A0%2E2%2Bmax%280%2Cmin%28taxable-37700%2C87440%29%29%2A0%2E4%2Bmax%280%2Ctaxable-125140%29%2A0%2E45:tax&amp;r=National+Insurance:min%28max%280%2Csalary-12570%29%2C37700%29%2A0%2E08%2Bmax%280%2Csalary-50270%29%2A0%2E02:ni&amp;g=Student+loan&amp;c=Plan+1+%28tick+one+plan%29:p1&amp;c=Plan+2:p2&amp;c=Plan+4:p4&amp;c=Plan+5:p5&amp;c=Postgraduate+Loan:pg&amp;r=Student+loan:p1%2Amax%280%2Csalary-26900%29%2A0%2E09%2Bp2%2Amax%280%2Csalary-29385%29%2A0%2E09%2Bp4%2Amax%280%2Csalary-33795%29%2A0%2E09%2Bp5%2Amax%280%2Csalary-25000%29%2A0%2E09%2Bpg%2Amax%280%2Csalary-21000%29%2A0%2E06:loan&amp;g=Take+home&amp;r=Annual+take-home:salary-tax-ni-loan:net&amp;r=Monthly+take-home:net%2F12"><span class="q">What do I actually take home?</span>
+        <span class="d">Salary in, student loan plans to tick, take-home out. UK based.</span>
+        <span class="attrs"><b>GPT-5.6 Sol</b> &middot; 11 Sep &middot; inputs boxes results</span></a>
+      <a href="/v2/#a=Build+a+personal+launch-or-kill+decision+engine&amp;h=Turn+vibes+into+a+go-or-no-go+score&amp;v=Score+an+idea+against+upside%2C+effort%2C+confidence%2C+and+time%2C+then+let+the+card+call+it%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-10&amp;g=Signal&amp;i=Upside+0-10:8:upside&amp;i=Confidence+0-10:7:confidence&amp;i=Urgency+0-10:6:urgency&amp;r=Signal+score:%28upside%2Aconfidence%2Aurgency%29/10:signal&amp;g=Drag&amp;i=Effort+0-10:5:effort&amp;i=Weeks+to+ship:3:weeks&amp;i=Risk+0-10:4:risk&amp;r=Drag+score:effort%2Aweeks%2Brisk:drag&amp;g=Verdict&amp;r=Launch+score:signal-drag:score&amp;t=Decision:score%3E=20:SHIP+IT:KILL+OR+RESHAPE"><span class="q">Should I build this or kill it?</span>
+        <span class="d">It invented the scoring system on the spot.</span>
+        <span class="attrs"><b>GPT-5.6 Sol</b> &middot; 10 Sep &middot; inputs results decision</span></a>
+    </div>
+
+
+    <p class="fine">All written by an AI when someone asked. If you have made one, <a href="https://github.com/midnight-merge/upshot/issues/new?title=Made+with+upshot&amp;body=Paste+your+link+here">send the link</a>. A card lives entirely in its link, so anything up here stays as it was written - only send one you are happy to leave.</p>
   </main>
 
   <div class="foot">
-    <div class="meta"><div class="sig"><div class="r1"><svg class="logo" viewBox="0 0 12 10" aria-hidden="true">
-      <rect x="0" y="0" width="12" height="2" rx="1"/>
-      <rect x="0" y="4" width="7" height="2" rx="1"/>
-      <circle cx="1.5" cy="8.5" r="1.5"/>
-    </svg><span class="model">Nothing to show</span></div></div></div>
-    <footer><div class="how">Make your own. Tell your AI to
-      <a href="/"><span class="cmd">read https://upshot.fyi</span></a> and export this</div></footer>
+    <footer><div class="how">Made by <a href="https://github.com/midnight-merge">Midnight
+      Merge</a></div></footer>
   </div>
-
-</div>
 
 </div>
 
