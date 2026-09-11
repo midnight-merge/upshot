@@ -1024,6 +1024,12 @@ function render(d){
      every page it opens from another app (example.com and Wikipedia's own
      articles included, so this is not ours to fix). Something has to live in
      that strip. Branding survives being clipped; the scope line does not. */
+  /* The mark is sacrificial, and re-confirmed as such on 11 Sep 2026: with it
+     removed, a card opened from WhatsApp on iOS arrives with the scope line
+     already up behind the browser chrome. Nothing on screen says there is
+     anything above, so the reader does not know to scroll - a silent loss of
+     the line that frames the whole card. Branding survives being clipped.
+     The scope line does not. */
   var head = '<div class="brand mark">' + LOGO + '<span>upshot.fyi</span></div>';
   if(d.a){
     head += '<div class="brand scope"><span>' + esc(d.a) + '</span></div>';

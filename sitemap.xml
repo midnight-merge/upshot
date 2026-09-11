@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://upshot.fyi/</loc></url>
+  <url><loc>https://upshot.fyi/made/</loc></url>
   <url><loc>https://upshot.fyi/llms.txt</loc></url>
 </urlset>

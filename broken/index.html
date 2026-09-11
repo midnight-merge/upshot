@@ -80,6 +80,20 @@ main > :last-child{margin-bottom:0}
   color:var(--faint);
 }
 .brand::after{content:"";display:block;clear:both}
+/* This page is where a truncated link lands, so the mark is the way out of
+   it rather than decoration. Still has to read as the wordmark. */
+/* a <div> on the other pages, so it has to stay a block here: an anchor is
+   inline by default, which changes how the floated mark clears and drops
+   the whole line below where it sits everywhere else. */
+a.brand{display:block;border-bottom:0;color:var(--faint)}
+a.brand:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+a.brand:hover{color:var(--accent)}
+a.brand:hover .logo{fill:var(--accent)}
+/* The same line is not a link on the homepage or on a card, so a border
+   under it here would sit it lower than everywhere else it appears. The
+   accent is the affordance. */
+.how a{border-bottom:0}
+.how a:hover .cmd{color:var(--ink)}
 
 /* the mark: lines of text distilling down to a single point - the upshot.
    Floated, not a flex child, so only the FIRST line clears it - wrapped
@@ -164,14 +178,14 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
 <div class="wrap"><div class="sheet">
 
   <div class="head">
-    <div class="brand">
+    <a class="brand" href="/">
       <svg class="logo" viewBox="0 0 12 10" aria-hidden="true">
         <rect x="0" y="0" width="12" height="2" rx="1"/>
         <rect x="0" y="4" width="7" height="2" rx="1"/>
         <circle cx="1.5" cy="8.5" r="1.5"/>
       </svg>
       <span>upshot.fyi</span>
-    </div>
+    </a>
   </div>
 
   <main>
@@ -188,7 +202,7 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
       <circle cx="1.5" cy="8.5" r="1.5"/>
     </svg><span class="model">Nothing to show</span></div></div></div>
     <footer><div class="how">Make your own. Tell your AI to
-      <span class="cmd">read https://upshot.fyi</span> and export this</div></footer>
+      <a href="/"><span class="cmd">read https://upshot.fyi</span></a> and export this</div></footer>
   </div>
 
 </div>

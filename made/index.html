@@ -79,6 +79,15 @@ main > :last-child{margin-bottom:0}
   color:var(--faint);
 }
 .brand::after{content:"";display:block;clear:both}
+/* the mark is the way home from here - a link, but it still has to read as
+   the wordmark rather than as a link in prose */
+/* a <div> on the other pages, so it has to stay a block here: an anchor is
+   inline by default, which changes how the floated mark clears and drops
+   the whole line below where it sits everywhere else. */
+a.brand{display:block;border-bottom:0;color:var(--faint)}
+a.brand:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+a.brand:hover{color:var(--accent)}
+a.brand:hover .logo{fill:var(--accent)}
 
 /* the mark: lines of text distilling down to a single point - the upshot.
    Floated, not a flex child, so only the FIRST line clears it - wrapped
@@ -174,14 +183,14 @@ pre{
 <div class="wrap"><div class="sheet">
 
   <div class="head">
-    <div class="brand">
+    <a class="brand" href="/">
       <svg class="logo" viewBox="0 0 12 10" aria-hidden="true">
         <rect x="0" y="0" width="12" height="2" rx="1"/>
         <rect x="0" y="4" width="7" height="2" rx="1"/>
         <circle cx="1.5" cy="8.5" r="1.5"/>
       </svg>
       <span>upshot.fyi</span>
-    </div>
+    </a>
   </div>
 
   <main>
