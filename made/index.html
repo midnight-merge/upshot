@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>upshot - made with it</title>
+<style>
+/* the card commits to one look in both themes - it is an object, not a document */
+:root{
+  --card:#12131A;
+  --ink:#F7F7F4;
+  --dim:#B4B6C2;
+  --faint:#8E91A6;
+  --accent:#C8FF3D;
+  --hair:rgba(247,247,244,.12);
+  /* the platform's own faces - nothing to download, and none of the
+     Google-Fonts pairings that read as templated */
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--card);
+  color:var(--ink);
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+  /* export content is arbitrary AI text with no length guarantee - never let
+     one long unbroken token overflow the card and trigger mobile auto-zoom */
+  overflow-wrap:anywhere;
+  /* Trailing space at the end of the document. Chrome on iOS stops the scroll
+     with the last of the page still under its bottom toolbar - you can drag
+     past it, but it rubber-bands straight back. Ordinary sites do not show
+     this because they have slack down there; this card ended 30px after the
+     credit line. Static, because the moment the two viewport heights diverge
+     is not one that fires any event to measure at. */
+  padding-bottom:160px;
+
+  /* an ordinary scrolling document - no viewport lock, no nested scrollport,
+     and deliberately no min-height:100vh. On iOS, 100vh is the LARGE viewport
+     (the height with the address bar retracted), so it stretches the body
+     past the visible area and even a two-line card scrolls. Nothing needs it:
+     the body's background propagates to the canvas, so the page paints edge
+     to edge however short the card is. */
+}
+
+.sheet{
+  width:100%;
+  max-width:430px;
+  background:var(--card);
+  padding:40px 26px 30px;
+}
+
+/* head - brand on the homepage, the scope line on a card */
+.head{padding-bottom:22px}
+/* a card with no scope line has nothing up top - take the gap with it */
+.head:empty{padding-bottom:0}
+/* foot - the hairline and spacing live HERE, not on .meta, so the homepage
+   (credit only) and a card (signature + credit) open the same way */
+.foot{
+  margin-top:34px;
+  padding-top:18px;
+  border-top:1px solid var(--hair);
+}
+.foot > :first-child{margin-top:0}
+
+/* the page scrolls, not this - ordinary flow */
+main > :last-child{margin-bottom:0}
+
+/* ONE header line, used by both the homepage and a card. Only the text
+   inside it ever differs - so the header does not change size, weight or
+   colour when you go from one to the other. */
+.brand{
+  font-family:var(--mono);
+  font-size:12.5px;
+  line-height:1.5;
+  letter-spacing:.01em;
+  color:var(--faint);
+}
+.brand::after{content:"";display:block;clear:both}
+
+/* the mark: lines of text distilling down to a single point - the upshot.
+   Floated, not a flex child, so only the FIRST line clears it - wrapped
+   lines run back to the full width instead of the whole block indenting. */
+.logo{
+  float:left;
+  width:12px;
+  height:10px;
+  margin:4px 8px 0 0;   /* top nudge sits it on the first line */
+  fill:var(--accent);
+}
+
+h1{
+  font-weight:700;
+  font-size:35px;
+  line-height:1.06;
+  letter-spacing:-.032em;
+  text-wrap:balance;
+  margin:0 0 22px;
+}
+
+.verdict{
+  font-size:19.5px;
+  font-weight:400;
+  line-height:1.42;
+  letter-spacing:-.008em;
+  color:var(--dim);
+  margin:0 0 34px;
+  padding-left:15px;
+  border-left:2px solid var(--accent);
+}
+
+p{margin:0 0 15px;font-size:15px;color:var(--dim)}
+
+footer{
+  margin-top:14px;
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--faint);
+}
+footer .frow{display:none}
+/* same hairline-to-accent treatment as the share control */
+a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--hair)}
+a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;text-wrap:pretty}
+.cmd{color:var(--accent)}
+/* A library row, not a link in prose. One shape repeated: the question, and
+   underneath it what the card is made of - so a hundred of these read as one
+   list rather than a hundred separate things. */
+.lib{margin:22px 0 0}
+.lib a{
+  display:block;padding:15px 0;
+  border-top:1px solid var(--hair);border-bottom:0;
+  color:var(--ink);
+}
+.lib a:hover{border-bottom:0}
+.lib a:hover .q{color:var(--accent)}
+.lib .q{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.01em}
+.lib .d{display:block;margin-top:4px;font-size:12.5px;line-height:1.5;color:var(--dim)}
+.lib .attrs{
+  display:block;margin-top:6px;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--faint);
+}
+.lib .attrs b{font-weight:400;color:var(--dim)}
+
+/* the column the sheet sits in */
+.wrap{display:flex;flex-direction:column;align-items:center;width:100%}
+
+/* landing page only */
+h2{font-weight:600;font-size:13px;margin:30px 0 3px;padding-top:20px;border-top:1px solid var(--hair)}
+.note{font-size:12px;color:var(--faint);margin-bottom:11px}
+/* fine print - sits in the same quiet register as .note and pre, so it
+   recedes instead of competing with the pitch above it */
+.fine{font-size:12px;line-height:1.6;color:var(--faint);margin:0 0 10px;text-wrap:pretty}
+/* :first-of-type would mean "first <p>", which is the verdict - not this */
+h2 + .fine{margin-top:11px}
+pre{
+  font-family:var(--mono);
+  font-size:11px;line-height:1.7;color:var(--faint);
+  background:transparent;margin:0;padding:0;
+  white-space:pre-wrap;word-break:break-word;
+}
+</style>
+</head>
+<body>
+<!-- Static copy, start to finish. An export is a different document at
+     /v2/, so nothing here is ever replaced and this page never changes
+     height after it is laid out. -->
+<div class="wrap"><div class="sheet">
+
+  <div class="head">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 12 10" aria-hidden="true">
+        <rect x="0" y="0" width="12" height="2" rx="1"/>
+        <rect x="0" y="4" width="7" height="2" rx="1"/>
+        <circle cx="1.5" cy="8.5" r="1.5"/>
+      </svg>
+      <span>upshot.fyi</span>
+    </div>
+  </div>
+
+  <main>
+    <h1>Made with upshot</h1>
+
+    <div class="lib">
+      <a href="/v2/#a=UK+take-home+pay+calculator+with+student+loan&amp;h=Calculate+your+2026%2F27+take-home+pay&amp;v=Enter+salary%2C+tick+one+student+loan+plan%2C+and+optionally+Postgraduate+Loan%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-11&amp;g=Pay&amp;i=Annual+salary:40000:salary&amp;r=Personal+allowance:max%280%2C12570-max%280%2Csalary-100000%29%2F2%29:allowance&amp;r=Taxable+income:max%280%2Csalary-allowance%29:taxable&amp;r=Income+tax:min%28taxable%2C37700%29%2A0%2E2%2Bmax%280%2Cmin%28taxable-37700%2C87440%29%29%2A0%2E4%2Bmax%280%2Ctaxable-125140%29%2A0%2E45:tax&amp;r=National+Insurance:min%28max%280%2Csalary-12570%29%2C37700%29%2A0%2E08%2Bmax%280%2Csalary-50270%29%2A0%2E02:ni&amp;g=Student+loan&amp;c=Plan+1+%28tick+one+plan%29:p1&amp;c=Plan+2:p2&amp;c=Plan+4:p4&amp;c=Plan+5:p5&amp;c=Postgraduate+Loan:pg&amp;r=Student+loan:p1%2Amax%280%2Csalary-26900%29%2A0%2E09%2Bp2%2Amax%280%2Csalary-29385%29%2A0%2E09%2Bp4%2Amax%280%2Csalary-33795%29%2A0%2E09%2Bp5%2Amax%280%2Csalary-25000%29%2A0%2E09%2Bpg%2Amax%280%2Csalary-21000%29%2A0%2E06:loan&amp;g=Take+home&amp;r=Annual+take-home:salary-tax-ni-loan:net&amp;r=Monthly+take-home:net%2F12"><span class="q">What do I actually take home?</span>
+        <span class="d">Salary in, student loan plans to tick, take-home out. UK based.</span>
+        <span class="attrs"><b>GPT-5.6 Sol</b> &middot; 11 Sep &middot; inputs boxes results</span></a>
+      <a href="/v2/#a=Build+a+personal+launch-or-kill+decision+engine&amp;h=Turn+vibes+into+a+go-or-no-go+score&amp;v=Score+an+idea+against+upside%2C+effort%2C+confidence%2C+and+time%2C+then+let+the+card+call+it%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-10&amp;g=Signal&amp;i=Upside+0-10:8:upside&amp;i=Confidence+0-10:7:confidence&amp;i=Urgency+0-10:6:urgency&amp;r=Signal+score:%28upside%2Aconfidence%2Aurgency%29/10:signal&amp;g=Drag&amp;i=Effort+0-10:5:effort&amp;i=Weeks+to+ship:3:weeks&amp;i=Risk+0-10:4:risk&amp;r=Drag+score:effort%2Aweeks%2Brisk:drag&amp;g=Verdict&amp;r=Launch+score:signal-drag:score&amp;t=Decision:score%3E=20:SHIP+IT:KILL+OR+RESHAPE"><span class="q">Should I build this or kill it?</span>
+        <span class="d">It invented the scoring system on the spot.</span>
+        <span class="attrs"><b>GPT-5.6 Sol</b> &middot; 10 Sep &middot; inputs results decision</span></a>
+    </div>
+
+
+    <p class="fine">All written by an AI when someone asked. If you have made one, <a href="https://github.com/midnight-merge/upshot/issues/new?title=Made+with+upshot&amp;body=Paste+your+link+here">send the link</a>. A card lives entirely in its link, so anything up here stays as it was written - only send one you are happy to leave.</p>
+  </main>
+
+  <div class="foot">
+    <footer><div class="how">Made by <a href="https://github.com/midnight-merge">Midnight
+      Merge</a></div></footer>
+  </div>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

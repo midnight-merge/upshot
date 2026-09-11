@@ -92,6 +92,17 @@ const CASES = [
   ['swallowedKey', `#m=GPT-5&d=2026-09-10&h=About twenty seven each&v=Service is in the total&g=Split it+i=Bill:80:bill&i=People:3:n&r=Each pays:bill/n`,
    {blocks: 1, values: ['26.67'], label: 'Split it'}],
 
+  // a box can carry a name a formula reads as 1 or 0
+  ['namedBoxes', `#h=Named boxes&v=A box can be referred to by name&g=Your ticket&i=Full fare:84:fare&c=You have a railcard:card&c=Travelling off peak:offpeak&r=Discount:card*0.34+offpeak*0.1:cut&r=You pay:fare-fare*cut&k=11`,
+   {blocks: 1, values: ['0.44', '47.04'], ticked: '11'}],
+  ['namedBoxesOff', `#h=Named boxes&v=A box can be referred to by name&g=Your ticket&i=Full fare:84:fare&c=You have a railcard:card&c=Travelling off peak:offpeak&r=Discount:card*0.34+offpeak*0.1:cut&r=You pay:fare-fare*cut`,
+   {blocks: 1, values: ['0', '84']}],
+  /* A trailing single word is a name; anything with a space in it is still
+     part of the label. "Be there by 9:30" has to stay a time, and
+     "Bring ID: passport" has to stay prose. */
+  ['colonInLabel', `#h=Colons in a label&v=Only a bare trailing word is a name&g=List&c=Be there by 9:30&c=Bring ID: passport&c=A named one:flag&r=Named:flag&k=111`,
+   {blocks: 1, values: ['1'], ticked: '111'}],
+
   // ticks and boxes: the checklist as two numbers a formula can use
   ['scoredEmpty', `#h=How exposed are you&v=Tick what applies&g=How many apply&c=A mortgage&c=Dependants&c=Higher earner&c=Self employed&r=Score:ticks/boxes*100:pct&t=Verdict:ticks>=2:Get cover:Probably fine`,
    {blocks: 1, values: ['0', 'Probably fine']}],
@@ -363,6 +374,18 @@ addEventListener('load', () => {
     ticked.back = tickState();
     out.push({name: 'tickRoundTrip', ...ticked});
 
+    // a named box moves its formula the moment it is ticked, and the name
+    // never appears on the card
+    location.hash = '#h=x&v=y&g=t&i=Full fare:84:fare&c=You have a railcard:card' +
+                    '&c=Be there by 9:30&r=You pay:fare-fare*card*0.34';
+    draw();
+    const named = {labels: text('.checks span'), before: text('#main .fv')};
+    const box = [...document.querySelectorAll('.checks input')][0];
+    box.checked = true;
+    box.dispatchEvent(new Event('change'));
+    named.after = text('#main .fv');
+    out.push({name: 'namedLive', ...named});
+
     // the evaluator and the number formatter, checked directly
     out.push({
       name: 'expressions',
@@ -486,6 +509,13 @@ function main(){
         (/Ready to walk:[^\n]*/.exec(live.copied) || [''])[0]);
   check(same2(live.back, live.before), 'and it goes back when the number does',
         live.back.join('  '));
+
+  const nm = byName.namedLive;
+  check(same2(nm.labels, ['You have a railcard', 'Be there by 9:30']),
+        'a box name never reaches the reader', nm.labels.join('  |  '));
+  check(same2(nm.before, ['84']) && same2(nm.after, ['55.44']),
+        'and ticking it moves the formula that reads it',
+        nm.before.join() + ' -> ' + nm.after.join());
 
   const ex = byName.expressions;
   check(ex.bad.length === 0, 'the evaluator agrees on every expression', ex.bad.join('; '));
