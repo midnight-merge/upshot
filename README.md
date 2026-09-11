@@ -85,7 +85,7 @@ the characters.
 
 **The spec is examples first.** A model copies a worked example far more
 reliably than it applies a rule, and every rule is a branch that can go wrong.
-Seven complete cards come before any prose, and the prose that survives is the
+Eight complete cards come before any prose, and the prose that survives is the
 part that breaks links if ignored.
 
 ## The card
@@ -112,7 +112,7 @@ holds whatever mix of lines it needs:
 |---|---|
 | `p` | bullets |
 | `o` | numbered steps, where order is the point |
-| `c` | checklist, tappable. Ticks are written back into the fragment, so a viewer ends up holding a link to their own half-finished version and can pass it on |
+| `c` | checklist, tappable. Ticks are written back into the fragment, so a viewer ends up holding a link to their own half-finished version and can pass it on. A formula can read them: `ticks` and `boxes` |
 | `f` | `Label:Value` rows. One or two on their own are set as headline figures, three or more become a spec sheet |
 | `i` | an input box. What the reader types is written back into the fragment, the same bargain the checklist makes |
 | `r` | `Label:Formula`. The card works it out and prints the formula beside it, every name replaced by what it held |
@@ -127,6 +127,15 @@ also anything else that pairs.
 Three blocks is the cap. Not a technical limit - a card that needs four blocks
 is two cards. There is no cap on the lines inside one, because how many boxes a
 tool needs is part of the tool.
+
+Two names are always in scope for a formula: `ticks`, how many boxes are
+ticked, and `boxes`, how many there are. That is the whole of "referenceable
+checkboxes" - no name per item, no change to `c=` or `k=`, nothing new in the
+grammar - and it buys the shape a static list cannot do: tick what applies, get
+a score and a verdict. `ticks/boxes` rather than a hardcoded total, so the card
+survives the model adding a fifth item. Every item weighs the same; if
+weighting ever matters, per-item names are still available and this does not
+block them.
 
 `i` and `r` are why the card is a tool rather than an answer: the AI writes the
 formula, the reader supplies the numbers. Any question with that split is a

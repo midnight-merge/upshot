@@ -43,6 +43,10 @@ An answer that changes with the reader:
 
 https://upshot.fyi/v2/#a=Whether+I+have+enough+runway+to+quit&h=Nine+months+is+the+number+to+beat&v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&m=GPT-5&d=2026-09-10&g=Runway&i=Cash+saved:18000:cash&i=Monthly+burn:2200:burn&i=Months+you+want:9:target&r=Runway:cash/burn:months&t=Ready+to+walk:months>=target:Go+now:Not+yet
 
+An answer the reader ticks their way to:
+
+https://upshot.fyi/v2/#a=Whether+I+need+income+protection&h=Two+of+these+and+it+is+worth+the+premium&v=Cover+costs+little+when+nothing+depends+on+you+and+a+lot+when+things+do%2E&m=GPT-5&d=2026-09-11&g=How+many+apply&c=You+have+a+mortgage&c=You+have+dependants&c=You+are+the+higher+earner&c=You+are+self+employed&r=Score:ticks/boxes%2A100:pct&t=Verdict:ticks%3E=2:Get+cover:Probably+fine
+
 ## The frame
 
 Always all five, always first.
@@ -62,7 +66,8 @@ whatever mix of lines it needs.
 - p  bullet, under 35 words
 - o  step, under 25 words. A how-to, where order is the point.
 - c  checklist item, under 20 words. The reader can tick these off, and the
-     ticks are kept in the link they hold. Do not send `k=`.
+     ticks are kept in the link they hold. A formula can read them - see
+     `ticks` below. Do not send `k=`.
 - f  row, written `Label:Value`, e.g. `f=Cold+start:180ms`. One or two are
      drawn large, three or more become a spec sheet. You do not choose which.
 - i  input, written `Label:Start:name`, e.g. `i=Seats:4:seats`. A box the
@@ -86,6 +91,11 @@ A comparison is two labelled blocks, and so is pros and cons:
 
 A formula may use digits, `+ - * / ( )`, any name on the card,
 `< > <= >= == !=`, and `min max round abs sqrt pow floor ceil`. Nothing else.
+
+Two names are always there when the card has a checklist on it: `ticks` is how
+many boxes are ticked, `boxes` how many there are. So a list the reader works
+through can drive a score or a verdict - `r=Score:ticks/boxes*100` - and it
+follows every tick. Do not name an input `ticks` or `boxes`.
 
 `i` always ends with a short one-word name. `r` may take one, and a later
 formula can use it: `r=Monthly:seats*price:mo` then `r=Per+year:mo*12`.

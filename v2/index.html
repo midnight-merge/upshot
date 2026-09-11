@@ -505,7 +505,7 @@ function parse(hash){
   out.blocks = out.blocks.filter(function(b){ return keep.indexOf(b.group) >= 0; });
   // worked out here rather than while drawing, so every reader of a parsed
   // card - the renderer, the share image, copy for AI - sees the same numbers
-  computeAll(out.blocks, out.w);
+  computeAll(out.blocks, out.w, out.k);
   return out;
 }
 
@@ -786,8 +786,26 @@ function readInputs(blocks, written){
    environment the next can see - so a formula too long to read on one line
    breaks into named steps instead. A result may only name results defined
    above it, which makes a cycle impossible rather than something to detect. */
-function computeAll(blocks, written){
+/* The checklist, as two numbers a formula can use. One k= covers every
+   checklist on the card in document order, so the count runs across blocks
+   exactly as the ticks do.
+
+   Seeded AFTER the inputs, so an input that happens to be called `ticks`
+   cannot quietly redefine what the spec says the word means. */
+function readTicks(blocks, ticked){
+  var boxes = 0;
+  blocks.forEach(function(b){ if(b.type === 'c') boxes += b.items.length; });
+  var marks = String(ticked == null ? '' : ticked);
+  var ticks = 0;
+  for(var i = 0; i < boxes; i++) if(marks.charAt(i) === '1') ticks++;
+  return {ticks: ticks, boxes: boxes};
+}
+
+function computeAll(blocks, written, ticked){
   var env = readInputs(blocks, written);
+  var counted = readTicks(blocks, ticked);
+  env.ticks = counted.ticks;
+  env.boxes = counted.boxes;
   blocks.forEach(function(b){
     /* A condition is only ever read out, never referred to, so it needs no
        name - which is what keeps four fields unambiguous: everything after
@@ -858,6 +876,12 @@ function computeAll(blocks, written){
 
 const listHTML = (cls, items, row) =>
   '<ul class="' + cls + '">' + items.map(row).join('') + '</ul>';
+
+/* Which rows each of these actually draws. bindInputs() repaints them in
+   place without redrawing the card, so it has to select exactly the rows the
+   body put there - two lists that drifted apart is the bug this stops. */
+const computedRows = block => (block.computed || []).filter(c => c.label);
+const decidedRows  = block => (block.decided  || []).filter(c => c.label);
 
 const BLOCKS = {
   p: {
@@ -941,11 +965,11 @@ const BLOCKS = {
     /* The same row as f and r - given, worked out, decided. A reader sees one
        kind of line whichever way the card arrived at it. */
     body(items, _, block){
-      const rows = (block.decided || []).filter(c => c.label && c.text);
+      const rows = decidedRows(block);
       if(!rows.length) return '';
-      return '<div class="facts calc">' + rows.map(c =>
+      return '<div class="facts calc" data-rows="t">' + rows.map(c =>
         '<div class="fact"><span class="fk">' + esc(c.label) + '</span>' +
-        '<span class="fv">' + esc(c.text) + '</span>' +
+        '<span class="fv">' + esc(c.text || '\u2014') + '</span>' +
         (c.expr ? '<span class="fx">' + esc(c.expr) + '</span>' : '') +
         '</div>'
       ).join('') + '</div>';
@@ -958,9 +982,9 @@ const BLOCKS = {
        exists for the formulas below it and is not drawn, which is what keeps
        a long calculation from arriving as one unreadable line. */
     body(items, _, block){
-      const rows = (block.computed || []).filter(c => c.label);
+      const rows = computedRows(block);
       if(!rows.length) return '';
-      return '<div class="facts calc">' + rows.map(c =>
+      return '<div class="facts calc" data-rows="r">' + rows.map(c =>
         '<div class="fact"><span class="fk">' + esc(c.label) + '</span>' +
         '<span class="fv">' + esc(showNumber(c.value)) + '</span>' +
         (c.expr ? '<span class="fx">' + esc(c.expr) + '</span>' : '') +
@@ -1133,11 +1157,13 @@ function toClipboard(text){
   });
 }
 
-function bindCopy(d){
+function bindCopy(){
   var btn = document.getElementById('copyBtn');
   if(!btn) return;
   btn.addEventListener('click', function(){
-    toClipboard(copyText(d)).then(function(){
+    // read the link at click time, not at draw time: typing and ticking
+    // rewrite the fragment without redrawing, so a captured card goes stale
+    toClipboard(copyText(parse(location.hash))).then(function(){
       actionResult(btn, true, 'Copied. Paste it into any AI');
     }, function(){
       actionResult(btn, false, 'Could not copy');
@@ -1171,6 +1197,36 @@ function bindShare(){
   });
 }
 
+/* Repaint the worked-out rows in place from the link. Not a redraw: that
+   would take the focus out of the box being typed in, and the tick out from
+   under the finger.
+
+   Re-read rather than recompute from the DOM, so the numbers on the card and
+   the numbers in the link cannot disagree - the link is the state, and this is
+   just what it looks like. */
+function repaintFromLink(){
+  var d = parse(location.hash);
+  var computed = [], decided = [];
+  d.blocks.forEach(function(b){
+    if(b.type === 'r') computed = computed.concat(computedRows(b));
+    if(b.type === 't') decided  = decided.concat(decidedRows(b));
+  });
+  paintRows('[data-rows="r"] .fact', computed, function(c){ return showNumber(c.value); });
+  paintRows('[data-rows="t"] .fact', decided,  function(c){ return c.text || '\u2014'; });
+}
+
+/* The rows a body drew never change in number, only in what they say - which
+   is what lets this walk them in step with the parsed card. */
+function paintRows(sel, rows, value){
+  [].slice.call(document.querySelectorAll(sel)).forEach(function(node, i){
+    var c = rows[i];
+    if(!c) return;
+    node.querySelector('.fv').textContent = value(c);
+    var fx = node.querySelector('.fx');
+    if(fx) fx.textContent = c.expr;
+  });
+}
+
 /* Ticks rewrite the fragment, so a viewer who works through a list ends up
    holding a link to their own version and can pass it on. replaceState rather
    than assignment: it leaves the back button alone and fires no hashchange, so
@@ -1184,6 +1240,8 @@ function bindChecks(){
       writeFragment('k', boxes.map(function(b){
         return b.checked ? '1' : '0';
       }).join(''));
+      // ticks and boxes are in scope for every formula on the card
+      repaintFromLink();
     });
   });
 }
@@ -1210,8 +1268,6 @@ function bindInputs(){
   var boxes = [].slice.call(document.querySelectorAll('.ins input'));
   if(!boxes.length) return;
 
-  var rows = [].slice.call(document.querySelectorAll('.calc .fact'));
-
   boxes.forEach(function(box){
     box.addEventListener('input', function(){
       writeFragment('w', boxes.map(function(b){
@@ -1221,22 +1277,7 @@ function bindInputs(){
         return isFinite(v) ? v : 0;
       }).join('~'));
 
-      /* Re-read rather than recompute from the DOM, so the numbers on the card
-         and the numbers in the link cannot disagree - the link is the state,
-         and this is just what it looks like. */
-      var d = parse(location.hash);
-      var computed = [];
-      d.blocks.forEach(function(b){
-        if(b.type !== 'r') return;
-        (b.computed || []).forEach(function(c){ if(c.label) computed.push(c); });
-      });
-      rows.forEach(function(row, i){
-        var c = computed[i];
-        if(!c) return;
-        row.querySelector('.fv').textContent = showNumber(c.value);
-        var fx = row.querySelector('.fx');
-        if(fx) fx.textContent = c.expr;
-      });
+      repaintFromLink();
     });
   });
 }
@@ -1256,7 +1297,7 @@ function draw(){
   document.getElementById('main').innerHTML = r.main;
   document.getElementById('foot').innerHTML = r.foot;
   bindShare();
-  bindCopy(d);
+  bindCopy();
   bindChecks();
   bindInputs();
   window.scrollTo(0, 0);

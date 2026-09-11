@@ -226,6 +226,10 @@ One number that is the whole point:
 
 https://upshot.fyi/v2/#a=What+the+annual+plan+actually+saves&amp;h=Two+months+free%2C+near+enough&amp;v=The+discount+is+worth+more+than+the+interest+on+paying+up+front%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=The+saving&amp;f=Off+the+monthly+price:17%25
 
+An answer the reader ticks their way to:
+
+https://upshot.fyi/v2/#a=Whether+I+need+income+protection&amp;h=Two+of+these+and+it+is+worth+the+premium&amp;v=Cover+costs+little+when+nothing+depends+on+you+and+a+lot+when+things+do%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=How+many+apply&amp;c=You+have+a+mortgage&amp;c=You+have+dependants&amp;c=You+are+the+higher+earner&amp;c=You+are+self+employed&amp;r=Score:ticks/boxes%2A100:pct&amp;t=Verdict:ticks%3E=2:Get+cover:Probably+fine
+
 An answer that changes with the reader:
 
 https://upshot.fyi/v2/#a=Whether+I+have+enough+runway+to+quit&amp;h=Nine+months+is+the+number+to+beat&amp;v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Runway&amp;i=Cash+saved:18000:cash&amp;i=Monthly+burn:2200:burn&amp;i=Months+you+want:9:target&amp;r=Runway:cash/burn:months&amp;t=Ready+to+walk:months>=target:Go+now:Not+yet
@@ -249,7 +253,8 @@ g  block label, 1 to 4 words
 p  bullet, under 35 words
 o  step, under 25 words. A how-to, where order is the point.
 c  checklist item, under 20 words. The reader can tick these off, and the
-   ticks are kept in the link they hold. Do not send k=.
+   ticks are kept in the link they hold. A formula can read them - see ticks
+   below. Do not send k=.
 f  row, written Label:Value, e.g. f=Cold+start:180ms. One or two are drawn
    large, three or more become a spec sheet. You do not choose which.
 i  input, written Label:Start:name, e.g. i=Seats:4:seats. A box the reader
@@ -273,6 +278,11 @@ FORMULAS
 
 A formula may use digits, + - * / ( ), any name on the card,
 &lt; &gt; &lt;= &gt;= == !=, and min max round abs sqrt pow floor ceil. Nothing else.
+
+Two names are always there when the card has a checklist on it: ticks is how
+many boxes are ticked, boxes how many there are. So a list the reader works
+through can drive a score or a verdict - r=Score:ticks/boxes*100 - and it
+follows every tick. Do not name an input ticks or boxes.
 
 i always ends with a short one-word name. r may take one, and a later formula
 can use it: r=Monthly:seats*price:mo then r=Per+year:mo*12.
