@@ -3,6 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- How the link looks when it is pasted somewhere. A fragment never reaches
+     the server, so a crawler cannot see THIS card - it sees the page every
+     card is served from. So the preview says what is true of all of them:
+     someone sent you one, and the link is the whole of it. Deliberately no
+     og:url here: some clients treat it as the canonical link and would rewrite
+     the share to it, which on a card would drop the fragment - the whole
+     export - on the floor. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="upshot">
+<meta property="og:title" content="Someone sent you an upshot">
+<meta property="og:description" content="The whole thing is the link.">
+<meta property="og:image" content="https://upshot.fyi/v2/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="upshot.fyi - someone sent you an upshot">
+<meta name="twitter:card" content="summary_large_image">
 <title>upshot - export</title>
 <meta name="robots" content="noindex">
 <style>
@@ -1322,6 +1338,11 @@ function draw(){
   // ever draws exports, and /broken/ only ever explains a bad link.
   if(!d.h && !d.v && !d.blocks.length){ location.replace('../broken/'); return; }
   var r = render(d);
+  /* The tab, and what a browser hands over when you copy the link with its
+     title. The og: tags cannot carry the headline - a crawler never sees the
+     fragment - but this side of the link can, and the bare page title is the
+     one place a reader on the card meets "export" instead of the point. */
+  document.title = d.h || d.v || 'upshot';
   // fill the existing regions; the shell itself is never rebuilt, so the
   // layout does not change shape mid-load
   document.getElementById('head').innerHTML = r.head;
