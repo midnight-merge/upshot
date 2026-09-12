@@ -139,8 +139,11 @@ Name a step and reuse it rather than nesting brackets.
 
 - Every space becomes `+`. The URL contains no spaces.
 - Encode inside values: `,` %2C, `.` %2E, `(` %28, `)` %29, `*` %2A, `?` %3F,
-  `&` %26, `#` %23, `+` %2B, `%` %25, `"` %22, `<` %3C, `>` %3E, and a `:` of
-  your own as %3A.
+  `&` %26, `#` %23, `+` %2B, `%` %25, `"` %22, `<` %3C, `>` %3E, `\` %5C,
+  `^` %5E, `` ` `` %60, `{` %7B, `|` %7C, `}` %7D.
+- The last six are rare in ordinary wording and common the moment a card is
+  about code. Like `<` and `>`, they are not legal in a URL, so one backtick in
+  a headline costs the reader everything after it.
 - A formula is the exception for `+` only: there it is a plus, not a space, and
   it needs no encoding. `-` and `/` never needed any. Everything else in a
   formula is encoded exactly as it is in wording - `*` %2A, `.` %2E, `(` %28,
@@ -150,6 +153,13 @@ Name a step and reuse it rather than nesting brackets.
 - `<` and `>` in a condition are encoded, `<` %3C and `>` %3E. They are not
   legal in a URL: a chat client ends the link at the first one and the reader
   gets half a card. `=` is legal and is written as it is, so `>=` is `%3E=`.
+- A colon in wording is written as it is, and is safe in `p`, `o`, `c` and the
+  value of an `f`: "Bring ID: passport" and "Be there by 9:30" both survive.
+  Encoding it changes nothing - the card decodes before it splits fields, so
+  %3A and `:` are the same character by the time it matters.
+- It is the field separator, so it cannot appear in an `r` label, an `i` label,
+  or either outcome of a `t`. There it silently cuts the text short. Write
+  those without one: `t=Verdict:n%3E0:Go now:Not yet`, never `Go: now`.
 - A full stop inside a number is still a full stop: `4%2E5`, never `4.5`.
 - No markdown and no line breaks inside a value.
 - Under 2000 characters. If you are over: drop the weakest block, then the

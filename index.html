@@ -511,9 +511,21 @@ Encode inside values:
 
   , %2C     . %2E     ( %28     ) %29     * %2A
   ? %3F     &amp; %26     # %23     + %2B     % %25     " %22
-  &lt; %3C     &gt; %3E
+  &lt; %3C     &gt; %3E     \ %5C     ^ %5E     ` %60
+  { %7B     | %7C     } %7D
 
-A : of your own goes as %3A. The = in a condition is written as it is, but
+The last six are rare in ordinary wording and common the moment a card is about
+code. Like &lt; and &gt;, they are not legal in a URL, so one backtick in a headline
+costs the reader everything after it.
+
+A colon in wording is written as it is, and is safe in p, o, c and the value of
+an f: "Bring ID: passport" and "Be there by 9:30" both survive. Encoding it
+changes nothing - the card decodes before it splits fields, so %3A and : are the
+same character by the time it matters. It is the field separator, so it cannot
+appear in an r label, an i label, or either outcome of a t, where it silently
+cuts the text short. Write those without one.
+
+The = in a condition is written as it is, but
 &lt; and &gt; are not legal in a URL and must be encoded - &lt; %3C and &gt; %3E - so
 &gt;= is %3E=. A chat client ends the link at the first one, and the reader gets
 half a card.
