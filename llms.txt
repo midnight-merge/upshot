@@ -23,9 +23,13 @@ A calculator, where the reader supplies the numbers:
 
 https://upshot.fyi/v2/#a=Splitting+dinner+three+ways&h=About+twenty+seven+each&v=Service+is+already+in+the+total%2C+so+there+is+nothing+more+to+add%2E&m=GPT-5&d=2026-09-10&g=Split+it&i=Bill:80:bill&i=People:3:n&r=Each+pays:bill/n
 
+How long something takes, from a rate:
+
+https://upshot.fyi/v2/#a=How+long+the+card+takes+to+clear&h=Five+years+at+that+payment&v=Almost+all+of+the+first+year+goes+on+interest%2E&m=GPT-5&d=2026-09-12&g=The+debt&i=Balance:4200:balance&i=Interest+rate+percent:24:apr&i=Paying+a+month:120:pay&g=How+long&r=Monthly+rate:apr/100/12:rate&r=Months+to+clear:round(0-ln(1-balance*rate/pay)/ln(1+rate)):months&r=Interest+in+total:round(months*pay-balance)
+
 A calculator in two stages, where a result feeds a later one:
 
-https://upshot.fyi/v2/#a=The+most+I+can+offer+on+the+renovation&h=Work+backward+from+the+exit+value&v=Every+cost+comes+off+the+resale+price+before+the+offer+does%2E&m=GPT-5&d=2026-09-10&g=Exit&i=After+repair+value:450000:arv&i=Selling+cost+percent:7:sell&r=Selling+costs:arv%2A%28sell/100%29:exit&g=Offer&i=Renovation:70000:reno&i=Target+profit:60000:profit&r=Maximum+offer:arv-exit-reno-profit
+https://upshot.fyi/v2/#a=The+most+I+can+offer+on+the+renovation&h=Work+backward+from+the+exit+value&v=Every+cost+comes+off+the+resale+price+before+the+offer+does%2E&m=GPT-5&d=2026-09-10&g=Exit&i=After+repair+value:450000:arv&i=Selling+cost+percent:7:sell&r=Selling+costs:arv*(sell/100):exit&g=Offer&i=Renovation:70000:reno&i=Target+profit:60000:profit&r=Maximum+offer:arv-exit-reno-profit
 
 A how-to:
 
@@ -45,11 +49,11 @@ https://upshot.fyi/v2/#a=Whether+I+have+enough+runway+to+quit&h=Nine+months+is+t
 
 An answer the reader ticks their way to:
 
-https://upshot.fyi/v2/#a=Whether+I+need+income+protection&h=Two+of+these+and+it+is+worth+the+premium&v=Cover+costs+little+when+nothing+depends+on+you+and+a+lot+when+things+do%2E&m=GPT-5&d=2026-09-11&g=How+many+apply&c=You+have+a+mortgage&c=You+have+dependants&c=You+are+the+higher+earner&c=You+are+self+employed&r=Score:ticks/boxes%2A100:pct&t=Verdict:ticks%3E=2:Get+cover:Probably+fine
+https://upshot.fyi/v2/#a=Whether+I+need+income+protection&h=Two+of+these+and+it+is+worth+the+premium&v=Cover+costs+little+when+nothing+depends+on+you+and+a+lot+when+things+do%2E&m=GPT-5&d=2026-09-11&g=How+many+apply&c=You+have+a+mortgage&c=You+have+dependants&c=You+are+the+higher+earner&c=You+are+self+employed&r=Score:ticks/boxes*100:pct&t=Verdict:ticks>=2:Get+cover:Probably+fine
 
 An answer with boxes a formula can read:
 
-https://upshot.fyi/v2/#a=What+the+ticket+actually+costs+me&h=The+railcard+pays+for+itself+on+this+trip&v=Two+discounts+stack+here%2C+which+is+the+part+people+miss%2E&m=GPT-5&d=2026-09-11&g=Your+ticket&i=Full+fare:84:fare&c=You+have+a+railcard:card&c=Travelling+off+peak:offpeak&r=Discount:card%2A0%2E34%2Boffpeak%2A0%2E1:cut&r=You+pay:fare-fare%2Acut
+https://upshot.fyi/v2/#a=What+the+ticket+actually+costs+me&h=The+railcard+pays+for+itself+on+this+trip&v=Two+discounts+stack+here%2C+which+is+the+part+people+miss%2E&m=GPT-5&d=2026-09-11&g=Your+ticket&i=Full+fare:84:fare&c=You+have+a+railcard:card&c=Travelling+off+peak:offpeak&r=Discount:card*0.34+offpeak*0.1:cut&r=You+pay:fare-fare*cut
 
 ## The frame
 
@@ -65,6 +69,17 @@ Always all five, always first.
 
 Up to three. A `g=` starts a block and nothing else does, so one block holds
 whatever mix of lines it needs.
+
+Choose a meaning by what the information is, never by how you want it to
+look. The card decides how things are drawn:
+
+    Just saying something?      p
+    Order matters?              o
+    The reader ticks it off?    c
+    A label and a known value?  f
+    The reader changes it?      i
+    Worked out from those?      r
+    Wording that depends on it? t
 
 - g  block label, 1 to 4 words
 - p  bullet, under 35 words
@@ -94,7 +109,17 @@ A comparison is two labelled blocks, and so is pros and cons:
 ## Formulas
 
 A formula may use digits, `+ - * / ( )`, any name on the card,
-`< > <= >= == !=`, and `min max round abs sqrt pow floor ceil`. Nothing else.
+`< > <= >= == !=`, and `min max round abs sqrt pow floor ceil ln`. Nothing else.
+
+Write arithmetic plainly. Inside a formula - everything after the first colon
+of an `r`, and the condition of a `t` - a `+` is a plus and needs no encoding,
+and you may space it out or not: `a+b`, `a + b` and `(a)+b` all read the same.
+This is the one place `+` does not mean a space. Everywhere else on the card it
+still does.
+
+`ln` is the natural log. It is the only way to answer how long - months for a
+balance to clear, years for something to double - so reach for it whenever the
+question is when rather than how much.
 
 Two names are always there when the card has a checklist on it: `ticks` is how
 many boxes are ticked, `boxes` how many there are. So a list the reader works
@@ -115,16 +140,24 @@ Name a step and reuse it rather than nesting brackets.
 - Every space becomes `+`. The URL contains no spaces.
 - Encode inside values: `,` %2C, `.` %2E, `(` %28, `)` %29, `*` %2A, `?` %3F,
   `&` %26, `#` %23, `+` %2B, `%` %25, `"` %22, and a `:` of your own as %3A.
+- A formula is the exception: `+ - * / ( ) .` are written as they are, because
+  there they are arithmetic and not wording. Only `%` and `&` still need
+  encoding inside one.
 - `=` `<` `>` in a condition are written as they are.
 - A full stop inside a number is still a full stop: `4%2E5`, never `4.5`.
 - No markdown and no line breaks inside a value.
 - Under 2000 characters. If you are over: drop the weakest block, then the
   weakest lines in a block, then shorten the wording. Never drop the frame,
   never cut a value off mid-sentence.
+- Everything is a link someone has to send, so keep it short by construction:
+  three to five lines a block, block labels of one or two words, and names of
+  a letter or two - `mo`, `apr`, `n`, not `monthly_payment`. Do not restate
+  the headline or the verdict in a bullet. A step that exists only to feed
+  another result goes unlabelled and is not drawn.
 
 ## Before you reply
 
-Check: no spaces, no bare `,` `.` `(` `)` `*` `?` inside any value, at most
+Check: no spaces, no bare `,` `.` `(` `)` `*` `?` inside any wording, at most
 three `g=`, every `i` name used by a formula, under 2000 characters.
 
 Reply with the URL and nothing else.

@@ -84,6 +84,16 @@ body{
 }
 .foot > :first-child{margin-top:0}
 
+/* Embedded as the hero demo on our own homepage. A card in a frame is still
+   the same card - it just drops the two things that only make sense on a page
+   of its own: the brand line, which the embedding page already carries, and
+   the scroll slack at the foot, which exists for iOS toolbars and not for a
+   box on someone else's page. See asEmbed(). */
+.embed body{padding-bottom:0}
+.embed .sheet{padding:22px 22px 20px}
+.embed a.brand{display:none}
+.embed footer .how{display:none}
+
 /* the page scrolls, not this - ordinary flow */
 main > :last-child{margin-bottom:0}
 
@@ -609,6 +619,12 @@ var CREDIT = '<footer><div class="how">Paste it into any AI to dig in. Or make '
 var FUNCS = {
   min: Math.min, max: Math.max, abs: Math.abs, sqrt: Math.sqrt,
   pow: Math.pow, floor: Math.floor, ceil: Math.ceil,
+  /* Natural log, and named ln rather than log on purpose: Math.log is base e,
+     a spreadsheet's LOG is base 10, and a model that guesses wrong gets a
+     plausible number rather than an error. ln means one thing everywhere.
+     It is what turns a rate into a how-long - months to clear a balance,
+     years to double - which nothing else here could express. */
+  ln: Math.log,
   round: function(x, dp){
     var f = Math.pow(10, dp || 0);
     return Math.round(x * f) / f;
@@ -839,6 +855,34 @@ function readTicks(blocks, ticked){
   return {ticks: ticks, boxes: boxes, names: names};
 }
 
+/* Restoring the + that parse() turned into a space.
+
+   A formula is allowed to be written with ordinary spacing, so putting every
+   space back as a + is wrong - "(1 + 2) * 3" would become "(1+2)+*+3". A space
+   touching a real operator was never a plus, so those go first; whatever is
+   left sits between two operands, which is the one place a + went missing.
+
+   Brackets are the exception, and are why this is a function rather than one
+   more chained replace. They are not operators: a gap inside a bracket is
+   spacing - "( a + b )" - but a gap against the outside of one is an operand
+   boundary, so "a+(b)" and "round(a)+round(b)" arrive as "a (b)" and
+   "round(a) round(b)" and the plus has to come back. The only real ambiguity
+   is a name before "(", which is a call if the name is one of ours and a lost
+   plus if it is not - and we hold the list, so it is not a guess. */
+function restorePlus(src){
+  return String(src == null ? '' : src)
+    .replace(/\s+/g, ' ')
+    .replace(/ *([-+*\/,<>=?:!]) */g, '$1')
+    .replace(/\( /g, '(')
+    .replace(/ \)/g, ')')
+    .replace(/([A-Za-z_][A-Za-z0-9_]*) \(/g, function(all, word){
+      return Object.prototype.hasOwnProperty.call(FUNCS, word) ? word + '(' : word + '+(';
+    })
+    .replace(/([0-9)]) \(/g, '$1+(')
+    .replace(/\) /g, ')+')
+    .replace(/ /g, '+');
+}
+
 function computeAll(blocks, written, ticked){
   var env = readInputs(blocks, written);
   var counted = readTicks(blocks, ticked);
@@ -855,10 +899,7 @@ function computeAll(blocks, written, ticked){
       b.decided = b.items.map(function(item){
         var parts = item.split(':');
         var label = (parts.shift() || '').trim();
-        var cond = (parts.shift() || '').trim()
-          .replace(/\s+/g, ' ')
-          .replace(/ *([-+*\/(),<>=!]) */g, '$1')
-          .replace(/ /g, '+');
+        var cond = restorePlus(parts.shift() || '');
         var yes = (parts.shift() || '').trim();
         var no = parts.join(':').trim();
         var hit = cond ? evaluate(cond, env) : null;
@@ -881,17 +922,7 @@ function computeAll(blocks, written, ticked){
       // guess: no ? in the formula, and a trailing :word is the name
       var tail = /^(.+):([A-Za-z_][A-Za-z0-9_]*)$/.exec(parts[0]);
       if(tail && parts[0].indexOf('?') < 0){ parts = [tail[1]]; name = tail[2]; }
-      /* parse() has already turned every raw + into a space, so a formula
-         arrives spaced wherever the model wrote + instead of %2B. Putting them
-         all back as + is wrong - "(1 + 2) * 3" would become "(1+2)+*+3" - and
-         it is only wrong because a formula is also allowed to be written with
-         ordinary spacing. A space touching an operator was never a plus, so
-         drop those first; whatever is left sits between two operands, which is
-         the one place a + went missing. */
-      var expr = parts.join(':')
-        .replace(/\s+/g, ' ')
-        .replace(/ *([-+*\/(),<>=?:!]) */g, '$1')
-        .replace(/ /g, '+');
+      var expr = restorePlus(parts.join(':'));
       var value = expr ? evaluate(expr, env) : null;
 
       /* The formula is printed so the number can be checked, and a name is
@@ -1331,6 +1362,36 @@ function bindInputs(){
 
 if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
+/* ---- embedded ----
+   The homepage shows a real card as its demo rather than a picture of one, in
+   a frame pointed at a real /v2/ link. Same origin, so the card can size its
+   own frame - which is the only way the height can be right, since it depends
+   on how the card's text wraps at whatever width the frame ended up.
+
+   It lives here rather than on the landing page on purpose: that document is
+   what a model fetches to learn the format, and carries exactly one script - a
+   redirect - so the spec can never come to depend on JS running. Embedding is
+   the card's business anyway.
+
+   frameElement throws on a cross-origin parent, which is the answer either
+   way: not our frame, not our business. */
+function asEmbed(){
+  var frame;
+  try{ frame = window.frameElement; }catch(e){ return; }
+  if(!frame) return;
+
+  document.documentElement.className += ' embed';
+
+  var fit = function(){
+    frame.style.height = document.documentElement.scrollHeight + 'px';
+  };
+  // the card rewrites itself as the reader types, and a recomputed row can
+  // take a line it did not before - follow the height rather than guess once
+  if(window.ResizeObserver) new ResizeObserver(fit).observe(document.body);
+  document.addEventListener('input', fit);
+  fit();
+}
+
 function draw(){
   var d = parse(location.hash);
   // Nothing renderable in the link - no headline, no verdict, no blocks. That
@@ -1358,6 +1419,7 @@ function draw(){
 
 
 draw();
+asEmbed();
 window.addEventListener('hashchange', draw);
 
 </script>

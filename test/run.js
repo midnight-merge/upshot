@@ -80,6 +80,17 @@ const CASES = [
   ['spacedFormulas', `#h=Formulas with spaces&v=Both halves survive&g=Sums&r=Sum:2 + 3&r=Rate:(1000 + 250) * 4%2E5`,
    {blocks: 1, values: ['5', '5,625']}],
 
+  /* The same slip against a bracket, which is the one place stripping the gap
+     is wrong: a bracket is not an operator, so "(a)+b" arriving as "(a) b"
+     has to come back a sum rather than a call. "round (a)" is the other side
+     of it - a name we know, written loosely, and still a call. */
+  ['bracketedPlus', `#h=Plus against a bracket&v=The gap is an operand boundary&g=Sums&i=A:10:a&i=B:4:b&r=Outside:(a)+b&r=Between calls:round(a)+round(b)&r=Both sides:(a+b)+(b+1)&r=Called loosely:round (a)+b`,
+   {blocks: 1, values: ['14', '14', '19', '14']}],
+
+  // a condition gets the same repair as a formula
+  ['bracketedPlusDecision', `#h=Plus in a condition&v=Same repair as a result&g=Runway&i=A:10:a&i=B:4:b&t=Over twelve:(a)+b>12:Yes:No`,
+   {blocks: 1, values: ['Yes']}],
+
   // the decision key: same row, wording the card chose
   ['decisionTrue', `#h=Enough runway&v=Nine months is the number&g=Runway&i=Cash:18000:cash&i=Burn:1000:burn&i=Target:9:target&r=Runway:cash/burn:months&t=Ready to walk:months>=target:Go now:Not yet`,
    {blocks: 1, values: ['18', 'Go now']}],
@@ -239,11 +250,54 @@ function siblingChecks(){
   check(missing.length === 0, 'the page carries every one of them, byte for byte',
         missing.length ? missing[0].slice(0, 60) + '...' : '');
 
-  // An example that contradicts the encoding rule teaches louder than the
-  // rule does, so no example may carry a character the rule bans.
-  const bare = examples.filter(e => /[~*]/.test(e.split('#')[1] || ''));
-  check(bare.length === 0, 'no example carries a bare ~ or *',
+  /* An example that contradicts the encoding rule teaches louder than the
+     rule does, so no example may carry a character the rule bans. The rule is
+     positional now: inside a formula `*` is arithmetic and written as it is,
+     in wording it still ends the link early. `~` separates the values in w=
+     and is banned outright. So this checks the fields, not the whole string. */
+  const wording = url => (url.split('#')[1] || '').split('&')
+    .map(pair => {
+      const eq = pair.indexOf('=');
+      const key = pair.slice(0, eq), val = pair.slice(eq + 1);
+      if(key !== 'r' && key !== 't') return val;
+      // field 1 of an r= or a t= is the formula - exempt, the rest is wording
+      const bits = val.split(':');
+      return bits.length < 2 ? val : [bits[0]].concat(bits.slice(2)).join(':');
+    }).join('&');
+  const bare = examples.filter(e =>
+    /\*/.test(wording(e)) || /~/.test(e.split('#')[1] || ''));
+  check(bare.length === 0, 'no example carries a bare * in wording, or a ~ anywhere',
         bare.length ? bare[0].slice(0, 60) + '...' : '');
+
+  /* Every og:image has to exist and has to be this page's own. A document that
+     borrows another's plate unfurls under someone else's headline, which is
+     how /made/ spent a day promising "make the tiny tool you wish existed".
+     A page may carry no image at all - /broken/ does - but it may not point at
+     one that is missing, and no two pages may share. */
+  const PAGES = [
+    ['index.html', landing], ['v2/index.html', fs.readFileSync(CARD, 'utf8')],
+    ['made/index.html', fs.readFileSync(path.join(ROOT, 'made', 'index.html'), 'utf8')],
+    ['broken/index.html', brokenPage]
+  ];
+  const claimed = new Map();
+  let ogTrouble = [];
+  PAGES.forEach(([name, html]) => {
+    const m = /<meta property="og:image" content="https:\/\/upshot\.fyi\/([^"]+)"/.exec(html);
+    if(!m){
+      // no image is allowed, but then there must be no large-image card either
+      if(/twitter:card" content="summary_large_image"/.test(html))
+        ogTrouble.push(`${name} asks for a large image card and names no image`);
+      return;
+    }
+    const file = path.join(ROOT, m[1]);
+    if(!fs.existsSync(file)) ogTrouble.push(`${name} points at ${m[1]}, which is not in the repo`);
+    if(claimed.has(m[1])) ogTrouble.push(`${name} shares ${m[1]} with ${claimed.get(m[1])}`);
+    claimed.set(m[1], name);
+    if(!/<meta property="og:image:alt"/.test(html))
+      ogTrouble.push(`${name} names an image with no alt text`);
+  });
+  check(ogTrouble.length === 0, 'every page has its own preview image, and it exists',
+        ogTrouble.join('; '));
 
   // Both documents must escape the same set, or a link written from one of
   // them arrives broken in WhatsApp and the other never sees why.

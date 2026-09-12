@@ -6,9 +6,12 @@
  *
  * A fragment never reaches a crawler, so the unfurl cannot carry THIS card's
  * headline. It carries what is true of every card instead: who it is from and
- * what opening it costs. Two plates, because the two audiences differ - the
+ * what opening it costs. One plate per audience, because they differ: the
  * homepage is read by someone deciding whether to try it, a card by someone
- * who has just been handed one.
+ * who has just been handed one, and /made/ by someone browsing what other
+ * people got out of it. A page that unfurls under another page's headline is
+ * worse than no image at all, so every document carrying an og:image gets its
+ * own - which the test suite enforces.
  *
  * Committed as PNGs. They change about never, and a build step nobody runs is
  * a build step that rots.
@@ -81,13 +84,18 @@ const PLATE = (title, sub) => `<!doctype html>
 const PLATES = [
   {
     out: path.join(ROOT, 'og.png'),
-    html: PLATE('Turn a chat into something you can use',
-                'Tell your AI to read upshot.fyi and export this. It replies with a link.')
+    html: PLATE('Make the tiny tool you wish existed',
+                'Describe it to your AI. Upshot turns it into a page that works - and the whole thing is the link.')
   },
   {
     out: path.join(ROOT, 'v2', 'og.png'),
     html: PLATE('Someone sent you an upshot',
                 'The whole thing is the link.')
+  },
+  {
+    out: path.join(ROOT, 'made', 'og.png'),
+    html: PLATE('Made with upshot',
+                'Cards people made by telling their AI to read upshot.fyi and export this.')
   }
 ];
 

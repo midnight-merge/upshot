@@ -4,16 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- How the link looks when it is pasted somewhere. -->
-<meta name="description" content="Tell your AI to read upshot.fyi and export this. It replies with a link, and that link is the card - the sums, the checklist, the call. No account, nothing to install.">
+<meta name="description" content="Describe the tiny tool you need to your AI - a calculator, a checklist, a decision. Upshot turns it into a page that works, and the whole thing is the link it hands back. Free, no account, nothing stored.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="upshot">
 <meta property="og:url" content="https://upshot.fyi/">
-<meta property="og:title" content="Turn a chat into something you can use">
-<meta property="og:description" content="Tell your AI to read upshot.fyi and export this. It replies with a link, and that link is the card.">
+<meta property="og:title" content="Make the tiny tool you wish existed">
+<meta property="og:description" content="Describe it to your AI. Upshot turns it into a page that works - and the whole thing is the link.">
 <meta property="og:image" content="https://upshot.fyi/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="upshot.fyi - turn a chat into something you can use">
+<meta property="og:image:alt" content="upshot.fyi - make the tiny tool you wish existed">
 <meta name="twitter:card" content="summary_large_image">
 <title>upshot</title>
 <script>
@@ -81,14 +81,15 @@ body{
 /* foot - the hairline and spacing live HERE, not on .meta, so the homepage
    (credit only) and a card (signature + credit) open the same way */
 .foot{
-  margin-top:34px;
-  padding-top:18px;
+  margin-top:28px;
+  padding-top:22px;
   border-top:1px solid var(--hair);
 }
 .foot > :first-child{margin-top:0}
 
 /* the page scrolls, not this - ordinary flow */
 main > :last-child{margin-bottom:0}
+
 
 /* ONE header line, used by both the homepage and a card. Only the text
    inside it ever differs - so the header does not change size, weight or
@@ -101,7 +102,6 @@ main > :last-child{margin-bottom:0}
   color:var(--faint);
 }
 .brand::after{content:"";display:block;clear:both}
-
 /* the mark: lines of text distilling down to a single point - the upshot.
    Floated, not a flex child, so only the FIRST line clears it - wrapped
    lines run back to the full width instead of the whole block indenting. */
@@ -122,18 +122,15 @@ h1{
   margin:0 0 22px;
 }
 
-.verdict{
-  font-size:19.5px;
-  font-weight:400;
-  line-height:1.42;
-  letter-spacing:-.008em;
-  color:var(--dim);
-  margin:0 0 34px;
-  padding-left:15px;
-  border-left:2px solid var(--accent);
-}
 
-p{margin:0 0 15px;font-size:15px;color:var(--dim)}
+p{margin:0 0 14px;font-size:15px;color:var(--dim)}
+/* The two lines that set up the command. The first says what the site is for
+   in one breath; the second is the cue, so the green block below reads as
+   something to type rather than a pull quote. */
+.sub{margin-bottom:18px}
+/* the page has no other italics - emphasis here is brightness, the same way
+   the card separates a verdict from its reasons */
+em{font-style:normal;color:var(--ink)}
 
 footer{
   margin-top:14px;
@@ -152,45 +149,122 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
 .cmd{color:var(--accent)}
 /* a conversation, not a list: what you type sits right, what came back sits
    left, and the corner each bubble squares off is which side said it */
-.demos{margin:30px 0 0;padding-top:26px;border-top:1px solid var(--hair)}
+.demos{margin:28px 0 0;padding-top:22px;border-top:1px solid var(--hair)}
 .demos + .note{margin-top:22px}
-.demo{display:flex;flex-direction:column;gap:6px;margin:0 0 30px}
+.demo{display:flex;flex-direction:column;gap:6px;margin:0 0 28px}
+/* what shape this one is - the breadth is the point of the set, and nobody
+   opens four cards to find it out */
+.demo .kind{
+  margin:0;
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--faint);
+}
 .demo:last-child{margin-bottom:0}
 .demo .ask{
   align-self:flex-end;max-width:88%;
-  margin:0;padding:9px 13px;
+  margin:0;padding:10px 13px;
   border-radius:15px 15px 5px 15px;
   background:rgba(247,247,244,.055);
   font-size:13.5px;line-height:1.5;color:var(--dim);
 }
-.demo .say{color:var(--accent)}
-/* the reply IS the link, and a soft bubble alone does not say so - the rule
-   and the arrow do, without turning it into a button */
+.demo .ask .say{display:block;margin-top:8px;color:var(--accent)}
+/* The reply IS the link. This started as a tinted bubble with a trailing
+   arrow, on the theory that the rule and the arrow would say so without
+   turning it into a button. A reader watched using the page said "I did not
+   know those were links" - the arrow was a glyph at the end of a wrapped line,
+   on a page that otherwise reads as a chat transcript, where a bubble is
+   something someone said rather than something you press. So the affordance
+   gets its own row and says the word, in the same mono label register the card
+   uses for its own footer. */
 .demo a.reply{
   align-self:flex-start;max-width:92%;
-  margin-top:5px;
-  padding:11px 14px;
-  border:1px solid rgba(200,255,61,.28);
+  margin-top:4px;
+  padding:10px 13px;
+  border:1px solid rgba(200,255,61,.42);
   border-radius:15px 15px 15px 5px;
-  border-bottom:0;
+  border-bottom:1px solid rgba(200,255,61,.42);
   background:rgba(200,255,61,.075);
   color:var(--ink);font-size:14.5px;line-height:1.4;letter-spacing:-.01em;
 }
-.demo a.reply::after{content:"\00a0\00a0\2192";color:var(--accent)}
-.demo a.reply:hover{color:var(--accent);background:rgba(200,255,61,.13);border-color:var(--accent)}
+
+.demo a.reply:hover{color:var(--accent);background:rgba(200,255,61,.15);border-color:var(--accent)}
 .demo a.reply:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* ---- the hero demo ----
+   One exchange, then the thing it produced. The bubbles reuse the same shapes
+   as the examples further down, so a reader learns one visual language once. */
+.stage{margin:28px 0 0}
+.stage .ask{
+  align-self:flex-end;max-width:88%;margin:0 0 10px auto;
+  padding:10px 13px;border-radius:15px 15px 5px 15px;
+  background:rgba(247,247,244,.055);
+  font-size:13.5px;line-height:1.5;color:var(--dim);width:fit-content;
+}
+/* the instruction sits on its own line inside the same bubble - one message,
+   but still legible as the bit you copy */
+.stage .ask .say{display:block;margin-top:8px;color:var(--accent)}
+/* what the AI sent back: a URL, shown as one. Truncated with ellipsis rather
+   than wrapped, because its length is the point and its content is not. */
+.stage .got{
+  display:block;max-width:92%;
+  padding:10px 13px;
+  border:1px solid rgba(200,255,61,.42);
+  border-radius:15px 15px 15px 5px;
+  background:rgba(200,255,61,.075);
+  color:var(--ink);border-bottom:1px solid rgba(200,255,61,.42);
+  font-family:var(--mono);font-size:11.5px;line-height:1.4;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.stage .got:hover{color:var(--accent);background:rgba(200,255,61,.15);border-color:var(--accent)}
+/* the card, opened. Hairline and inset rather than a drop shadow - the page
+   has no other depth and one shadow would be the only lit object on it. */
+.opened{
+  margin-top:14px;
+  border:1px solid var(--hair);
+  border-radius:12px;
+  overflow:hidden;
+  background:var(--card);
+}
+/* the card sets its own height once it loads - this is what shows before
+   that, sized for the demo it carries */
+.opened iframe{display:block;width:100%;height:520px;border:0}
+.after{margin:28px 0 0}
+.flow{
+  margin:10px 0 0;
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--faint);
+}
+
+/* The reveal. Staged so the order reads as cause and effect - you say it, it
+   answers, the thing opens - which is the sentence the hero no longer has to
+   write out. Anyone who has asked not to be moved gets the end state at once. */
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.stage > *{animation:rise .45s ease both}
+.stage > :nth-child(1){animation-delay:.15s}
+.stage > :nth-child(2){animation-delay:.95s}
+.stage > :nth-child(3){animation-delay:1.55s}
+.stage > :nth-child(4){animation-delay:2.15s}
+@media (prefers-reduced-motion: reduce){
+  .stage > *{animation:none}
+}
 
 /* the column the sheet sits in */
 .wrap{display:flex;flex-direction:column;align-items:center;width:100%}
 
 /* landing page only */
-h2{font-weight:600;font-size:13px;margin:30px 0 3px;padding-top:20px;border-top:1px solid var(--hair)}
-.note{font-size:12px;color:var(--faint);margin-bottom:11px}
+/* The handoff. The demos are someone else's cards; this is the reader's turn,
+   so it sits in body copy rather than the quiet register the spec below uses -
+   it is the last thing a human is asked to do before the page starts talking
+   to machines. Same hairline as .demos: a new section, not a new style. */
+.turn{margin-top:28px;padding-top:22px;border-top:1px solid var(--hair)}
+.turn + .fine{margin-bottom:0}
+h2{font-weight:600;font-size:13px;margin:28px 0 4px;padding-top:22px;border-top:1px solid var(--hair)}
+.note{font-size:12px;color:var(--faint);margin-bottom:10px}
 /* fine print - sits in the same quiet register as .note and pre, so it
    recedes instead of competing with the pitch above it */
 .fine{font-size:12px;line-height:1.6;color:var(--faint);margin:0 0 10px;text-wrap:pretty}
 /* :first-of-type would mean "first <p>", which is the verdict - not this */
-h2 + .fine{margin-top:11px}
+h2 + .fine{margin-top:10px}
 pre{
   font-family:var(--mono);
   font-size:11px;line-height:1.7;color:var(--faint);
@@ -217,33 +291,78 @@ pre{
   </div>
 
   <main>
-    <h1>Turn a chat into something you can use</h1>
+    <h1>Make the tiny tool you wish existed</h1>
 
-    <p class="verdict">Tell your AI: <span class="cmd">read https://upshot.fyi
-      and export this</span></p>
+    <p class="sub">Describe it to your AI. Upshot turns it into a page that
+      works - and the whole thing is the link it hands back.</p>
 
-    <p>No account, nothing to install. It does the sums, keeps the checklist,
-      makes the call - and the whole thing is the link.</p>
+    <!-- The hero is the product, not a description of it. The bubbles arrive
+         in sequence and then the card itself opens underneath, in an iframe
+         pointed at a REAL /v2/ URL - so what a first-time reader plays with is
+         the renderer, not a mock-up of it, and it can never drift from the
+         thing it is selling. -->
+    <div class="stage">
+      <!-- One message, not two. Sent on its own, the ask gets answered in prose
+           and the instruction arrives a turn too late - so the command rides
+           along with it, which is also how anyone copying this will send it. -->
+      <p class="ask">drive or train? make me something I can put my own numbers
+        into.
+        <span class="say">read https://upshot.fyi and export this</span></p>
+      <a class="got" href="/v2/#a=Drive+or+train%3F&amp;h=Which+is+cheaper%3F&amp;v=Put+your+own+numbers+in+and+it+works+it+out%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=Drive&amp;i=Fuel+there+and+back:0:fuel&amp;i=Parking+and+tolls:0:parking&amp;r=Drive+total:fuel%2Bparking:drive&amp;g=Train&amp;i=Return+ticket+each:0:ticket&amp;i=People:1:people&amp;r=Train+total:ticket%2Apeople:train&amp;g=Answer&amp;r=You+save:abs%28drive-train%29:difference&amp;t=Cheaper+option:drive%3C=train:Drive:Train&amp;w=80~30~30~2">upshot.fyi/v2/#a=Drive+or+train%3F&amp;h=Which+is+cheaper...</a>
+      <div class="opened">
+        <iframe id="toy" title="A working upshot: drive or train, which is cheaper"
+          src="/v2/#a=Drive+or+train%3F&amp;h=Which+is+cheaper%3F&amp;v=Put+your+own+numbers+in+and+it+works+it+out%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=Drive&amp;i=Fuel+there+and+back:0:fuel&amp;i=Parking+and+tolls:0:parking&amp;r=Drive+total:fuel%2Bparking:drive&amp;g=Train&amp;i=Return+ticket+each:0:ticket&amp;i=People:1:people&amp;r=Train+total:ticket%2Apeople:train&amp;g=Answer&amp;r=You+save:abs%28drive-train%29:difference&amp;t=Cheaper+option:drive%3C=train:Drive:Train&amp;w=80~30~30~2" loading="lazy" scrolling="no"></iframe>
+      </div>
+      <p class="flow">Put 4 in People. Watch it change its mind.</p>
+    </div>
 
+    <p class="after">That page is not stored anywhere. It <em>is</em> the link -
+      every word of it - so there is no copy of it sitting on a server
+      anywhere. Nothing you make reaches us: no account, no database, nothing
+      to leak and nothing to sell. Send it to anyone.</p>
+
+    <!-- Four reasons to make one, not four shapes of the same reason: to
+         post, to decide, to plan, to face. The order climbs - read it,
+         tick it, work it out, let it reach a verdict. The label says which,
+         so the range is legible without opening four cards. -->
     <div class="demos">
     <div class="demo">
-      <p class="ask">my flight landed four hours late, can I claim anything?</p>
-      <p class="ask say">read https://upshot.fyi and export this</p>
-      <a class="reply" href="/v2/#a=Whether+I+can+claim+for+my+delayed+flight&amp;h=Yes%2C+if+you+landed+three+hours+late&amp;v=It+is+the+landing+time+that+counts%2C+not+the+take+off%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=The+catch&amp;p=Weather+and+strikes+do+not+count%2E&amp;p=A+broken+plane+does%2E&amp;p=You+can+still+claim+months+later%2E">Yes, if you landed three hours late</a>
+      <p class="kind">Something to post</p>
+      <p class="ask">nine countries this year. make me something I can post.
+        <span class="say">read https://upshot.fyi and export this</span></p>
+      <a class="reply" href="/v2/#a=My+year+of+travel&amp;h=Nine+countries%2C+forty+one+nights+away&amp;v=Portugal%2C+Morocco%2C+Georgia%2C+Estonia%2C+Japan%2C+Vietnam%2C+Peru%2C+Chile%2C+Iceland%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=The+year&amp;f=Countries:9&amp;f=Flights:23&amp;f=Nights+away:41&amp;f=Miles+flown:31%2C400&amp;f=Longest+trip:11+nights">Nine countries, forty one nights away</a>
     </div>
     <div class="demo">
-      <p class="ask">moving out next month - what do I actually have to do to get my deposit back?</p>
-      <p class="ask say">read https://upshot.fyi and export this</p>
-      <a class="reply" href="/v2/#a=What+I+need+to+do+to+get+the+deposit+back&amp;h=Photograph+everything+before+you+hand+the+keys+over&amp;v=Most+deductions+fail+because+nobody+can+prove+what+the+place+looked+like+on+the+way+out%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=Before+you+leave&amp;c=Photograph+every+room+with+the+date+showing&amp;c=Compare+it+against+the+check+in+inventory&amp;c=Professional+clean+only+if+the+contract+says+so&amp;c=Fill+the+nail+holes+and+touch+up+the+paint&amp;c=Get+the+meter+readings+in+writing&amp;c=Note+the+deposit+scheme+reference">Photograph everything before you hand the keys over</a>
+      <p class="kind">Something to settle</p>
+      <p class="ask">I think I am underpaid. do I actually have a case for a rise?
+        <span class="say">read https://upshot.fyi and export this</span></p>
+      <a class="reply" href="/v2/#a=Whether+I+have+a+case+for+a+pay+rise&amp;h=Four+of+these+and+you+have+a+case&amp;v=Two+is+a+conversation%2E+Four+is+a+number+they+have+to+answer%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=What+you+have&amp;c=Hit+every+target+this+year&amp;c=Took+on+scope+nobody+replaced&amp;c=Checked+what+the+market+pays&amp;c=Someone+senior+who+will+back+you&amp;c=Six+months+since+you+last+asked&amp;g=So&amp;t=Verdict:ticks%3E=4:Ask+for+it:Not+yet">Four of these and you have a case</a>
     </div>
     <div class="demo">
-      <p class="ask">offered 55k but it is a much longer commute. is it actually better?</p>
-      <p class="ask say">read https://upshot.fyi and export this</p>
-      <a class="reply" href="/v2/#a=Whether+the+new+job+is+actually+better&amp;h=The+commute+eats+the+whole+raise&amp;v=Three+thousand+more+on+paper%2C+and+the+drive+costs+more+than+that%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=The+money&amp;i=Current+salary:52000:now&amp;i=Offered+salary:55000:offer&amp;i=Extra+commute+per+month:300:travelm&amp;r=Commute+a+year:travelm%2A12:travel&amp;g=What+else+they+are+offering&amp;c=Fully+remote:remote&amp;c=Better+pension:pension&amp;c=Private+healthcare:health&amp;c=Five+more+days+holiday:holiday&amp;g=So&amp;r=Perks+in+money:remote%2Atravel%2Bpension%2Aoffer%2A0%2E03%2Bhealth%2A600%2Bholiday%2Aoffer%2F260%2A5:extras&amp;r=Real+difference:offer-now-travel%2Bextras:gain&amp;t=Verdict:gain%3E0:Worth+taking:Not+the+raise+it+looks">The commute eats the whole raise</a>
+      <p class="kind">Something to plan</p>
+      <p class="ask">I want to get from 85kg to 75kg. what is that actually going to take?
+        <span class="say">read https://upshot.fyi and export this</span></p>
+      <a class="reply" href="/v2/#a=What+will+it+take+to+hit+your+goal%3F&amp;h=Turn+your+fitness+goal+into+a+real+plan&amp;v=See+your+estimated+timeline%2C+workouts+and+training+hours%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=Your+goal&amp;i=Current+weight+kg:85:current&amp;i=Target+weight+kg:75:target&amp;i=Workouts+per+week:3:workouts&amp;i=Minutes+per+workout:45:minutes&amp;i=Average+daily+calorie+deficit:400:deficit&amp;r=Weight+to+lose+kg:abs%28current-target%29:lose&amp;r=Estimated+days:lose%2A7700/deficit:days&amp;r=Estimated+weeks:days/7:weeks&amp;r=Total+workouts:weeks%2Aworkouts:totalworkouts&amp;r=Total+training+hours:totalworkouts%2Aminutes/60:traininghours">Turn your fitness goal into a real plan</a>
+    </div>
+    <div class="demo">
+      <p class="kind">Something to price</p>
+      <p class="ask">4200 on a credit card at 24%. what does it actually cost me to clear it?
+        <span class="say">read https://upshot.fyi and export this</span></p>
+      <a class="reply" href="/v2/#a=What+clearing+the+card+actually+costs&amp;h=The+longer+you+take%2C+the+more+of+it+is+interest&amp;v=Pick+how+fast+you+want+it+gone%2E+It+works+out+the+payment+and+what+the+interest+adds+up+to%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=The+debt&amp;i=Balance:4200:balance&amp;i=Interest+rate+percent:24:apr&amp;i=Clear+it+in+months:24:months&amp;g=What+that+takes&amp;r=Monthly+rate:apr/100/12:rate&amp;r=Payment+a+month:round%28balance%2Arate/%281-pow%281%2Brate%2C0-months%29%29%29:pay&amp;r=Total+interest:round%28pay%2Amonths-balance%29:interest&amp;g=So&amp;t=Verdict:interest%3C=balance/2:Fine+at+this+pace:Too+slow+-+the+interest+is+over+half+what+you+owe">The longer you take, the more of it is interest</a>
     </div>
     </div>
 
-    <p class="note"><a href="/made/">More of them</a></p>
+    <p class="note"><a href="/made/">More of these</a></p>
+
+    <p class="turn">Now make yours. Tell your AI what you want - a calculator,
+      a checklist, a decision you keep going round on - then say <span
+      class="cmd">read https://upshot.fyi and export this</span></p>
+    <p class="fine">Words, numbers and boxes, on one screen. No pictures, no
+      charts, no notifications, and nothing it can go and look up - it only
+      knows what your chat already worked out. That is the same reason the
+      whole thing fits in a link.</p>
+    <p class="fine">A browser never sends the part of a link after the # - so
+      your answer stays between you and whoever you send it to.</p>
 
     <h2>Format</h2>
     <p class="note">For any AI reading this page.</p>
@@ -271,9 +390,13 @@ A calculator, where the reader supplies the numbers:
 
 https://upshot.fyi/v2/#a=Splitting+dinner+three+ways&amp;h=About+twenty+seven+each&amp;v=Service+is+already+in+the+total%2C+so+there+is+nothing+more+to+add%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Split+it&amp;i=Bill:80:bill&amp;i=People:3:n&amp;r=Each+pays:bill/n
 
+How long something takes, from a rate:
+
+https://upshot.fyi/v2/#a=How+long+the+card+takes+to+clear&amp;h=Five+years+at+that+payment&amp;v=Almost+all+of+the+first+year+goes+on+interest%2E&amp;m=GPT-5&amp;d=2026-09-12&amp;g=The+debt&amp;i=Balance:4200:balance&amp;i=Interest+rate+percent:24:apr&amp;i=Paying+a+month:120:pay&amp;g=How+long&amp;r=Monthly+rate:apr/100/12:rate&amp;r=Months+to+clear:round(0-ln(1-balance*rate/pay)/ln(1+rate)):months&amp;r=Interest+in+total:round(months*pay-balance)
+
 A calculator in two stages, where a result feeds a later one:
 
-https://upshot.fyi/v2/#a=The+most+I+can+offer+on+the+renovation&amp;h=Work+backward+from+the+exit+value&amp;v=Every+cost+comes+off+the+resale+price+before+the+offer+does%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Exit&amp;i=After+repair+value:450000:arv&amp;i=Selling+cost+percent:7:sell&amp;r=Selling+costs:arv%2A%28sell/100%29:exit&amp;g=Offer&amp;i=Renovation:70000:reno&amp;i=Target+profit:60000:profit&amp;r=Maximum+offer:arv-exit-reno-profit
+https://upshot.fyi/v2/#a=The+most+I+can+offer+on+the+renovation&amp;h=Work+backward+from+the+exit+value&amp;v=Every+cost+comes+off+the+resale+price+before+the+offer+does%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Exit&amp;i=After+repair+value:450000:arv&amp;i=Selling+cost+percent:7:sell&amp;r=Selling+costs:arv*(sell/100):exit&amp;g=Offer&amp;i=Renovation:70000:reno&amp;i=Target+profit:60000:profit&amp;r=Maximum+offer:arv-exit-reno-profit
 
 A how-to:
 
@@ -289,11 +412,11 @@ https://upshot.fyi/v2/#a=What+the+annual+plan+actually+saves&amp;h=Two+months+fr
 
 An answer with boxes a formula can read:
 
-https://upshot.fyi/v2/#a=What+the+ticket+actually+costs+me&amp;h=The+railcard+pays+for+itself+on+this+trip&amp;v=Two+discounts+stack+here%2C+which+is+the+part+people+miss%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=Your+ticket&amp;i=Full+fare:84:fare&amp;c=You+have+a+railcard:card&amp;c=Travelling+off+peak:offpeak&amp;r=Discount:card%2A0%2E34%2Boffpeak%2A0%2E1:cut&amp;r=You+pay:fare-fare%2Acut
+https://upshot.fyi/v2/#a=What+the+ticket+actually+costs+me&amp;h=The+railcard+pays+for+itself+on+this+trip&amp;v=Two+discounts+stack+here%2C+which+is+the+part+people+miss%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=Your+ticket&amp;i=Full+fare:84:fare&amp;c=You+have+a+railcard:card&amp;c=Travelling+off+peak:offpeak&amp;r=Discount:card*0.34+offpeak*0.1:cut&amp;r=You+pay:fare-fare*cut
 
 An answer the reader ticks their way to:
 
-https://upshot.fyi/v2/#a=Whether+I+need+income+protection&amp;h=Two+of+these+and+it+is+worth+the+premium&amp;v=Cover+costs+little+when+nothing+depends+on+you+and+a+lot+when+things+do%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=How+many+apply&amp;c=You+have+a+mortgage&amp;c=You+have+dependants&amp;c=You+are+the+higher+earner&amp;c=You+are+self+employed&amp;r=Score:ticks/boxes%2A100:pct&amp;t=Verdict:ticks%3E=2:Get+cover:Probably+fine
+https://upshot.fyi/v2/#a=Whether+I+need+income+protection&amp;h=Two+of+these+and+it+is+worth+the+premium&amp;v=Cover+costs+little+when+nothing+depends+on+you+and+a+lot+when+things+do%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=How+many+apply&amp;c=You+have+a+mortgage&amp;c=You+have+dependants&amp;c=You+are+the+higher+earner&amp;c=You+are+self+employed&amp;r=Score:ticks/boxes*100:pct&amp;t=Verdict:ticks>=2:Get+cover:Probably+fine
 
 An answer that changes with the reader:
 
@@ -313,6 +436,17 @@ THE BLOCKS - three at most
 
 A g= starts a block and nothing else does, so one block holds whatever mix of
 lines it needs.
+
+Choose a meaning by what the information is, never by how you want it to
+look. The card decides how things are drawn:
+
+  Just saying something?      p
+  Order matters?              o
+  The reader ticks it off?    c
+  A label and a known value?  f
+  The reader changes it?      i
+  Worked out from those?      r
+  Wording that depends on it? t
 
 g  block label, 1 to 4 words
 p  bullet, under 35 words
@@ -342,7 +476,17 @@ A comparison is two labelled blocks, and so is pros and cons:
 FORMULAS
 
 A formula may use digits, + - * / ( ), any name on the card,
-&lt; &gt; &lt;= &gt;= == !=, and min max round abs sqrt pow floor ceil. Nothing else.
+&lt; &gt; &lt;= &gt;= == !=, and min max round abs sqrt pow floor ceil ln. Nothing else.
+
+Write arithmetic plainly. Inside a formula - everything after the first colon
+of an r, and the condition of a t - a + is a plus and needs no encoding, and
+you may space it out or not: a+b, a + b and (a)+b all read the same. This is
+the one place + does not mean a space. Everywhere else on the card it still
+does.
+
+ln is the natural log. It is the only way to answer how long - months for a
+balance to clear, years for something to double - so reach for it whenever the
+question is when rather than how much.
 
 Two names are always there when the card has a checklist on it: ticks is how
 many boxes are ticked, boxes how many there are. So a list the reader works
@@ -370,6 +514,10 @@ Encode inside values:
 
 A : of your own goes as %3A. The = &lt; &gt; in a condition are written as they are.
 
+A formula is the exception: + - * / ( ) . are written as they are, because
+there they are arithmetic and not wording. Only the percent sign and the
+ampersand still need encoding inside one.
+
 A full stop inside a number is still a full stop: 4%2E5, never 4.5.
 
   wrong  v=SQLite+wins+on+ops,+but+you+need+concurrent+writes.
@@ -384,10 +532,16 @@ Under 2000 characters. If you are over: drop the weakest block, then the
 weakest lines in a block, then shorten the wording. Never drop the frame, never
 cut a value off mid-sentence.
 
+Everything is a link someone has to send, so keep it short by construction:
+three to five lines a block, block labels of one or two words, and names of a
+letter or two - mo, apr, n, not monthly_payment. Do not restate the headline or
+the verdict in a bullet. A step that exists only to feed another result goes
+unlabelled and is not drawn.
+
 
 BEFORE YOU REPLY
 
-Check: no spaces, no bare , . ( ) * ? inside any value, at most three g=,
+Check: no spaces, no bare , . ( ) * ? inside any wording, at most three g=,
 every i name used by a formula, under 2000 characters.
 
 Reply with the URL and nothing else.</pre>
