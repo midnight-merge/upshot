@@ -110,6 +110,12 @@ const CASES = [
   ['decisionUnanswerable', `#h=Nothing computable&v=The verdict must not fall through&g=Runway&r=Broken:nope*2:regret&t=Verdict:regret<35:Go now:Stay home`,
    {blocks: 1, values: ['\u2014', '\u2014']}],
 
+  /* A number smaller than the two places we round to is not zero. Printed as
+     one it makes correct working read as nonsense - the LC card computed
+     10,000 and showed it as 1/sqrt(0.01*0), which is a proof of the opposite. */
+  ['smallNumbers', `#h=Small numbers stay honest&v=Below a hundredth, three significant figures&g=Resonance&i=Inductance:0.01:l&i=Capacitance:0.000001:c&r=Angular:1/sqrt(l*c):w&r=Tiny:c/1000`,
+   {blocks: 1, values: ['10,000', '1e-9']}],
+
   // a box can carry a name a formula reads as 1 or 0
   ['namedBoxes', `#h=Named boxes&v=A box can be referred to by name&g=Your ticket&i=Full fare:84:fare&c=You have a railcard:card&c=Travelling off peak:offpeak&r=Discount:card*0.34+offpeak*0.1:cut&r=You pay:fare-fare*cut&k=11`,
    {blocks: 1, values: ['0.44', '47.04'], ticked: '11'}],

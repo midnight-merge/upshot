@@ -776,9 +776,21 @@ function evaluate(src, env){
    read the same figure, and a number grouped to the viewer's locale would not
    be the number that was sent. Two decimals at most, trailing zeros trimmed -
    round() in the formula is how a card asks for none. */
+/* Two places is right for money and for most answers a card carries. It is
+   wrong for a number whose whole magnitude sits below them: a capacitance of
+   0.000001 printed as 0 turns correct working into 1/sqrt(0.01*0), a proof
+   that refutes itself, and a rate of 0.002 becomes a headline figure reading
+   nothing. Below a hundredth, show three significant figures instead - which
+   is the smallest change that keeps a small number honest. */
+function twoPlaces(v){
+  var a = Math.abs(v);
+  if(a !== 0 && a < 0.01) return String(Number(v.toPrecision(3)));
+  return v.toFixed(2).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+}
+
 function showNumber(v){
   if(v === null) return '\u2014';
-  var s = v.toFixed(2).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+  var s = twoPlaces(v);
   var sign = s.charAt(0) === '-' ? '-' : '';
   if(sign) s = s.slice(1);
   var dot = s.indexOf('.');
@@ -788,7 +800,7 @@ function showNumber(v){
 }
 
 var plainNumber = function(v){
-  return v === null ? '\u2014' : v.toFixed(2).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+  return v === null ? '\u2014' : twoPlaces(v);
 };
 
 /* Inputs are read before anything is worked out, so a formula can name one
