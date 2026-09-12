@@ -282,11 +282,88 @@ function sweepColons() {
   console.log(`  ${safe.length + 1} checks`);
 }
 
-sweepCharacters();
-sweepColons();
-sweepExamples();
-sweepFormulas();
+/* ---- scoring a batch of real generations ----
+   node test/transport.js links.txt
 
-console.log(`\n${checks} checks`);
-console.log(failures ? `\n${failures} failed` : '\nall passed');
-process.exit(failures ? 1 : 0);
+   The point of the file: a link has to be scored as text, exactly as it left
+   the model. Opening it in a browser proves nothing, because the address bar
+   is not the channel - it never truncates, never renders markdown, and is
+   blind to every failure this file exists to catch. */
+function scoreBatch(file) {
+  const raw = fs.readFileSync(file, 'utf8');
+  const urls = raw.split(/\s+/).filter(t => /^https?:\/\/[^\s]*#/.test(t));
+  if (!urls.length) {
+    console.log(`no links found in ${file} - one URL per line, nothing else`);
+    process.exit(1);
+  }
+  console.log(`scoring ${urls.length} generated links\n`);
+
+  const verdicts = [];
+  urls.forEach((url, i) => {
+    const why = [];
+    const cutAt = truncatedBy(url);
+    if (cutAt) why.push(`unsendable: ${JSON.stringify(cutAt.ch)} at ${cutAt.at} cuts ${url.length - cutAt.at} chars`);
+    if (markdownEaten(url) !== url) why.push('markdown eats part of it');
+    if (url.length >= 2000) why.push(`${url.length} chars, over the 2000 limit`);
+
+    let d = null;
+    try { d = parse(url.slice(url.indexOf('#'))); } catch (e) { why.push('does not parse'); }
+    if (d) {
+      ['h', 'v', 'm', 'd'].forEach(k => { if (!d[k]) why.push(`no ${k}=`); });
+      const groups = new Set(d.blocks.map(b => b.group));
+      if (groups.size > 3) why.push(`${groups.size} blocks, cap is 3`);
+      if (!d.blocks.length) why.push('no blocks');
+      d.blocks.forEach(b => {
+        (b.computed || []).forEach(c => { if (c.label && c.value === null) why.push(`"${c.label}" draws a dash`); });
+        (b.decided || []).forEach(c => { if (c.label && !c.text) why.push(`"${c.label}" cannot be decided`); });
+        if (b.type === 't') b.items.forEach(it => {
+          if (it.split(':').length !== 4) why.push('a t= does not have its four fields');
+        });
+      });
+      // an input nothing refers to is a box the reader fills in for no reason
+      const named = [];
+      d.blocks.forEach(b => { if (b.type === 'i') b.items.forEach(it => {
+        const p = it.split(':'); if (p.length >= 3) named.push(p[2]); }); });
+      const formulas = d.blocks.flatMap(b =>
+        (b.type === 'r' || b.type === 't') ? b.items.join(' ') : []).join(' ');
+      named.forEach(n => {
+        if (!new RegExp('\\b' + n + '\\b').test(formulas)) why.push(`input "${n}" is never used`);
+      });
+    }
+    verdicts.push({url, why});
+    const head = (/[#&]h=([^&]*)/.exec(url) || [, '?'])[1].replace(/\+/g, ' ').slice(0, 44);
+    console.log(`${why.length ? 'BAD ' : 'ok  '} ${String(i + 1).padStart(3)}  ${head}`);
+    why.forEach(w => console.log(`        - ${w}`));
+  });
+
+  const bad = verdicts.filter(v => v.why.length);
+  const rate = ((urls.length - bad.length) / urls.length * 100).toFixed(1);
+  console.log(`\n${urls.length - bad.length}/${urls.length} valid first render  (${rate}%)`);
+
+  if (bad.length) {
+    const tally = {};
+    bad.forEach(v => v.why.forEach(w => {
+      const kind = w.split(':')[0]
+        .replace(/^input "[^"]*" is never used$/, 'an input nothing refers to')
+        .replace(/^"[^"]*" /, 'a row ');
+      tally[kind] = (tally[kind] || 0) + 1;
+    }));
+    console.log('\nwhat went wrong, most common first:');
+    Object.entries(tally).sort((a, b) => b[1] - a[1])
+      .forEach(([k, n]) => console.log(`  ${String(n).padStart(3)}  ${k}`));
+  }
+  process.exit(bad.length ? 1 : 0);
+}
+
+if (process.argv[2]) {
+  scoreBatch(process.argv[2]);
+} else {
+  sweepCharacters();
+  sweepColons();
+  sweepExamples();
+  sweepFormulas();
+
+  console.log(`\n${checks} checks`);
+  console.log(failures ? `\n${failures} failed` : '\nall passed');
+  process.exit(failures ? 1 : 0);
+}
