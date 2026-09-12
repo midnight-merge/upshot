@@ -823,7 +823,12 @@ function evaluate(src, env){
    is the smallest change that keeps a small number honest. */
 function twoPlaces(v){
   var a = Math.abs(v);
-  if(a !== 0 && a < 0.01) return String(Number(v.toPrecision(3)));
+  /* Six figures, not three. The printed working has to reproduce the answer
+     when a reader recomputes it, and a physical constant entered as
+     0.000000000066743 shown as 6.67e-11 puts the escape speed of the Earth out
+     by four metres a second. Six is enough for the constants that turn up on a
+     card and still short enough to read. */
+  if(a !== 0 && a < 0.01) return String(Number(v.toPrecision(6)));
   return v.toFixed(2).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
 }
 

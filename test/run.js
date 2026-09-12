@@ -113,8 +113,15 @@ const CASES = [
   /* A number smaller than the two places we round to is not zero. Printed as
      one it makes correct working read as nonsense - the LC card computed
      10,000 and showed it as 1/sqrt(0.01*0), which is a proof of the opposite. */
-  ['smallNumbers', `#h=Small numbers stay honest&v=Below a hundredth, three significant figures&g=Resonance&i=Inductance:0.01:l&i=Capacitance:0.000001:c&r=Angular:1/sqrt(l*c):w&r=Tiny:c/1000`,
+  ['smallNumbers', `#h=Small numbers stay honest&v=Below a hundredth, six significant figures&g=Resonance&i=Inductance:0.01:l&i=Capacitance:0.000001:c&r=Angular:1/sqrt(l*c):w&r=Tiny:c/1000`,
    {blocks: 1, values: ['10,000', '1e-9']}],
+
+  /* The printed working has to reproduce the answer. A constant entered to
+     five figures and shown to three puts the escape speed of the Earth out by
+     four metres a second, and the one thing a card is supposed to let you do
+     is check it. */
+  ['workingReproducesTheAnswer', `#h=Escape speed&v=The working has to add up&g=Planet&i=Mass:5.972e24:m&i=Radius:6371000:r&i=G:0.000000000066743:g&r=Escape speed:sqrt(2*g*m/r)`,
+   {blocks: 1, values: ['11,185.98']}],
 
   // a box can carry a name a formula reads as 1 or 0
   ['namedBoxes', `#h=Named boxes&v=A box can be referred to by name&g=Your ticket&i=Full fare:84:fare&c=You have a railcard:card&c=Travelling off peak:offpeak&r=Discount:card*0.34+offpeak*0.1:cut&r=You pay:fare-fare*cut&k=11`,
