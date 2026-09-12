@@ -460,17 +460,20 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
 </div>
 
 <script>
-// AI-authored links sometimes get percent-encoded twice (once by hand per
-// our own instructions, once for real when the link is assembled) - decode
-// until it stops changing instead of trusting exactly one layer
-function decodeAll(v){
-  for(var i = 0; i < 4; i++){
-    var next;
-    try { next = decodeURIComponent(v); } catch(e){ break; }
-    if(next === v) break;
-    v = next;
-  }
-  return v;
+/* Decode once, which is what a percent-encoded string means.
+
+   This used to decode repeatedly until the result stopped changing, to repair
+   a link a model had encoded twice. It was written when the Encoding section
+   was a list of characters to remember and getting it wrong was common; the
+   rule is now one sentence and a batch of real generations came back clean, so
+   the repair was defending a hole that has since been filled in.
+
+   It was not free. Decoding until nothing changes cannot tell a double-encoded
+   comma from text that simply contains one: a card explaining that "%2C means
+   comma" had to write %252C, and got back a comma. Text that is about the
+   encoding is exactly the text a format like this attracts. */
+function decodeOnce(v){
+  try { return decodeURIComponent(v); } catch(e){ return v; }
 }
 
 /* The card is a fixed frame - scope line, headline, verdict, signature - with
@@ -479,6 +482,39 @@ function decodeAll(v){
    appear in the URL, so the grammar needs no numbering and no nesting. */
 var BLOCK_KEYS = ['p', 'o', 'c', 'f', 'r', 't', 'i'];
 var MAX_BLOCKS = 3;
+
+/* Keys whose value is several fields with a colon between them. They are the
+   only ones that travel with a written colon still disguised - see MARK. */
+var FIELDED = ['f', 'i', 'r', 't', 'c'];
+
+/* A colon is the field separator and is also an ordinary character in English.
+   Decoding %3A on the way in would make the two the same thing, which is why a
+   written colon used to survive in a bullet and silently cut an r= label short.
+   So it comes in disguised, is split around, and is a colon again on the far
+   side. Nothing outside this file ever sees the stand-in: fields() and text()
+   take it back out, and esc() does too, so it cannot reach the page even by a
+   route nobody thought of. */
+var MARK = '\u0001';
+function text(s){
+  return String(s == null ? '' : s).split(MARK).join(':');
+}
+
+/* The one place that knows what a field is. It was six places, each deriving
+   the grammar again from a split() - which is how %3A came to work in some of
+   them and quietly truncate in others. n is how many fields the key has, and
+   the last one keeps whatever is left, so trailing prose may hold colons.
+
+   Deliberately does not trim. A label wants trimming and the caller does it;
+   a formula must not be touched, because parse() has already turned its plus
+   signs into spaces and a trailing one is a + that has to come back. Trimming
+   here turned the malformed "1+" into a confident 1. */
+function fields(item, n){
+  var parts = String(item == null ? '' : item).split(':');
+  var out = parts.slice(0, n - 1);
+  out.push(parts.slice(n - 1).join(':'));
+  while(out.length < n) out.push('');
+  return out.map(text);
+}
 
 function parse(hash){
   var out = {blocks: []};
@@ -505,7 +541,10 @@ function parse(hash){
     var i = pair.indexOf('=');
     if(i < 0) return;
     var k = pair.slice(0,i);
-    var v = decodeAll(pair.slice(i+1).replace(/\+/g,' '));
+    var v = decodeOnce(pair.slice(i+1).replace(/\+/g,' ').replace(/%3A/gi, MARK));
+    // only a fielded key needs the disguise kept; everything else is prose and
+    // wants its colon back before anyone reads it
+    if(FIELDED.indexOf(k) < 0) v = text(v);
 
     if(k === 'g'){
       // v2: a g= is the ONLY thing that starts a block, so one block can hold
@@ -543,7 +582,7 @@ function parse(hash){
 }
 
 function esc(t){
-  return String(t == null ? '' : t)
+  return text(t)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
@@ -819,10 +858,8 @@ function readInputs(blocks, written){
     b.fields = b.items.map(function(item){
       // Label:Start:name. The name is last because every plain row on the card
       // is Label:Value, and an input is that row with a handle on the end.
-      var parts = item.split(':');
-      var label = (parts.shift() || '').trim();
-      var sent = (parts.shift() || '').trim();
-      var name = parts.join(':').trim();
+      var f = fields(item, 3);
+      var label = f[0].trim(), sent = f[1].trim(), name = f[2].trim();
       var mine = typed[seen++];
       var value = parseFloat(mine !== undefined && mine !== '' ? mine : sent);
       if(!isFinite(value)) value = 0;
@@ -841,8 +878,13 @@ function readInputs(blocks, written){
    anything with a space in it is still part of the label, which is what keeps
    "Bring ID: passport" prose and "Be there by 9:30" a time. */
 function checkField(item){
-  var m = /^(.*):([A-Za-z_][A-Za-z0-9_]*)$/.exec(String(item == null ? '' : item));
-  return m ? {label: m[1], name: m[2]} : {label: String(item == null ? '' : item), name: ''};
+  /* A name is a bare word after the LAST real colon. A written colon arrives
+     disguised, so it cannot be mistaken for the separator here either - which
+     is what lets "Bring ID: passport" stay prose while "...:card" is a name. */
+  var raw = String(item == null ? '' : item);
+  var m = /^(.*):([A-Za-z_][A-Za-z0-9_]*)$/.exec(raw);
+  return m ? {label: text(m[1]), name: m[2]}
+           : {label: text(raw), name: ''};
 }
 
 /* The checklist, as numbers a formula can use. One k= covers every
@@ -909,11 +951,9 @@ function computeAll(blocks, written, ticked){
        the second colon splits once more and stops. */
     if(b.type === 't'){
       b.decided = b.items.map(function(item){
-        var parts = item.split(':');
-        var label = (parts.shift() || '').trim();
-        var cond = restorePlus(parts.shift() || '');
-        var yes = (parts.shift() || '').trim();
-        var no = parts.join(':').trim();
+        var f = fields(item, 4);
+        var label = f[0].trim(), yes = f[2].trim(), no = f[3].trim();
+        var cond = restorePlus(f[1]);
         /* null is "could not be worked out", not "false". Treating the two
            alike is how a card ends up printing the losing branch with full
            authority - "Stay home. The numbers have spoken." - when in fact
@@ -931,9 +971,9 @@ function computeAll(blocks, written, ticked){
     }
     if(b.type !== 'r') return;
     b.computed = b.items.map(function(item){
-      var cut = item.indexOf(':');
-      var label = (cut < 0 ? item : item.slice(0, cut)).trim();
-      var parts = [cut < 0 ? '' : item.slice(cut + 1)];
+      var f = fields(item, 2);
+      var label = f[0].trim();
+      var parts = [f[1]];
       var name = '';
       // a?b:c uses the same colon the fields do, so the spec says a branching
       // result may not be named - which makes this unambiguous rather than a
@@ -1010,9 +1050,7 @@ const BLOCKS = {
          result, a row set at 34px is not a figure, it is a row shouting. */
       if(items.length <= 2 && block && block.alone) return BLOCKS.n.body(items);
       return '<div class="facts">' + items.map(row => {
-        const cut = row.indexOf(':');
-        const key = cut < 0 ? row : row.slice(0, cut);
-        const value = cut < 0 ? '' : row.slice(cut + 1);
+        const [key, value] = fields(row, 2);
         return '<div class="fact"><span class="fk">' + esc(key) + '</span>' +
                (value ? '<span class="fv">' + esc(value) + '</span>' : '') + '</div>';
       }).join('') + '</div>';
@@ -1024,9 +1062,7 @@ const BLOCKS = {
     // or two of it. Label:Value, same order as every other row.
     body(items){
       return '<div class="stats">' + items.map(row => {
-        const cut = row.indexOf(':');
-        const label = cut < 0 ? row : row.slice(0, cut);
-        const value = cut < 0 ? '' : row.slice(cut + 1);
+        const [label, value] = fields(row, 2);
         return '<div class="stat"><div class="sv">' + esc(value) + '</div>' +
                (label ? '<div class="sl">' + esc(label) + '</div>' : '') + '</div>';
       }).join('') + '</div>';
@@ -1212,13 +1248,13 @@ function copyText(d){
     }
 
     b.items.forEach(function(item, i){
-      var cut = item.indexOf(':');
-      var a = cut < 0 ? item : item.slice(0, cut);
-      var z = cut < 0 ? ''   : item.slice(cut + 1);
-      if(b.type === 'o')      lines.push((i + 1) + '. ' + item);
+      if(b.type === 'o')      lines.push((i + 1) + '. ' + text(item));
       else if(b.type === 'c') lines.push('[' + (String(d.k || '')[tick++] === '1' ? 'x' : ' ') + '] ' + checkField(item).label);
-      else if(b.type === 'f') lines.push(a + (z ? ': ' + z : ''));
-      else                    lines.push('- ' + item);
+      else if(b.type === 'f'){
+        var row = fields(item, 2);
+        lines.push(row[0] + (row[1] ? ': ' + row[1] : ''));
+      }
+      else                    lines.push('- ' + text(item));
     });
     parts.push(lines.join('\n'));
   });

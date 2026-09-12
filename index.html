@@ -507,34 +507,26 @@ ENCODING - the part that breaks links
 
 Every space becomes +. The URL contains no spaces.
 
-Encode inside values:
+In wording, keep letters, digits and - as they are. Encode everything else as
+%XX in upper case:
 
-  , %2C     . %2E     ( %28     ) %29     * %2A
-  ? %3F     &amp; %26     # %23     + %2B     % %25     " %22
-  &lt; %3C     &gt; %3E     \ %5C     ^ %5E     ` %60
-  { %7B     | %7C     } %7D
+  , %2C     . %2E     ' %27     ( %28     ) %29     * %2A
+  : %3A     ? %3F     &amp; %26     # %23     + %2B     % %25     _ %5F
 
-The last six are rare in ordinary wording and common the moment a card is about
-code. Like &lt; and &gt;, they are not legal in a URL, so one backtick in a headline
-costs the reader everything after it.
+and the same for anything else that is not a letter or a digit.
 
-A colon in wording is written as it is, and is safe in p, o, c and the value of
-an f: "Bring ID: passport" and "Be there by 9:30" both survive. Encoding it
-changes nothing - the card decodes before it splits fields, so %3A and : are the
-same character by the time it matters. It is the field separator, so it cannot
-appear in an r label, an i label, or either outcome of a t, where it silently
-cuts the text short. Write those without one.
+Do not work out which characters are safe. Most are not, in one chat client or
+another - a bare . ends the link in WhatsApp, &gt; is not legal in a URL at all,
+and a pair of * or _ is eaten as bold or italic before the link is ever
+clicked. The ones that are safe cost nothing to encode anyway.
 
-The = in a condition is written as it is, but
-&lt; and &gt; are not legal in a URL and must be encoded - &lt; %3C and &gt; %3E - so
-&gt;= is %3E=. A chat client ends the link at the first one, and the reader gets
-half a card.
+In a formula, keep letters, digits and + - / = _ and encode the rest the same
+way: * %2A, . %2E, ( %28, ) %29, , %2C, &lt; %3C, &gt; %3E. + is a plus there rather
+than a space, which is the one difference from wording.
 
-A formula is the exception for + only: there it is a plus, not a space, and it
-needs no encoding. - and / never needed any. Everything else in a formula is
-encoded exactly as it is in wording - * %2A, . %2E, ( %28, ) %29 - because the
-link has to survive being pasted, and . ends it early while a pair of bare *
-is read as emphasis and eaten before it ever arrives.
+The colons that separate the fields of an f, i, r, c or t stay as they are. It
+is only a colon inside the wording that is encoded, and once it is, it can go
+anywhere: t=Verdict:n%3E0:Ship%3A+today:Hold reads back as "Ship: today".
 
 A full stop inside a number is still a full stop: 4%2E5, never 4.5.
 

@@ -31,9 +31,10 @@ const cut = js.indexOf('/* execCommand is the fallback');
 if (cut < 0) throw new Error('cannot find the cut point in v2/index.html');
 const mod = {exports: {}};
 new Function('module', 'exports', js.slice(0, cut) +
-  '\nmodule.exports={parse:parse,evaluate:evaluate,restorePlus:restorePlus};'
+  '\nmodule.exports={parse:parse,evaluate:evaluate,restorePlus:restorePlus,' +
+  'fields:fields,text:text};'
 )(mod, mod.exports);
-const {parse} = mod.exports;
+const {parse, fields} = mod.exports;
 if (typeof parse !== 'function') throw new Error('engine did not load');
 
 let failures = 0, checks = 0;
@@ -47,29 +48,26 @@ function check(ok, what, detail) {
    This is llms.txt's Encoding section written out as code. If it and the
    renderer ever disagree, one of them is wrong and the model is caught in
    between - which is exactly how this week went. */
-const WORDING = {
-  ',': '%2C', '.': '%2E', '(': '%28', ')': '%29', '*': '%2A', '?': '%3F',
-  '&': '%26', '#': '%23', '+': '%2B', '%': '%25', '"': '%22', '<': '%3C',
-  '>': '%3E', '\\': '%5C', '^': '%5E', '`': '%60', '{': '%7B', '|': '%7C',
-  '}': '%7D', ':': '%3A'
-};
-// a formula keeps + - / = as they are; everything else follows the wording rule
-const FORMULA_KEEP = new Set(['+', '-', '/', '=']);
+/* The rule, as code. In wording keep letters, digits and a hyphen; in a
+   formula also keep + - / = _ , because there they are arithmetic. Encode
+   everything else. That is the whole Encoding section, and the point of
+   writing it this way is that there is no list of dangerous characters to
+   fall behind - a character nobody thought about is encoded by default.
 
+   Every encoding bug this file has caught was a character missing from a
+   list: > , then * and . wrongly exempted, then \\ ^ ` { | } never mentioned,
+   then _ eaten as italic. A list cannot stop the next one. This can. */
+function pct(ch) {
+  return Array.from(Buffer.from(ch, 'utf8'))
+    .map(b => '%' + b.toString(16).toUpperCase().padStart(2, '0')).join('');
+}
 function encodeWording(text) {
-  return String(text).split('').map(ch => {
-    if (ch === ' ') return '+';
-    if (WORDING[ch]) return WORDING[ch];
-    return ch;
-  }).join('');
+  return String(text).split('').map(ch =>
+    ch === ' ' ? '+' : /[A-Za-z0-9-]/.test(ch) ? ch : pct(ch)).join('');
 }
 function encodeFormula(f) {
-  return String(f).split('').map(ch => {
-    if (FORMULA_KEEP.has(ch)) return ch;
-    if (ch === ' ') return '';
-    if (WORDING[ch]) return WORDING[ch];
-    return ch;
-  }).join('');
+  return String(f).split('').map(ch =>
+    ch === ' ' ? '' : /[A-Za-z0-9+\-/=_]/.test(ch) ? ch : pct(ch)).join('');
 }
 
 /* ---- the channel ----
@@ -114,7 +112,7 @@ function sweepCharacters() {
     ['o  step', t => `#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&o=${encodeWording(t)}`,
       d => d.blocks[0].items[0]],
     ['f  row value', t => `#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&f=L:${encodeWording(t)}`,
-      d => d.blocks[0].items[0].split(':').slice(1).join(':')],
+      d => fields(d.blocks[0].items[0], 2)[1]],
     ['t  outcome', t => `#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=N:1:n&t=L:n%3E0:${encodeWording(t)}:no`,
       d => d.blocks.find(b => b.type === 't').decided[0].text]
   ];
@@ -128,9 +126,6 @@ function sweepCharacters() {
   const uncovered = {};
   for (const [name, build, read] of FIELDS) {
     for (const ch of CHARS) {
-      /* The colon is the field separator. The spec says so, and says which
-         fields it may not appear in; sweepColons() below pins that down. */
-      if (ch === ':' && /^[rit]/.test(name)) continue;
       // padded, so a lone character is not also a trailing-punctuation case
       const text = 'a' + ch + 'b';
       const hash = build(text);
@@ -194,6 +189,20 @@ function sweepExamples() {
       (b.decided || []).forEach(c => { if (c.label && !c.text) dashes.push(c.label); });
     });
     check(dashes.length === 0, `every row computes: ${name}`, dashes.join(', '));
+
+    /* And the example has to be what the rule would have produced. A model
+       copies the example and skims the rule, so an example that does not obey
+       its own spec teaches the wrong thing louder than the spec teaches the
+       right one - which is exactly how `>` survived in one example and not
+       the other for as long as it did. */
+    (url.split('#')[1] || '').split('&').forEach(pair => {
+      const i = pair.indexOf('=');
+      const k = pair.slice(0, i), v = pair.slice(i + 1);
+      if (!'ahvmdgpo'.includes(k)) return;          // prose keys, no sub-fields
+      const plain = decodeURIComponent(v.replace(/\+/g, ' '));
+      check(encodeWording(plain) === v, `${k}= obeys the encoding rule: ${name}`,
+        encodeWording(plain) === v ? '' : `is ${v.slice(0, 40)}, rule says ${encodeWording(plain).slice(0, 40)}`);
+    });
   });
   console.log(`  ${urls.length} live URLs checked`);
 }
@@ -262,8 +271,7 @@ function sweepColons() {
   const safe = [
     ['p  bullet', F + '&p=Bring+ID:+passport', d => d.blocks[0].items[0], 'Bring ID: passport'],
     ['o  step', F + '&o=Be+there+by+9:30', d => d.blocks[0].items[0], 'Be there by 9:30'],
-    ['f  value', F + '&f=Meet:9:30am',
-      d => d.blocks[0].items[0].split(':').slice(1).join(':'), '9:30am'],
+    ['f  value', F + '&f=Meet:9:30am', d => fields(d.blocks[0].items[0], 2)[1], '9:30am'],
     ['c  item', F + '&c=Be+there+by+9:30', d => d.blocks[0].items[0], 'Be there by 9:30']
   ];
   safe.forEach(([name, hash, read, want]) => {
