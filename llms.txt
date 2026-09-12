@@ -25,11 +25,11 @@ https://upshot.fyi/v2/#a=Splitting+dinner+three+ways&h=About+twenty+seven+each&v
 
 How long something takes, from a rate:
 
-https://upshot.fyi/v2/#a=How+long+the+card+takes+to+clear&h=Five+years+at+that+payment&v=Almost+all+of+the+first+year+goes+on+interest%2E&m=GPT-5&d=2026-09-12&g=The+debt&i=Balance:4200:balance&i=Interest+rate+percent:24:apr&i=Paying+a+month:120:pay&g=How+long&r=Monthly+rate:apr/100/12:rate&r=Months+to+clear:round(0-ln(1-balance*rate/pay)/ln(1+rate)):months&r=Interest+in+total:round(months*pay-balance)
+https://upshot.fyi/v2/#a=How+long+the+card+takes+to+clear&h=Five+years+at+that+payment&v=Almost+all+of+the+first+year+goes+on+interest%2E&m=GPT-5&d=2026-09-12&g=The+debt&i=Balance:4200:balance&i=Interest+rate+percent:24:apr&i=Paying+a+month:120:pay&g=How+long&r=Monthly+rate:apr/100/12:rate&r=Months+to+clear:round%280-ln%281-balance%2Arate/pay%29/ln%281+rate%29%29:months&r=Interest+in+total:round%28months%2Apay-balance%29
 
 A calculator in two stages, where a result feeds a later one:
 
-https://upshot.fyi/v2/#a=The+most+I+can+offer+on+the+renovation&h=Work+backward+from+the+exit+value&v=Every+cost+comes+off+the+resale+price+before+the+offer+does%2E&m=GPT-5&d=2026-09-10&g=Exit&i=After+repair+value:450000:arv&i=Selling+cost+percent:7:sell&r=Selling+costs:arv*(sell/100):exit&g=Offer&i=Renovation:70000:reno&i=Target+profit:60000:profit&r=Maximum+offer:arv-exit-reno-profit
+https://upshot.fyi/v2/#a=The+most+I+can+offer+on+the+renovation&h=Work+backward+from+the+exit+value&v=Every+cost+comes+off+the+resale+price+before+the+offer+does%2E&m=GPT-5&d=2026-09-10&g=Exit&i=After+repair+value:450000:arv&i=Selling+cost+percent:7:sell&r=Selling+costs:arv%2A%28sell/100%29:exit&g=Offer&i=Renovation:70000:reno&i=Target+profit:60000:profit&r=Maximum+offer:arv-exit-reno-profit
 
 A how-to:
 
@@ -45,15 +45,15 @@ https://upshot.fyi/v2/#a=What+the+annual+plan+actually+saves&h=Two+months+free%2
 
 An answer that changes with the reader:
 
-https://upshot.fyi/v2/#a=Whether+I+have+enough+runway+to+quit&h=Nine+months+is+the+number+to+beat&v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&m=GPT-5&d=2026-09-10&g=Runway&i=Cash+saved:18000:cash&i=Monthly+burn:2200:burn&i=Months+you+want:9:target&r=Runway:cash/burn:months&t=Ready+to+walk:months>=target:Go+now:Not+yet
+https://upshot.fyi/v2/#a=Whether+I+have+enough+runway+to+quit&h=Nine+months+is+the+number+to+beat&v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&m=GPT-5&d=2026-09-10&g=Runway&i=Cash+saved:18000:cash&i=Monthly+burn:2200:burn&i=Months+you+want:9:target&r=Runway:cash/burn:months&t=Ready+to+walk:months%3E=target:Go+now:Not+yet
 
 An answer the reader ticks their way to:
 
-https://upshot.fyi/v2/#a=Whether+I+need+income+protection&h=Two+of+these+and+it+is+worth+the+premium&v=Cover+costs+little+when+nothing+depends+on+you+and+a+lot+when+things+do%2E&m=GPT-5&d=2026-09-11&g=How+many+apply&c=You+have+a+mortgage&c=You+have+dependants&c=You+are+the+higher+earner&c=You+are+self+employed&r=Score:ticks/boxes*100:pct&t=Verdict:ticks>=2:Get+cover:Probably+fine
+https://upshot.fyi/v2/#a=Whether+I+need+income+protection&h=Two+of+these+and+it+is+worth+the+premium&v=Cover+costs+little+when+nothing+depends+on+you+and+a+lot+when+things+do%2E&m=GPT-5&d=2026-09-11&g=How+many+apply&c=You+have+a+mortgage&c=You+have+dependants&c=You+are+the+higher+earner&c=You+are+self+employed&r=Score:ticks/boxes%2A100:pct&t=Verdict:ticks%3E=2:Get+cover:Probably+fine
 
 An answer with boxes a formula can read:
 
-https://upshot.fyi/v2/#a=What+the+ticket+actually+costs+me&h=The+railcard+pays+for+itself+on+this+trip&v=Two+discounts+stack+here%2C+which+is+the+part+people+miss%2E&m=GPT-5&d=2026-09-11&g=Your+ticket&i=Full+fare:84:fare&c=You+have+a+railcard:card&c=Travelling+off+peak:offpeak&r=Discount:card*0.34+offpeak*0.1:cut&r=You+pay:fare-fare*cut
+https://upshot.fyi/v2/#a=What+the+ticket+actually+costs+me&h=The+railcard+pays+for+itself+on+this+trip&v=Two+discounts+stack+here%2C+which+is+the+part+people+miss%2E&m=GPT-5&d=2026-09-11&g=Your+ticket&i=Full+fare:84:fare&c=You+have+a+railcard:card&c=Travelling+off+peak:offpeak&r=Discount:card%2A0%2E34+offpeak%2A0%2E1:cut&r=You+pay:fare-fare%2Acut
 
 ## The frame
 
@@ -97,7 +97,7 @@ look. The card decides how things are drawn:
      what it held. Put the numbers into the formula rather than working them
      out yourself.
 - t  decision, written `Label:Condition:When+true:When+false`, e.g.
-     `t=Ready+to+walk:months>=target:Go+now:Not+yet`. The card tests the
+     `t=Ready+to+walk:months%3E=target:Go+now:Not+yet`. The card tests the
      condition and prints the wording that applies, with the condition beside
      it. Four fields, always.
 
@@ -139,11 +139,17 @@ Name a step and reuse it rather than nesting brackets.
 
 - Every space becomes `+`. The URL contains no spaces.
 - Encode inside values: `,` %2C, `.` %2E, `(` %28, `)` %29, `*` %2A, `?` %3F,
-  `&` %26, `#` %23, `+` %2B, `%` %25, `"` %22, and a `:` of your own as %3A.
-- A formula is the exception: `+ - * / ( ) .` are written as they are, because
-  there they are arithmetic and not wording. Only `%` and `&` still need
-  encoding inside one.
-- `=` `<` `>` in a condition are written as they are.
+  `&` %26, `#` %23, `+` %2B, `%` %25, `"` %22, `<` %3C, `>` %3E, and a `:` of
+  your own as %3A.
+- A formula is the exception for `+` only: there it is a plus, not a space, and
+  it needs no encoding. `-` and `/` never needed any. Everything else in a
+  formula is encoded exactly as it is in wording - `*` %2A, `.` %2E, `(` %28,
+  `)` %29 - because the link has to survive being pasted, and `.` ends it early
+  while a pair of bare `*` is read as emphasis and eaten before it ever
+  arrives.
+- `<` and `>` in a condition are encoded, `<` %3C and `>` %3E. They are not
+  legal in a URL: a chat client ends the link at the first one and the reader
+  gets half a card. `=` is legal and is written as it is, so `>=` is `%3E=`.
 - A full stop inside a number is still a full stop: `4%2E5`, never `4.5`.
 - No markdown and no line breaks inside a value.
 - Under 2000 characters. If you are over: drop the weakest block, then the

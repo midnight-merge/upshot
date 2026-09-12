@@ -902,12 +902,18 @@ function computeAll(blocks, written, ticked){
         var cond = restorePlus(parts.shift() || '');
         var yes = (parts.shift() || '').trim();
         var no = parts.join(':').trim();
+        /* null is "could not be worked out", not "false". Treating the two
+           alike is how a card ends up printing the losing branch with full
+           authority - "Stay home. The numbers have spoken." - when in fact
+           nothing spoke: the condition cited a result that was itself a dash.
+           An unanswerable question draws a dash here, exactly as r does. */
         var hit = cond ? evaluate(cond, env) : null;
         var shown = cond.replace(/[A-Za-z_][A-Za-z0-9_]*/g, function(word){
           return Object.prototype.hasOwnProperty.call(env, word)
             ? plainNumber(env[word]) : word;
         });
-        return {label: label, expr: shown, text: hit ? yes : no};
+        return {label: label, expr: shown,
+                text: hit === null ? '' : (hit ? yes : no)};
       });
       return;
     }

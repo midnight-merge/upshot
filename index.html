@@ -392,11 +392,11 @@ https://upshot.fyi/v2/#a=Splitting+dinner+three+ways&amp;h=About+twenty+seven+ea
 
 How long something takes, from a rate:
 
-https://upshot.fyi/v2/#a=How+long+the+card+takes+to+clear&amp;h=Five+years+at+that+payment&amp;v=Almost+all+of+the+first+year+goes+on+interest%2E&amp;m=GPT-5&amp;d=2026-09-12&amp;g=The+debt&amp;i=Balance:4200:balance&amp;i=Interest+rate+percent:24:apr&amp;i=Paying+a+month:120:pay&amp;g=How+long&amp;r=Monthly+rate:apr/100/12:rate&amp;r=Months+to+clear:round(0-ln(1-balance*rate/pay)/ln(1+rate)):months&amp;r=Interest+in+total:round(months*pay-balance)
+https://upshot.fyi/v2/#a=How+long+the+card+takes+to+clear&amp;h=Five+years+at+that+payment&amp;v=Almost+all+of+the+first+year+goes+on+interest%2E&amp;m=GPT-5&amp;d=2026-09-12&amp;g=The+debt&amp;i=Balance:4200:balance&amp;i=Interest+rate+percent:24:apr&amp;i=Paying+a+month:120:pay&amp;g=How+long&amp;r=Monthly+rate:apr/100/12:rate&amp;r=Months+to+clear:round%280-ln%281-balance%2Arate/pay%29/ln%281+rate%29%29:months&amp;r=Interest+in+total:round%28months%2Apay-balance%29
 
 A calculator in two stages, where a result feeds a later one:
 
-https://upshot.fyi/v2/#a=The+most+I+can+offer+on+the+renovation&amp;h=Work+backward+from+the+exit+value&amp;v=Every+cost+comes+off+the+resale+price+before+the+offer+does%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Exit&amp;i=After+repair+value:450000:arv&amp;i=Selling+cost+percent:7:sell&amp;r=Selling+costs:arv*(sell/100):exit&amp;g=Offer&amp;i=Renovation:70000:reno&amp;i=Target+profit:60000:profit&amp;r=Maximum+offer:arv-exit-reno-profit
+https://upshot.fyi/v2/#a=The+most+I+can+offer+on+the+renovation&amp;h=Work+backward+from+the+exit+value&amp;v=Every+cost+comes+off+the+resale+price+before+the+offer+does%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Exit&amp;i=After+repair+value:450000:arv&amp;i=Selling+cost+percent:7:sell&amp;r=Selling+costs:arv%2A%28sell/100%29:exit&amp;g=Offer&amp;i=Renovation:70000:reno&amp;i=Target+profit:60000:profit&amp;r=Maximum+offer:arv-exit-reno-profit
 
 A how-to:
 
@@ -412,15 +412,15 @@ https://upshot.fyi/v2/#a=What+the+annual+plan+actually+saves&amp;h=Two+months+fr
 
 An answer with boxes a formula can read:
 
-https://upshot.fyi/v2/#a=What+the+ticket+actually+costs+me&amp;h=The+railcard+pays+for+itself+on+this+trip&amp;v=Two+discounts+stack+here%2C+which+is+the+part+people+miss%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=Your+ticket&amp;i=Full+fare:84:fare&amp;c=You+have+a+railcard:card&amp;c=Travelling+off+peak:offpeak&amp;r=Discount:card*0.34+offpeak*0.1:cut&amp;r=You+pay:fare-fare*cut
+https://upshot.fyi/v2/#a=What+the+ticket+actually+costs+me&amp;h=The+railcard+pays+for+itself+on+this+trip&amp;v=Two+discounts+stack+here%2C+which+is+the+part+people+miss%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=Your+ticket&amp;i=Full+fare:84:fare&amp;c=You+have+a+railcard:card&amp;c=Travelling+off+peak:offpeak&amp;r=Discount:card%2A0%2E34+offpeak%2A0%2E1:cut&amp;r=You+pay:fare-fare%2Acut
 
 An answer the reader ticks their way to:
 
-https://upshot.fyi/v2/#a=Whether+I+need+income+protection&amp;h=Two+of+these+and+it+is+worth+the+premium&amp;v=Cover+costs+little+when+nothing+depends+on+you+and+a+lot+when+things+do%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=How+many+apply&amp;c=You+have+a+mortgage&amp;c=You+have+dependants&amp;c=You+are+the+higher+earner&amp;c=You+are+self+employed&amp;r=Score:ticks/boxes*100:pct&amp;t=Verdict:ticks>=2:Get+cover:Probably+fine
+https://upshot.fyi/v2/#a=Whether+I+need+income+protection&amp;h=Two+of+these+and+it+is+worth+the+premium&amp;v=Cover+costs+little+when+nothing+depends+on+you+and+a+lot+when+things+do%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=How+many+apply&amp;c=You+have+a+mortgage&amp;c=You+have+dependants&amp;c=You+are+the+higher+earner&amp;c=You+are+self+employed&amp;r=Score:ticks/boxes%2A100:pct&amp;t=Verdict:ticks%3E=2:Get+cover:Probably+fine
 
 An answer that changes with the reader:
 
-https://upshot.fyi/v2/#a=Whether+I+have+enough+runway+to+quit&amp;h=Nine+months+is+the+number+to+beat&amp;v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Runway&amp;i=Cash+saved:18000:cash&amp;i=Monthly+burn:2200:burn&amp;i=Months+you+want:9:target&amp;r=Runway:cash/burn:months&amp;t=Ready+to+walk:months>=target:Go+now:Not+yet
+https://upshot.fyi/v2/#a=Whether+I+have+enough+runway+to+quit&amp;h=Nine+months+is+the+number+to+beat&amp;v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Runway&amp;i=Cash+saved:18000:cash&amp;i=Monthly+burn:2200:burn&amp;i=Months+you+want:9:target&amp;r=Runway:cash/burn:months&amp;t=Ready+to+walk:months%3E=target:Go+now:Not+yet
 
 
 THE FRAME - always all five, always first
@@ -464,7 +464,7 @@ r  result, written Label:Formula, e.g. r=Total:seats*price. The card works it
    held. Put the numbers into the formula rather than working them out
    yourself.
 t  decision, written Label:Condition:When+true:When+false, e.g.
-   t=Ready+to+walk:months&gt;=target:Go+now:Not+yet. The card tests the condition
+   t=Ready+to+walk:months%3E=target:Go+now:Not+yet. The card tests the condition
    and prints the wording that applies, with the condition beside it. Four
    fields, always.
 
@@ -511,12 +511,18 @@ Encode inside values:
 
   , %2C     . %2E     ( %28     ) %29     * %2A
   ? %3F     &amp; %26     # %23     + %2B     % %25     " %22
+  &lt; %3C     &gt; %3E
 
-A : of your own goes as %3A. The = &lt; &gt; in a condition are written as they are.
+A : of your own goes as %3A. The = in a condition is written as it is, but
+&lt; and &gt; are not legal in a URL and must be encoded - &lt; %3C and &gt; %3E - so
+&gt;= is %3E=. A chat client ends the link at the first one, and the reader gets
+half a card.
 
-A formula is the exception: + - * / ( ) . are written as they are, because
-there they are arithmetic and not wording. Only the percent sign and the
-ampersand still need encoding inside one.
+A formula is the exception for + only: there it is a plus, not a space, and it
+needs no encoding. - and / never needed any. Everything else in a formula is
+encoded exactly as it is in wording - * %2A, . %2E, ( %28, ) %29 - because the
+link has to survive being pasted, and . ends it early while a pair of bare *
+is read as emphasis and eaten before it ever arrives.
 
 A full stop inside a number is still a full stop: 4%2E5, never 4.5.
 

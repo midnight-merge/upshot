@@ -103,6 +103,13 @@ const CASES = [
   ['swallowedKey', `#m=GPT-5&d=2026-09-10&h=About twenty seven each&v=Service is in the total&g=Split it+i=Bill:80:bill&i=People:3:n&r=Each pays:bill/n`,
    {blocks: 1, values: ['26.67'], label: 'Split it'}],
 
+  /* A condition that cannot be worked out is not a condition that came out
+     false. If it drew the false branch, a card whose numbers are all dashes
+     would still print a verdict, and that is the one failure this format must
+     never have: confident, wrong, and indistinguishable from working. */
+  ['decisionUnanswerable', `#h=Nothing computable&v=The verdict must not fall through&g=Runway&r=Broken:nope*2:regret&t=Verdict:regret<35:Go now:Stay home`,
+   {blocks: 1, values: ['\u2014', '\u2014']}],
+
   // a box can carry a name a formula reads as 1 or 0
   ['namedBoxes', `#h=Named boxes&v=A box can be referred to by name&g=Your ticket&i=Full fare:84:fare&c=You have a railcard:card&c=Travelling off peak:offpeak&r=Discount:card*0.34+offpeak*0.1:cut&r=You pay:fare-fare*cut&k=11`,
    {blocks: 1, values: ['0.44', '47.04'], ticked: '11'}],
@@ -251,23 +258,30 @@ function siblingChecks(){
         missing.length ? missing[0].slice(0, 60) + '...' : '');
 
   /* An example that contradicts the encoding rule teaches louder than the
-     rule does, so no example may carry a character the rule bans. The rule is
-     positional now: inside a formula `*` is arithmetic and written as it is,
-     in wording it still ends the link early. `~` separates the values in w=
-     and is banned outright. So this checks the fields, not the whole string. */
-  const wording = url => (url.split('#')[1] || '').split('&')
-    .map(pair => {
-      const eq = pair.indexOf('=');
-      const key = pair.slice(0, eq), val = pair.slice(eq + 1);
-      if(key !== 'r' && key !== 't') return val;
-      // field 1 of an r= or a t= is the formula - exempt, the rest is wording
-      const bits = val.split(':');
-      return bits.length < 2 ? val : [bits[0]].concat(bits.slice(2)).join(':');
-    }).join('&');
-  const bare = examples.filter(e =>
-    /\*/.test(wording(e)) || /~/.test(e.split('#')[1] || ''));
-  check(bare.length === 0, 'no example carries a bare * in wording, or a ~ anywhere',
+     rule does, so no example may carry a character the rule bans. This went
+     field-aware for a day, when the spec let a formula write `*` plainly. It
+     should not have: a chat UI reads a pair of bare `*` as emphasis and eats
+     them, so `j*45` arrives as `j45` and the formula is quietly a different
+     one. Encoded everywhere, wording and formula alike. */
+  const bare = examples.filter(e => /[~*]/.test(e.split('#')[1] || ''));
+  check(bare.length === 0, 'no example carries a bare ~ or *',
         bare.length ? bare[0].slice(0, 60) + '...' : '');
+
+  /* The harder rule, and the one that actually loses cards: a character that is
+     not legal in a URL at all. A chat client ends the link at the first one, so
+     the reader gets half a card - and the half that survives still renders,
+     which is why nobody notices. `>` is the one that bit us: the spec used to
+     say write `<` and `>` as they are, and a `t=` condition is the one place a
+     model reaches for them. Encoded, they are fine. */
+  const ILLEGAL = /[ "<>{}|\\^`]/;
+  const unsendable = examples
+    .map(e => ({e, m: ILLEGAL.exec(e)}))
+    .filter(x => x.m);
+  check(unsendable.length === 0,
+        'no example carries a character that ends the link early',
+        unsendable.length
+          ? `${JSON.stringify(unsendable[0].m[0])} at ${unsendable[0].m.index} of ${unsendable[0].e.slice(0, 40)}...`
+          : '');
 
   /* Every og:image has to exist and has to be this page's own. A document that
      borrows another's plate unfurls under someone else's headline, which is
