@@ -1,21 +1,26 @@
 # upshot
 
-Turn a chat conversation into something you can use.
+Make the tiny tool you wish existed.
 
-You're talking to an AI, it says something worth sharing, you say **"read
-https://upshot.fyi and export this"**. It replies with a link. You send the
-link.
+Drive or take the train. Whether the annual gym membership is worth it. What
+you actually take home after the student loan. Small, specific questions that
+nothing exists for and that aren't worth a spreadsheet.
 
-What arrives is not a summary. It does the sums, keeps the checklist, makes the
-call — a small tool the AI built for the question you actually asked.
+Describe one to an AI and say **"read https://upshot.fyi and export this"**. It
+hands back a link, and the link *is* the tool — boxes to type in, formulas that
+work themselves out, a verdict that changes its mind when you change the
+numbers.
 
-No account, no API key, nothing to install, on either end. Live at
-[upshot.fyi](https://upshot.fyi).
+The whole thing lives in the URL, so there is no account, nothing installed and
+nothing stored anywhere. Keep it to yourself or send it to someone; it works the
+same either way.
+
+Live at [upshot.fyi](https://upshot.fyi).
 
 ## See one
 
-These are real links, not screenshots. Open them, type in the boxes, watch the
-numbers move.
+Real links, not screenshots. Open them, type in the boxes, watch the numbers
+move.
 
 - **[Splitting dinner three ways](https://upshot.fyi/v2/#a=Splitting+dinner+three+ways&h=About+twenty+seven+each&v=Service+is+already+in+the+total%2C+so+there+is+nothing+more+to+add%2E&m=GPT-5&d=2026-09-10&g=Split+it&i=Bill:80:bill&i=People:3:n&r=Each+pays:bill/n)**
   — the whole card is 180 characters of URL.
@@ -37,13 +42,13 @@ https://upshot.fyi/v2/#a=...&h=...&m=GPT-5&d=2026-09-10&g=Split+it&i=Bill:80:bil
 Browsers never send the part after `#` to a server. So:
 
 - **Nothing is stored, because there is nothing to store.** No database, no
-  account, no rows with your text in them. The site cannot see a card even in
+  account, no rows with your text in them. The site cannot see your card even in
   principle.
+- **Your numbers never leave your device.** They are worked out in the browser
+  and written back into your own copy of the link — an instrument that
+  structurally cannot phone home.
 - **One static file renders unlimited cards, for free.** There is no per-link
   cost, so there is no reason to ever charge for one.
-- **A reader's numbers never leave their device.** They are worked out in the
-  browser and written back into that reader's own link — a calculator that
-  structurally cannot phone home.
 
 The flip side, stated plainly: anyone holding the link can read the card, and so
 can your chat history. Private from us is not private in general.
@@ -78,19 +83,19 @@ whatever mix of lines it needs:
 |---|---|
 | `p` | a bullet |
 | `o` | a numbered step, where order is the point |
-| `c` | a checklist item the reader can tick |
+| `c` | a checklist item you can tick off |
 | `f` | a `Label:Value` row |
-| `i` | an input box the reader types in |
+| `i` | a box you type a number into |
 | `r` | a `Label:Formula` result, worked out and shown with its working |
 | `t` | a `Label:Condition:When+true:When+false` decision |
 
-`i` and `r` are why a card is a tool rather than an answer: the AI writes the
-formula, the reader supplies the numbers. `t` is the same trick for a decision —
-the sender writes the condition and both readings, and the reader's own numbers
-pick which one they see.
+The AI writes the formulas; you type the numbers. A `t=` handles a decision the
+same way — the condition and both outcomes are written in, and whichever one
+your numbers make true is the one that shows.
 
-Ticks and typed numbers are written back into the fragment, so a reader ends up
-holding a link to their own half-finished version, and can pass that on.
+Ticks and typed numbers are written back into the URL as you go, so the link in
+your address bar is always a link to the state you're looking at. Bookmark it,
+or send that.
 
 Three blocks is the cap. Not a technical limit — a card that needs four blocks is
 two cards.
@@ -107,11 +112,12 @@ new path — `/v3/` — rather than an edit. `/v1/` is frozen and still works.
 
 That is the entire cost of the promise: an old static file nobody touches again.
 
-## Sending links through chat apps
+## The link has to survive intact
 
-A card is only worth anything if the link survives being sent, and chat clients
-are hostile in ways that are invisible until you test them. All of these were
-found by sending real links and seeing what arrived:
+Because the card *is* the link, anything that damages the link destroys the
+card — and the damage is usually invisible, since a truncated URL still renders
+a perfectly convincing card with half the content missing. All of these were
+found by sending real links and looking at what came out the other side:
 
 - **A raw comma or full stop inside a value** stops WhatsApp turning the text
   into a link, and the rest arrives as plain text. It doesn't cut at the
