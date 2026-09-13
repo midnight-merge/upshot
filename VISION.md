@@ -1,209 +1,242 @@
-# Vision notes
+# Vision
 
-You took a vague idea and built it. This is the clearer version of the idea.
+What upshot is, what was decided, and what was refused. The format itself is in
+`README.md` and `llms.txt` — this is the reasoning behind it, the part that
+isn't recoverable from the code.
 
-## The problem
+Current as of 13 Sep 2026.
 
-I'm talking to an AI. It says something good. I want to send it to my friends.
-Screenshots are ugly. Pasted text feels like nothing. What's missing is: "yo, export
-this" → a link I can drop in WhatsApp.
+## What it is
 
-Real case: I was telling friends about a murder trial, had just checked details with
-ChatGPT, and wanted to send something short and clean instead of a wall of text.
+A small UI language, and a compilation target. The human writes intent in chat,
+the model compiles it, the card is the output. The asset is the closed
+vocabulary, not expressiveness.
 
-## The good part: keep it
+It is not an export format, and framing it as one undersells it. An export
+preserves what was said. This produces something that *works* — it does the
+sums, keeps the checklist, makes the call.
 
-Put the data in the URL after the `#`, host one static page that reads it. No
-server, no database, no cost per link, infinite links off one file. And the URL
-length limit is a feature — it forces the export to stay short.
+## The founding test
 
-This is right. Don't change it.
+An upshot's founding moment is "I have something worth showing you" — a gift,
+not an ask. Every interactive feature has to pass: **the card has to be good
+even if the recipient never touches it.**
 
-## The bad part: the API key
+That test is what kills most feature ideas, and it should keep killing them.
 
-Right now `view.html` asks the visitor for an OpenAI key and saves it in their
-browser. It needs that key to summarise the text — but an AI already summarised it,
-in the chat the user just came from. We're paying for the same work twice.
+## Settled architecture
 
-And it means "anyone can use this" really means "anyone with an OpenAI account, a
-card on file, and enough trust to paste a key into a stranger's site". That's almost
-nobody.
+**The whole card lives after the `#`.** A fragment never reaches the server, so
+one static page renders unlimited cards for free, and there is structurally
+nothing to store, leak, or sell. This is the good part. Don't change it.
 
-Write the summary in the chat. `view.html` just decodes and displays.
+**The path is the version.** A fragment never reaches GitHub Pages, so it can't
+route on one — the version has to live where the server can see it: `/v2/`.
+Every link ever written against `/v2/` keeps rendering, forever. A later format
+gets `/v3/`. `/v1/` is frozen and still works.
 
-## How the link gets made
+The rule that follows: **a change that makes a previously-valid card render
+differently is a new path, not an edit.** Those links are already out in the
+world.
 
-The real question is who builds the URL.
+**Four documents, one job each.** `/` is landing page and spec. `/v2/` is the
+card. `/broken/` is what an unrenderable link gets. `/llms.txt` is the spec for
+models. Nothing is both a landing page and a card — that was five layout
+rewrites of pain on iOS.
 
-**Option A — the AI types it.** Then the URL has to be plain readable text, not
-base64. One step, no tools, no pasting. Catch: the AI has to escape things right and
-use no spaces (WhatsApp stops the link at the first space), and our page has to
-decode loosely so small mistakes still work.
+## How the link gets made — answered
 
-**Option B — something else builds it.** Either a paste box on the site (AI writes
-text, user pastes, site gives back the link), or the AI runs a script if it has tools
-(Claude Code, ChatGPT's code tool). Slightly more work for the user, but it never
-breaks, and the URL can be base64 since nobody types it.
+The open question in the first version of this file was whether a plain chat
+model could emit a clean URL by hand, or whether it needed base64 and a paste
+box.
 
-Either way, a saved prompt helps — a custom GPT or pinned snippet that teaches the
-format once, so "export this" just works after that.
+**Answered: it can.** ~30 consecutive clean links from GPT-5.6, two batches of
+real generations at 100% valid, three clean cold links from Claude on 13 Sep
+2026. The readable path lives.
 
-A server-side shortener would fix everything and kill the free static thing. No.
+**Base64 plus a paste box is rejected** (10 Sep 2026). "The beauty is llm >
+upshot straight." One step is the product; three steps is a tool you have to be
+motivated to use. Do not re-propose it — design within the readable URL instead.
 
-**Test this first:** can a normal chat, with no tools, actually spit out a clean
-1-2k character URL with no spaces? If yes, Option A is the product. If no, Option B
-is the floor and no design work changes that.
+**The verb matters.** "Export this *to* upshot.fyi" reads to a model as a
+request to submit content to a website, which it refuses. Asking it to *read*
+the domain works. So does the scheme: `read https://upshot.fyi` is materially
+more reliable than `read upshot.fyi`, which a model has to recognise as a URL
+before it can fetch one — and sometimes searches for instead. Both failures
+happen at the entry point, where nothing downstream gets a chance to work.
 
-## Format and size
+The phrase is: **read https://upshot.fyi and export this**
 
-No base64 doesn't mean no structure. A readable URL still has fields, like
-`#m=<model>&d=<date>&a=<the+ask>&b=<body>`. Just separated instead of encoded. The
-metadata works either way.
+## The design laws
 
-Size is what changes. Base64 + compression turns a 2000 character export into about
-800 characters of URL. Readable text doesn't compress, so the same thing is about
-2400. Both are fine to send. Option A is just tighter.
+- Cut any key whose only difference from another is how it looks. The card
+  decides how things are drawn; that is not the model's job.
+- A repeated key beats a separator.
+- Soft shape belongs in examples, hard constraints in rules.
+- The test for a new primitive: would a model get this right cold, first try,
+  having seen the spec but no example of this exact case?
+- Composition, not an enum of card types. An enum is something the model has to
+  classify into, and past a handful of options an LLM starts guessing. There is
+  nothing to classify now — it picks lines that fit.
 
-Full chat transcripts are out either way. 20k characters, the link looks insane in a
-chat, and it kills the "short and clean" thing that made the idea good.
+## The model behind `f`, `i` and `c`
 
-## The URL carries structure, not just text
+Worked out 13 Sep 2026, after a cold generation routed settled facts into a
+checklist and produced a card that contradicted its own headline.
 
-If we only put prose in the URL, the page gets a blob and doesn't know what's a
-headline, what's a bullet, what's the verdict. So the URL has to be a filled-in
-form.
+Two independent axes, not one:
 
-```
-#s=explainer
-&m=GPT-5
-&d=2026-09-06
-&a=Whether+seed+oils+are+actually+bad+for+you
-&h=Seed+oils+are+not+the+villain+the+internet+says
-&v=The+claim+rests+on+lab+studies+humans+trials+havent+reproduced
-&p=Swapping+saturated+fat+for+seed+oil+lowers+LDL
-&p=The+inflammation+link+comes+from+animal+work
-&p=Reheated+frying+oil+is+a+separate+issue
-```
+|  | fixed | reader can change |
+|---|---|---|
+| **the conversation knows it** | `f` | `i` |
+| **only the reader knows it** | — | `c` (yes/no), `i` (number) |
 
-`s` picks the shape, so the page knows which skeleton to draw. `m`, `d`, `a` are
-the container and are always there. The rest are slots that shape expects — repeat
-`p` for each bullet. A list shape or a steps shape would have different slots.
+This is what an `i`'s `Start` value actually is — not a default, but *the
+conversation's own number, left editable*. "Bill: 80" is an `f` row you can play
+with. Once framed that way, `i` stops looking like an anomaly.
 
-This is the real cost of the no-base64 path. The AI isn't just writing text, it's
-filling in a form, and there's more for it to get wrong. So the test question is
-sharper than it first looked: not "can a chat emit a clean URL", but "can a chat
-emit a clean URL with the right fields in the right slots."
+The decision table in `llms.txt` currently flattens this 2×2 into a linear list
+of questions, and asks about widget behaviour ("the reader ticks it off?")
+rather than about what the information is — which contradicts the first design
+law and is how a settled fact falls through into `c`. **Re-cutting that table
+around provenance is the next language change**, and it should be validated
+against real generations rather than reasoning alone.
 
-Page should decode loosely — missing slot, just don't draw it. Unknown shape, fall
-back to the plainest one.
+Note where `pick-one` lands on that grid: unknown + editable + *exclusive*. It
+is a missing cell, not a nice-to-have.
 
-## WhatsApp findings (tested 6 Sep 2026)
+## Refused on purpose
 
-Tested by sending real links to WhatsApp and seeing what stays blue.
+- **Reader text inputs** — can't feed a formula, and free text in a URL is a
+  liability.
+- **Charts and images** — break both "fits in a link" and the one-look design.
+- **Anything that fetches** — kills the structural privacy claim outright.
+- **The AI-generated interview, and polls** — both invert the gift into a chore.
+- **A server-side shortener** — would fix everything and kill the free static
+  thing.
+- **Per-link preview cards** — would mean moving data into a `?query`, which
+  means a real server, which means everyone's content in our logs. One good
+  generic preview card instead.
+- **v1's share-image renderer** — deleted. A v2 card is mostly inputs, results
+  and checklists, and a picture of a tool is not one: it freezes one reader's
+  numbers and presents them as the answer. Took ~650 lines with it.
 
-Fine: length up to at least 800 characters, `&` separators, `%22`, hyphens,
-`localhost` with a port, capitals, digits.
+## What the testing taught
 
-Breaks it: **a raw comma or full stop inside a value.** WhatsApp stops linkifying
-at that point and the rest of the URL arrives as plain text. It doesn't cut at the
-punctuation itself, it cuts earlier, so it looks random until you bisect it.
+**Model compliance is not the problem. We are.** Six bugs on 12 Sep 2026, four
+more on 13 Sep — every one ours, none of them a model disobeying. A model that
+follows a wrong spec faithfully produces confidently broken output, not garbage.
+So spec bugs are *invisible*: they look like success until someone pastes a link
+into WhatsApp.
 
-Fix: encode `,` as %2C and `.` as %2E. Confirmed working on the full 806 character
-Clancy link.
+That is the entire argument for the reference encoder in `test/transport.js` —
+it's the Encoding section as executable code, and the only thing that makes a
+spec bug fail loudly.
 
-**Brackets, found 9 Sep 2026.** Same failure, different character. WhatsApp
-matches parentheses so that a URL written inside brackets in prose does not
-swallow the closing one. A balanced single pair is fine - `round%28p%2F2%2E5%29`
-stayed blue through a whole card - but the closing bracket of a nested pair
-ends the link, and everything after it arrives as plain text. Tested by sending
-two real calculator cards: one cut at `round(w*(1%2Br%2F30)`**`)`**, the other
-at `min(max(e-100000%2C0)%2F2%2C12570`**`)`**. Both are the outer bracket of a
-nest.
+**Model the channel, not the renderer.** Every bug found on 12 Sep lived below
+the renderer: the card drew perfectly from a URL a chat client had already
+truncated. Opening a link in a browser proves nothing — the address bar never
+truncates and never renders markdown. **Score links as text.**
 
-Prose almost never nests brackets, so this was invisible until formulas went in
-the URL - arithmetic nests constantly. Fix: encode `(` as %28 and `)` as %29.
-About 5% longer, and it removes the class rather than the case.
+**One rule beats a list of characters.** The encoding rule was a list, and the
+list *was* the bug: `>` was told to be written plainly, `*` and `.` were wrongly
+exempted, `\ ^ \` { | }` were never mentioned, and `_` silently ate `snake_case`
+as italic. The rule is now one sentence — in wording keep letters, digits and a
+hyphen; in a formula also `+ - / = _`; encode everything else — so a character
+nobody thought about is encoded by default. It cost zero characters on the
+worked examples.
 
-**What this means for the format.** Every sentence has a full stop. So the AI now
-has to encode punctuation on every single sentence it writes, in a URL it can't
-see rendered, with silent failure if it slips once. That's a big reliability ask
-for a plain chat model, and it's real evidence for base64 plus a paste box or a
-tool, rather than the AI typing the URL by hand.
+The findings that produced it, kept because they're empirical and not
+re-derivable: a raw comma or full stop inside a value stops WhatsApp linkifying
+and the rest arrives as plain text (found 6 Sep). A closing bracket that ends a
+*nested* pair does the same, which was invisible until formulas went in the URL,
+because prose almost never nests brackets (found 9 Sep). Both are now covered by
+the general rule rather than by name.
 
-Test this before committing to the readable path. If ChatGPT gets punctuation
-encoding right nine times in ten, the readable path lives. If it's six in ten, it
-doesn't.
+**Refuse, don't repair.** `decodeAll`'s decode-until-stable was added when
+getting the encoding wrong was common; it couldn't tell a double-encoded comma
+from text containing one. Removing it changed nothing across 34 known cards.
+Same shape, 13 Sep: a `t=` whose condition has no comparison operator now draws
+a dash rather than truthy-coercing a stray number into a real-looking verdict.
 
-## Container and shapes
+**A dash is the only honest failure.** `t=` used to treat "could not be worked
+out" as "false" and print the losing branch with full authority. Anything
+unanswerable draws a dash, as `r=` always did.
 
-**Metadata is the container.** It's on every page, always. Model, date, and one line
-saying what was asked. It's the frame, and the frame is what makes the content mean
-something.
+**The printed working must reproduce the answer when recomputed.** Formatting is
+not cosmetic here — it is the proof.
 
-One honest note: most chats are many messages, so there's no single prompt to quote.
-That one line is the AI describing its own brief. Weaker than a real quote, but fine
-as long as we call it a summary of the ask, not a quote.
+**One owner for a grammar.** Splitting fields on colons happened in six places,
+each re-deriving the rule, which is why `%3A` worked in some fields and silently
+truncated in others.
 
-Also, the export is scoped to whatever you point at, not the whole conversation. You
-might talk to ChatGPT about five things and only want one of them exported — "export
-this, mainly the bit about x". So the one-liner describes the ask behind that bit. If
-you don't say what to focus on, the AI uses whatever you were last on.
+**The scorer cannot see a wrong number.** Two of the worst bugs passed every
+structural check — a card printed "Stay home. The numbers have spoken." with
+every input dashed, and another showed working that recomputed to a different
+answer than it displayed. Read the computed values, not the pass rate.
 
-**Shapes go inside the container.** This isn't just for debates — recipes, trip
-plans, gym plans, explainers, book recs, code. So the body can't be shaped like a
-debate. Small set of layouts the AI picks from: explainer, list, steps, comparison.
-Same look, different skeleton.
+## Known gaps, ranked
 
-## The site teaches the AI
+1. **Pick-one.** Boxes are binary; a reader cannot choose one of N (tax band,
+   tier, plan). Faking it with named boxes cannot stop them ticking three.
+   Biggest expressive hole in the vocabulary.
+2. **Units.** Every numeric card smuggles units into labels ("Interest rate
+   percent") and results print bare — "Payment 222" of what. Arguably cosmetic,
+   but an ambiguous number is not.
+3. **Duration formatting.** The known 5.64-not-5:38 soft spot. Adding `ln` made
+   it worse, because "how long until" cards became easy to write.
+4. **`t=` is binary.** Three-way outcomes (under/right/over) need two `t=` rows
+   that can contradict each other. It is also the most fragile key to parse —
+   four positional fields, only the last protected from an embedded colon — and
+   the only key whose *wording is chosen by a formula*, which is what makes a
+   card feel alive. Most important, least robust. Resist fixing it with a
+   heuristic that guesses which field is the condition; refusal is the right
+   shape.
+5. **The three-block cap is binding, not spare.** A comparison plus a verdict
+   eats all three. Keep it — it protects the one-screen promise — but know it.
 
-The user shouldn't have to paste a wall of instructions. Host the spec as a plain
-text file and let the AI fetch it. Then the whole flow is one sentence:
+**Most key distinctions are advisory, not structural.** Nothing stops `c`
+holding facts, `p` holding ordered steps, or `f` holding a number the model
+worked out itself. The grammar accepts all of it. One of those failed under test
+on 13 Sep; `p` vs `o` is the same shape of risk, untested.
 
-> "export this to upshot.fyi"
+## The live risk
 
-The AI reads `/llms.txt`, gets the format, writes the URL. No setup, no custom GPT,
-no pinned prompt. Still just a static file — the "server" is a text file.
+Not encoding reliability any more. It is a model that has to *invent* a formula
+rather than apply a known one — which the card then renders with full authority,
+and whose printed working proves the arithmetic, not the premise.
 
-Two nice side effects. We can change the format whenever we like and every AI picks
-it up straight away, so nobody's saved prompt goes stale. And we can version it, so
-old links keep working.
+Still unmeasured: other people's phrasing, and models beyond GPT-5.6 and Claude.
+The corpus is how that gets measured — `node test/transport.js <file>` scores any
+file of links, one per line. Keep collecting them.
 
-Catch: it needs browsing on, and some models will guess the format instead of
-fetching. So keep the spec short, and make the page say "this link looks
-incomplete" instead of rendering blank.
+## Where things stand
 
-**Every export carries the instruction.** The footer of a rendered page tells you
-how to make your own. Someone gets a link off a mate, sees the line, does their
-own. The thing being shared is the thing that spreads it.
+Live at [upshot.fyi](https://upshot.fyi), behind Cloudflare in front of GitHub
+Pages. Zero `set-cookie` headers on `/`, `/v2/` and `/made/`, so the "no cookies"
+line in Privacy is still true — re-check it if bot protection or WAF rules ever
+go on. Do not enable APO or a Cache Everything rule; that is what would create a
+stale-renderer risk. Traffic analytics are server-side with no script on the
+page, so they can show homepage vs card vs `/made/`, never which card.
 
-## Hosting
+Homepage confirmed indexed by Google 13 Sep 2026. Remaining discoverability work
+is in `DISCOVERABILITY.md`.
 
-Real domain, self-hosted.
+`/made/` is curated by hand — a static list, no server, no moderation queue. A
+submission box comes only when there are more good cards than can be collected by
+hand, and the cheap version is a pre-filled GitHub issue rather than a backend.
+The reason to delay: choosing what appears makes us a publisher, which
+contradicts the Terms line that text on the domain "never reaches us to moderate
+or remove." Ask permission before featuring a card — it lives in its URL and
+cannot be edited or withdrawn by whoever made it.
 
-**Short domain = more room.** Every character in the base URL is one less for the
-content. Keep the path short too.
+## Working agreements
 
-**The domain is part of the feel.** It's the first thing people see in WhatsApp,
-before the page even loads. Same job as the fonts and spacing.
+**Do not commit or push unless asked.** Make the edits, show the result, wait.
+Same for opening PRs.
 
-**Every link gets the same WhatsApp preview.** Anything after `#` never reaches the
-server, so we can't make a custom preview card per link. Doing that would mean
-moving the data into a `?query`, which means running a real server instead of a
-static file, and then everyone's content goes through our logs. Not worth it.
-Decided: keep the `#`, design one good generic preview card.
+**Do not tack on rules.** A rule you have to remember is a rule that gets
+skipped. Prefer a question that cannot produce the wrong answer — the same move
+that replaced the character list with one encoding sentence.
 
-## Why this works at all
-
-The presentation is the product. A screenshot is ugly and easy to fake. Pasted text
-has no weight. A proper page reads like something someone made — it gives the content
-a feel. That's the whole moat: the fonts, the spacing, how the link looks in a chat.
-
-One thing to keep in mind while designing: the same page makes a good answer and a
-made-up answer look exactly the same, and looking authoritative is the point. A small
-"AI summary" badge won't fix that, people read the layout not the footer. Model, date
-and the one-line ask are cheap and do the job. Ship those and stop there.
-
-## Next
-
-Build the encoder and a stripped-down `view.html` that renders one shape properly.
-Look at it, tweak the feel, then add the other shapes.
+**Terse imperative beats explanatory prose** in anything a model reads.
