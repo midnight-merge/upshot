@@ -855,9 +855,10 @@ var plainNumber = function(v){
    One w= carries every input on the card, in document order, exactly as one k=
    carries every tick. What the reader typed wins over what the sender sent,
    which is what makes the link theirs once they have touched it. */
-function readInputs(blocks, written){
+function readInputs(blocks, written, env){
   var typed = String(written == null ? '' : written).split('~');
-  var env = {}, seen = 0;
+  env = env || {};
+  var seen = 0;
   blocks.forEach(function(b){
     if(b.type !== 'i') return;
     b.fields = b.items.map(function(item){
@@ -868,7 +869,10 @@ function readInputs(blocks, written){
       var mine = typed[seen++];
       var value = parseFloat(mine !== undefined && mine !== '' ? mine : sent);
       if(!isFinite(value)) value = 0;
-      if(name) env[name] = value;
+      // The first claim on a name wins, everywhere on the card - a later i=,
+      // c= or r= reusing one is a mistake, not a rebinding, so it is dropped
+      // rather than silently rewiring every formula that already reads it.
+      if(name && !Object.prototype.hasOwnProperty.call(env, name)) env[name] = value;
       return {name: name, label: label, value: value};
     });
   });
@@ -943,13 +947,16 @@ function restorePlus(src){
 }
 
 function computeAll(blocks, written, ticked){
-  var env = readInputs(blocks, written);
   var counted = readTicks(blocks, ticked);
+  // ticks/boxes are reserved and claim their names first, so nothing later -
+  // an input, a named box, or a result - can knock them out from under a
+  // checklist formula that is already reading them.
+  var env = {ticks: counted.ticks, boxes: counted.boxes};
+  readInputs(blocks, written, env);
   for(var name in counted.names){
-    if(Object.prototype.hasOwnProperty.call(counted.names, name)) env[name] = counted.names[name];
+    if(Object.prototype.hasOwnProperty.call(counted.names, name) &&
+       !Object.prototype.hasOwnProperty.call(env, name)) env[name] = counted.names[name];
   }
-  env.ticks = counted.ticks;
-  env.boxes = counted.boxes;
   blocks.forEach(function(b){
     /* A condition is only ever read out, never referred to, so it needs no
        name - which is what keeps four fields unambiguous: everything after
@@ -963,8 +970,17 @@ function computeAll(blocks, written, ticked){
            alike is how a card ends up printing the losing branch with full
            authority - "Stay home. The numbers have spoken." - when in fact
            nothing spoke: the condition cited a result that was itself a dash.
-           An unanswerable question draws a dash here, exactly as r does. */
-        var hit = cond ? evaluate(cond, env) : null;
+           An unanswerable question draws a dash here, exactly as r does.
+
+           A decision is a comparison by definition - every field in the spec
+           is Label:Condition:When+true:When+false, and Condition always
+           compares something. A bare number here is not a quiet decision, it
+           is four fields that came apart at a colon nobody encoded - a
+           trueText or label spilling a comparator's slot. Truthy-coercing
+           that number would pick a real-looking branch with the same false
+           authority the paragraph above already refuses to allow for null,
+           so it draws the same dash. */
+        var hit = (cond && /<=|>=|==|!=|<|>/.test(cond)) ? evaluate(cond, env) : null;
         var shown = cond.replace(/[A-Za-z_][A-Za-z0-9_]*/g, function(word){
           return Object.prototype.hasOwnProperty.call(env, word)
             ? plainNumber(env[word]) : word;
@@ -1003,7 +1019,9 @@ function computeAll(blocks, written, ticked){
       // under 59,700 is noise, not working
       if(shown === plainNumber(value)) shown = '';
 
-      if(name && value !== null) env[name] = value;
+      // First claim wins - see readInputs. A result naming itself after an
+      // input or an earlier result does not rewire it, it just goes unnamed.
+      if(name && value !== null && !Object.prototype.hasOwnProperty.call(env, name)) env[name] = value;
       return {label: label, expr: shown, value: value};
     });
   });

@@ -61,12 +61,20 @@ function pct(ch) {
   return Array.from(Buffer.from(ch, 'utf8'))
     .map(b => '%' + b.toString(16).toUpperCase().padStart(2, '0')).join('');
 }
+/* Array.from, not .split(''): a character outside the Basic Multilingual
+   Plane - most emoji - is a surrogate pair, two UTF-16 code units that
+   .split('') tears apart. Each lone half is not valid UTF-8 on its own, so
+   Buffer.from(half, 'utf8') silently produces the replacement character
+   instead of throwing - this reference encoder mangled every emoji into
+   %EF%BF%BD%EF%BF%BD for exactly that reason until a real one was checked
+   against what the rule should have produced. Array.from iterates by
+   codepoint, which keeps a surrogate pair together. */
 function encodeWording(text) {
-  return String(text).split('').map(ch =>
+  return Array.from(String(text)).map(ch =>
     ch === ' ' ? '+' : /[A-Za-z0-9-]/.test(ch) ? ch : pct(ch)).join('');
 }
 function encodeFormula(f) {
-  return String(f).split('').map(ch =>
+  return Array.from(String(f)).map(ch =>
     ch === ' ' ? '' : /[A-Za-z0-9+\-/=_]/.test(ch) ? ch : pct(ch)).join('');
 }
 
@@ -121,6 +129,10 @@ function sweepCharacters() {
   const CHARS = [];
   for (let i = 32; i < 127; i++) CHARS.push(String.fromCharCode(i));
   CHARS.push('£', '€', '’', '—', 'é');
+  // surrogate pairs - a model describing an actual conversation reaches for
+  // these constantly, and they are a different code path from every char
+  // above: two UTF-16 units that a naive split() would tear apart
+  CHARS.push('🚗', '🚆', '👍');
 
   let roundTrip = 0, unsendable = 0, eaten = 0;
   const uncovered = {};
@@ -290,6 +302,70 @@ function sweepColons() {
   console.log(`  ${safe.length + 1} checks`);
 }
 
+/* ---- one shared name, claimed twice ----
+   `ticks`, `boxes`, and every i= and named r= all live in one namespace.
+   Nothing in the spec stops a model reusing a name - it only asks it not
+   to - so the card has to survive the reuse itself. Found 13 Sep 2026: an
+   i= reused as an r='s own name silently rewired every formula after it,
+   because the later write won. First claim now wins everywhere; a later
+   write with the same name is dropped rather than rebinding what already
+   reads it. */
+function sweepNamespace() {
+  console.log('\none name, claimed twice');
+  const F = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G';
+
+  // an r= reusing an i='s name must not rewire a later formula
+  const d1 = parse(F + '&i=Seats:4:seats&r=Double:seats*2:seats&r=Check:seats+1');
+  const check1 = d1.blocks.find(b => b.type === 'r').computed.find(c => c.label === 'Check');
+  check(check1 && check1.value === 5, 'a result cannot rename the input it was named after',
+    check1 ? `Check came to ${check1.value}, wanted 5 (the original seats)` : 'no Check row');
+
+  // a result named "ticks" must not corrupt a checklist score - k=11 ticks
+  // both boxes, so a correct score is 2/2*100
+  const d2 = parse('#k=11&a=A&h=H&v=V&m=M&d=2026-01-01&g=List&c=One&c=Two' +
+    '&r=Ticks:5:ticks&r=Score:ticks/boxes*100:score');
+  const score = d2.blocks.find(b => b.type === 'r').computed.find(c => c.label === 'Score');
+  check(score && score.value === 100, 'a result cannot rename the reserved ticks/boxes',
+    score ? `Score came to ${score.value}, wanted 100 (2 ticked of 2)` : 'no Score row');
+  console.log('  2 checks');
+}
+
+/* ---- a decision is a comparison, or it is not a decision ----
+   Every t= in the spec is Label:Condition:When+true:When+false, and
+   Condition always compares something. `fields()` only protects the LAST
+   of those four from an embedded colon - so an unencoded colon anywhere in
+   the label or the true-text shifts the rest by one, and the wrong slot
+   lands where Condition should be. Found 13 Sep 2026: when that slot ends
+   up holding a bare number, truthy-coercing it picked a real-looking
+   branch with full authority - exactly the false confidence the existing
+   null-draws-a-dash rule already refuses to allow. A condition with no
+   comparison operator now can never decide, whatever shifted into it. */
+function sweepDecisions() {
+  console.log('\na decision without a comparison');
+  const F = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=N:1:n';
+
+  // the exact failure: an unencoded colon in the label shifts every field
+  const d1 = parse(F + '&t=Ratio+3:2+exceeded:n%3E0:Yes:No');
+  const t1 = d1.blocks.find(b => b.type === 't').decided[0];
+  check(t1.text === '', 'a colon-mangled label draws a dash, not a wrong verdict',
+    t1.text === '' ? '' : `text came to ${JSON.stringify(t1.text)}`);
+
+  // the general rule, isolated from the colon bug that first found it: any
+  // condition without a comparator is unanswerable, not truthy
+  const d2 = parse(F + '&t=Weird:5:Yes:No');
+  const t2 = d2.blocks.find(b => b.type === 't').decided[0];
+  check(t2.text === '', 'a bare number never stands in for a comparison',
+    t2.text === '' ? '' : `text came to ${JSON.stringify(t2.text)}`);
+
+  // and a real comparison still decides normally - the guard must not
+  // swallow legitimate decisions along with malformed ones
+  const d3 = parse(F + '&t=Real:n%3E0:Yes:No');
+  const t3 = d3.blocks.find(b => b.type === 't').decided[0];
+  check(t3.text === 'Yes', 'a real comparison still decides',
+    t3.text === 'Yes' ? '' : `text came to ${JSON.stringify(t3.text)}`);
+  console.log('  3 checks');
+}
+
 /* ---- scoring a batch of real generations ----
    node test/transport.js links.txt
 
@@ -368,6 +444,8 @@ if (process.argv[2]) {
 } else {
   sweepCharacters();
   sweepColons();
+  sweepNamespace();
+  sweepDecisions();
   sweepExamples();
   sweepFormulas();
 

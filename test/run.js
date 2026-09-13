@@ -254,9 +254,15 @@ function siblingChecks(){
         'that redirect is in the head, ahead of the landing copy');
 
   // The spec stays static: fetchers do not run JS, and a spec built by JS
-  // would be invisible to the thing it exists for.
-  check((landing.match(/<script/g) || []).length === 1 && !/\bfunction\b/.test(landing),
-        'the landing page carries nothing but that redirect',
+  // would be invisible to the thing it exists for. The page now carries a
+  // second, inert <script type="application/ld+json"> block for search
+  // engines and one small copy-to-clipboard enhancement in the body, so
+  // "exactly one <script> tag" is no longer the right proxy - what matters
+  // is that the spec text itself survives with every script stripped out.
+  const noScripts = landing.replace(/<script[\s\S]*?<\/script>/g, '');
+  check(!/\bfunction\b/.test(noScripts) && /BEFORE YOU REPLY/.test(noScripts) &&
+        /Reply with the URL and nothing else\./.test(noScripts),
+        'the landing page carries the spec outside of any script',
         'it is the document AIs fetch - the spec may not depend on JS');
 
   /* The spec exists twice - on the page and in /llms.txt - and most models
