@@ -7,205 +7,168 @@ https://upshot.fyi and export this"**. It replies with a link. You send the
 link.
 
 What arrives is not a summary. It does the sums, keeps the checklist, makes the
-call - a small tool the AI built for the question you actually asked.
+call — a small tool the AI built for the question you actually asked.
 
 No account, no API key, nothing to install, on either end. Live at
 [upshot.fyi](https://upshot.fyi).
 
-## How it works
+## See one
 
-The whole card lives in the URL, after the `#`. Everything after `#` stays in
-the browser and is never sent to the server, so this site never sees your
-content and there is nothing to store.
+These are real links, not screenshots. Open them, type in the boxes, watch the
+numbers move.
 
-That means one static page can render unlimited cards for free. It also means
-the numbers a reader types are worked out on their own device and written back
-into their own link - a calculator that structurally cannot phone home.
+- **[Splitting dinner three ways](https://upshot.fyi/v2/#a=Splitting+dinner+three+ways&h=About+twenty+seven+each&v=Service+is+already+in+the+total%2C+so+there+is+nothing+more+to+add%2E&m=GPT-5&d=2026-09-10&g=Split+it&i=Bill:80:bill&i=People:3:n&r=Each+pays:bill/n)**
+  — the whole card is 180 characters of URL.
+- **[Do I have enough runway to quit?](https://upshot.fyi/v2/#a=Whether+I+have+enough+runway+to+quit&h=Nine+months+is+the+number+to+beat&v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&m=GPT-5&d=2026-09-10&g=Runway&i=Cash+saved:18000:cash&i=Monthly+burn:2200:burn&i=Months+you+want:9:target&r=Runway:cash/burn:months&t=Ready+to+walk:months%3E=target:Go+now:Not+yet)**
+  — change the numbers and the verdict at the bottom changes its mind.
+- **[UK take-home pay, with student loan plans](https://upshot.fyi/v2/#a=UK+take-home+pay+calculator+with+student+loan&h=Calculate+your+2026%2F27+take-home+pay&v=Enter+salary%2C+tick+one+student+loan+plan%2C+and+optionally+Postgraduate+Loan%2E&m=GPT-5%2E6+Sol&d=2026-09-11&g=Pay&i=Annual+salary:40000:salary&r=Personal+allowance:max%280%2C12570-max%280%2Csalary-100000%29%2F2%29:allowance&r=Taxable+income:max%280%2Csalary-allowance%29:taxable&r=Income+tax:min%28taxable%2C37700%29%2A0%2E2%2Bmax%280%2Cmin%28taxable-37700%2C87440%29%29%2A0%2E4%2Bmax%280%2Ctaxable-125140%29%2A0%2E45:tax&r=National+Insurance:min%28max%280%2Csalary-12570%29%2C37700%29%2A0%2E08%2Bmax%280%2Csalary-50270%29%2A0%2E02:ni&g=Student+loan&c=Plan+1+%28tick+one+plan%29:p1&c=Plan+2:p2&c=Plan+4:p4&c=Plan+5:p5&c=Postgraduate+Loan:pg&r=Student+loan:p1%2Amax%280%2Csalary-26900%29%2A0%2E09%2Bp2%2Amax%280%2Csalary-29385%29%2A0%2E09%2Bp4%2Amax%280%2Csalary-33795%29%2A0%2E09%2Bp5%2Amax%280%2Csalary-25000%29%2A0%2E09%2Bpg%2Amax%280%2Csalary-21000%29%2A0%2E06:loan&g=Take+home&r=Annual+take-home:salary-tax-ni-loan:net&r=Monthly+take-home:net%2F12)**
+  — tick a plan, and the tick is written back into your copy of the link.
+
+More at [upshot.fyi/made](https://upshot.fyi/made/).
+
+## The trick
+
+The whole card lives in the URL, after the `#`.
 
 ```
-https://upshot.fyi/v2/#a=...&h=...&v=...&m=GPT-5&d=2026-09-10&g=Split+it&i=Bill:80:bill&i=People:3:n&r=Each+pays:bill/n
+https://upshot.fyi/v2/#a=...&h=...&m=GPT-5&d=2026-09-10&g=Split+it&i=Bill:80:bill&i=People:3:n&r=Each+pays:bill/n
 ```
 
-`v2/index.html` reads those fields and draws the card. That's the entire
-system.
+Browsers never send the part after `#` to a server. So:
 
-## Four documents, one job each
+- **Nothing is stored, because there is nothing to store.** No database, no
+  account, no rows with your text in them. The site cannot see a card even in
+  principle.
+- **One static file renders unlimited cards, for free.** There is no per-link
+  cost, so there is no reason to ever charge for one.
+- **A reader's numbers never leave their device.** They are worked out in the
+  browser and written back into that reader's own link — a calculator that
+  structurally cannot phone home.
 
-| | |
+The flip side, stated plainly: anyone holding the link can read the card, and so
+can your chat history. Private from us is not private in general.
+
+## Using it
+
+Say this to any AI that can read a web page:
+
+> read https://upshot.fyi and export this
+
+That's the whole setup. Nothing to paste, no custom GPT, no saved prompt to go
+stale. The AI fetches [`/llms.txt`](https://upshot.fyi/llms.txt), learns the
+format, and writes the URL.
+
+The verb matters, oddly. "Export this **to** upshot.fyi" reads to a model as a
+request to submit your content to a website, which it will often refuse. Asking
+it to **read** the domain works. So does including the scheme — `read
+https://upshot.fyi` beats `read upshot.fyi`, which a model has to recognise as
+a URL before it can fetch one, and sometimes searches for instead.
+
+## The format
+
+A fixed frame with up to three blocks stacked in the middle. The frame is always
+the same shape, whatever the card is about: a scope line, a headline, a
+one-sentence verdict, the blocks, and a signature saying which model wrote it and
+when.
+
+`g=` starts a block and labels it. Nothing else starts one, so a block holds
+whatever mix of lines it needs:
+
+| key | what it is |
 |---|---|
-| `/` | the landing page and the format spec. Static HTML, no renderer |
-| `/v2/` | the card. Ships an empty `<main>` and fills it from the fragment |
-| `/v1/` | the same, for the format as it was. Frozen |
-| `/broken/` | what a link with nothing renderable in it gets |
+| `p` | a bullet |
+| `o` | a numbered step, where order is the point |
+| `c` | a checklist item the reader can tick |
+| `f` | a `Label:Value` row |
+| `i` | an input box the reader types in |
+| `r` | a `Label:Formula` result, worked out and shown with its working |
+| `t` | a `Label:Condition:When+true:When+false` decision |
 
-The split is not tidiness. One document that was both a landing page and a card
-had to carry the whole format spec to every card link, lay it out as a very
-tall page, then throw it away and put a ~500px card in its place. A document
-that changes height that drastically after layout is a document iOS will hand
-you scrolled, with the header up behind the browser chrome - which is a bug
-this repo chased through five layout rewrites. Now neither document changes
-height after it is laid out.
+`i` and `r` are why a card is a tool rather than an answer: the AI writes the
+formula, the reader supplies the numbers. `t` is the same trick for a decision —
+the sender writes the condition and both readings, and the reader's own numbers
+pick which one they see.
 
-The path is the version. A fragment never reaches the server, so GitHub Pages
-cannot route on it and the version has to live somewhere it can see: the path.
-`/v2/` keeps rendering every link ever written against it, so a later format
-gets `/v3/` and nothing already sent goes stale. An unversioned
-`upshot.fyi/#link` is forwarded to `/v2/` by a head script, because the client
-is the only thing that can see a fragment.
+Ticks and typed numbers are written back into the fragment, so a reader ends up
+holding a link to their own half-finished version, and can pass that on.
 
-`/v1/` is what that promise costs, and it is the whole cost: a static file
-nobody touches again. Links written before v2 still render exactly as they did.
-Nothing new is written against it and the tests no longer cover it.
+Three blocks is the cap. Not a technical limit — a card that needs four blocks is
+two cards.
 
-Fields are bounded by word count rather than URL length, because a model can
-hold to "under 25 words" but cannot count characters of a percent-encoded URL.
-The limits keep a card readable on one phone screen.
+The full spec, with worked examples, is at
+[upshot.fyi/llms.txt](https://upshot.fyi/llms.txt). It is written for a model to
+read, which makes it a decent short read for a human too.
 
-## The site teaches the AI
+## Your links keep working
 
-`/` is a landing page that spells out the format in plain text, and
-`/llms.txt` says the same thing. Point an AI at the domain and it learns the
-format on the spot. Nothing to paste, no saved prompt to go stale, and the
-format can change without breaking anyone's setup.
+The path is the version. `/v2/` will render every link ever written against it,
+permanently. A format change that would alter how an existing card renders gets a
+new path — `/v3/` — rather than an edit. `/v1/` is frozen and still works.
 
-Three things this depends on, all of them found the hard way:
+That is the entire cost of the promise: an old static file nobody touches again.
 
-**The spec is static HTML.** Fetchers don't run JavaScript, so a spec built by
-JS would be invisible to the thing it exists for.
+## Sending links through chat apps
 
-**The verb matters.** "Export this to upshot.fyi" reads to a model as a request
-to submit content to a website, which it refuses. Asking it to *read* the
-domain works.
+A card is only worth anything if the link survives being sent, and chat clients
+are hostile in ways that are invisible until you test them. All of these were
+found by sending real links and seeing what arrived:
 
-**So does the scheme.** `read https://upshot.fyi` is materially more reliable
-than `read upshot.fyi`, which a model has to recognise as a URL before it can
-fetch one - and sometimes searches for instead. Both failures happen at the
-entry point, where nothing downstream gets a chance to work, so both are worth
-the characters.
+- **A raw comma or full stop inside a value** stops WhatsApp turning the text
+  into a link, and the rest arrives as plain text. It doesn't cut at the
+  punctuation — it cuts earlier, so it looks random until you bisect it.
+- **A closing bracket that ends a nested pair** does the same. Invisible until
+  formulas went into URLs, because prose almost never nests brackets.
+- **A pair of `*` or `_`** is eaten as bold or italic before the link is ever
+  clicked, so `j*45` silently arrives as `j45` — a different formula.
 
-**The spec is examples first.** A model copies a worked example far more
-reliably than it applies a rule, and every rule is a branch that can go wrong.
-Eight complete cards come before any prose, and the prose that survives is the
-part that breaks links if ignored.
+The fix is one rule rather than a list of characters to remember: in wording keep
+letters, digits and a hyphen, in a formula also `+ - / = _`, and percent-encode
+everything else. A character nobody has thought of yet is encoded by default.
+That matters more than it sounds — the earlier version was a list, and the list
+was the bug.
 
-## The card
+`test/transport.js` models this channel: it round-trips every character through
+every field, simulates a markdown-rendering chat client, and checks the shipped
+examples still survive both.
 
-A fixed frame with up to three blocks stacked in the middle. The frame is
-always the same shape, whatever the card is about:
+## Running it
 
-| | |
-|---|---|
-| scope line | mono, quiet, one line on what was asked |
-| headline | the conclusion, set large |
-| verdict | one sentence, indented behind an accent rule |
-| **blocks** | 0 to 3, each optionally labelled |
-| signature | model, date, and how to make your own |
+```
+python3 -m http.server 8787
+```
 
-That fixed frame is the whole design language. Accent appears in exactly three
-places - the verdict rule, the block labels, and the markers - so a card is
-recognisable at a glance no matter which blocks it uses.
+Then open `http://localhost:8787/`. There is no build step and no dependencies —
+it is static HTML all the way down.
 
-`g=` starts a block and labels it, and nothing else starts one, so a block
-holds whatever mix of lines it needs:
+## Tests
 
-| | |
-|---|---|
-| `p` | bullets |
-| `o` | numbered steps, where order is the point |
-| `c` | checklist, tappable. Ticks are written back into the fragment, so a viewer ends up holding a link to their own half-finished version and can pass it on. A formula can read them: `ticks`, `boxes`, or a box's own name |
-| `f` | `Label:Value` rows. One or two on their own are set as headline figures, three or more become a spec sheet |
-| `i` | an input box. What the reader types is written back into the fragment, the same bargain the checklist makes |
-| `r` | `Label:Formula`. The card works it out and prints the formula beside it, every name replaced by what it held |
-| `t` | `Label:Condition:When+true:When+false`. The card tests the condition and prints the wording that applies |
+```
+node test/run.js        # the renderer. Drives whatever Chrome is installed
+node test/transport.js  # the URL itself. No Chrome, no model, no network
+```
 
-Composition rather than a fixed set of card types, because the alternative was
-an enum the model had to classify into, and past a handful of options an LLM
-starts guessing. There is nothing to classify now: it picks lines that fit. A
-comparison is two labelled `p` blocks, which is also pros and cons, which is
-also anything else that pairs.
+Both are dependency-free. `run.js` asks whether the card draws what the URL says.
+`transport.js` asks the question underneath: whether the URL can survive being
+sent at all — 900+ character-by-field round trips, the shipped examples through a
+simulated chat client, and 4000 generated formulas checked against plain
+JavaScript arithmetic.
 
-Three blocks is the cap. Not a technical limit - a card that needs four blocks
-is two cards. There is no cap on the lines inside one, because how many boxes a
-tool needs is part of the tool.
+It also scores a batch of real generations:
 
-A box can carry a name - `c=You have a railcard:card` - which a formula reads
-as 1 when ticked and 0 when not. Two more names are always in scope: `ticks`,
-how many boxes are ticked, and `boxes`, how many there are. Name the boxes when
-the options differ from each other, count them when only how many matters. That is the whole of "referenceable
-checkboxes" - no name per item, no change to `c=` or `k=`, nothing new in the
-grammar - and it buys the shape a static list cannot do: tick what applies, get
-a score and a verdict. `ticks/boxes` rather than a hardcoded total, so the card
-survives the model adding a fifth item. Every item weighs the same; if
-weighting ever matters, per-item names are still available and this does not
-block them.
+```
+node test/transport.js links.txt   # one URL per line
+```
 
-`i` and `r` are why the card is a tool rather than an answer: the AI writes the
-formula, the reader supplies the numbers. Any question with that split is a
-card waiting to be made. `t` is the same trick for a decision - the sender
-writes the condition and both readings, the reader's own numbers pick which one
-they see.
+which reports valid-first-render plus a tally of what went wrong. Links are
+scored as text, exactly as they left the model — opening one in a browser proves
+nothing, because the address bar never truncates and never renders markdown.
 
-Inputs are read across the whole card before anything is computed, and results
-are computed in document order, so a formula can name an input anywhere on the
-card and a result defined above it. That makes a cycle impossible rather than
-something to detect, and it lets a two-stage card work: name a step in one
-block, use it in the next.
+## Writing another renderer
 
-### Why `f` decides its own size
-
-`n=` used to exist for a headline figure, next to `f=` for a spec-sheet row.
-They were the same object - a labelled value - with the fields in opposite
-orders, so the only thing the model chose between them was a look. That is the
-card's job, not the model's, and the reversed order was a live trap. One key
-now, and the card sets one or two rows large only when they are the whole
-block: beside a bullet and a result, a row at 34px is not a figure, it is a row
-shouting.
-
-## Sharing
-
-The link is the export, so the share button hands the URL to
-`navigator.share` - the native sheet on a phone, a clipboard copy on desktop.
-The other action copies the card as plain text for pasting back into a chat,
-formula and all, because someone whose first reaction is "is that right?" is
-about to paste it into their own model.
-
-v1 drew the card onto a canvas and shared a PNG, for Instagram and X where a
-link is no use. That is gone. A v2 card is mostly inputs, results and
-checklists, and a picture of a tool is not one - it freezes one reader's
-numbers and presents them as the answer. The OS screenshot button now does the
-job, on a page that was already designed, which is what the hand-rolled
-renderer was really for.
-
-Removing it took about 650 lines with it, and with them the tax the README used
-to describe: every block declaring two implementations, one in HTML and one in
-canvas ops, that had to be kept in agreement. A block declares its HTML and
-nothing else.
-
-## Gotchas, all found by sending real links
-
-**Punctuation.** A raw comma or full stop inside a value stops WhatsApp turning
-the text into a link, and the rest arrives as plain text. Encode them as `%2C`
-and `%2E`. A closing bracket that ends a nested pair does it too, which is why
-the spec tells a model to name a step and reuse it rather than nest.
-
-**Markdown in the chat you are replying in.** A bare `*` is an italic marker
-and gets eaten before the reader ever copies the link, so `*` is always `%2A`.
-v1 had the same problem with `~`, which is one of the reasons v2 separates
-fields with `:` instead.
-
-**`:` is safe**, tested end to end through WhatsApp, including after digits
-where a linkifier might read `host:port`. `=`, `<` and `>` inside a condition
-are safe too and are written bare.
-
-**`+` where `&` was needed.** The one failure seen in real generations: a model
-writes `&g=Freedom+r=Raw+runway`, the `+` decodes to a space, and the whole
-`r=` is swallowed into the label - taking every formula downstream with it. The
-card repairs this, but only inside a `g=`: a label is a few words and never
-contains `r=`, so the split is unambiguous there in a way it would not be
-inside a sentence.
-
-**Length**, `&`, `%22`, hyphens, digits and capitals are all fine, tested to 800
-characters. `VISION.md` has the full results.
+The format is documented for reimplementation, not just for use. `/llms.txt` is
+the whole specification, `test/transport.js` contains the encoder as executable
+code, and the tests are the closest thing to a conformance suite. If you write a
+renderer, links written for `/v2/` should render identically on it.
 
 ## Files
 
@@ -214,71 +177,17 @@ characters. `VISION.md` has the full results.
 | `index.html` | landing page and spec. Static, plus a head redirect for unversioned `#links` |
 | `v2/index.html` | the card: parser, renderer, and nothing else |
 | `v1/index.html` | the previous format, frozen |
-| `broken/index.html` | the page a link with no content in it lands on |
+| `broken/index.html` | the page a link with nothing renderable in it gets |
 | `llms.txt` | the format, for AIs that look there |
-| `robots.txt`, `sitemap.xml` | let crawlers in, point at the spec |
-| `CNAME` | custom domain for GitHub Pages |
-| `VISION.md` | product direction, decisions, and test findings |
-| `test/run.js` | regression tests, no dependencies |
+| `made/` | a hand-curated gallery of cards people have made |
+| `test/` | the two suites |
+| `VISION.md` | product direction, decisions, what was refused, and why |
 
-## Running it
+## Licence
 
-```
-python3 -m http.server 8787
-```
+MIT — see [LICENSE](LICENSE).
 
-Open `http://localhost:8787/` for the homepage, and
-`http://localhost:8787/v2/#h=Hello&v=A+verdict&m=GPT-5&d=2026-09-10` for a
-card.
-
-## Tests
-
-```
-node test/run.js
-```
-
-Drives whatever Chrome is on the machine. No dependencies, no install. Set
-`CHROME=/path/to/chrome` if it cannot find one.
-
-v1's suite existed mostly to police the share image: the browser laid the card
-out from CSS, `layout()` re-derived it in canvas ops, and the two could drift
-apart silently, so every case was pinned to an exact pixel height in
-`test/baselines.json`. Those heights depended on the operating system's font
-metrics and were only meaningful on the machine that wrote them.
-
-Both are gone. With one implementation there is nothing to keep in agreement,
-so the tests assert what the page renders instead - how many blocks, and every
-figure in them - which is the same answer on every machine.
-
-What they cover:
-
-- every block kind, alone and mixed together in one block
-- the arithmetic, the evaluator and the number formatter, including the
-  formulas that should fail
-- both branches of a `t=` decision
-- the `+`-for-`&` repair, which has to come out identical to the card the model
-  meant to write
-- typing and ticking: the card, the `w=`/`k=` in the link, and what a reader
-  sees when that link is opened fresh
-- copy-for-AI carrying every block kind, which is where a key added to the
-  renderer alone shows up as raw text
-- nothing is fetched from a third party, the inline script parses, `/v2/` still
-  ships an empty `<main>`, and nothing draws the card into a canvas
-- the spec has not drifted: every worked example appears byte-identical in both
-  the landing page and `llms.txt`, both escape the same characters, and every
-  key in `BLOCK_KEYS` is documented
-
-## Status
-
-Works end to end. Deployed on GitHub Pages.
-
-Reliability of the readable URL was the open question and now looks settled for
-frontier models: around thirty consecutive clean links from GPT-5.6, and every
-card it wrote through the v2 spec parsed and rendered. The one real failure was
-the `+`-for-`&` slip above, which the card now repairs.
-
-The unproven part is smaller and further out: whether a model that has to
-invent a formula, rather than apply a known one, invents a defensible one. A
-card renders `(upside*confidence*urgency)/10` with exactly the authority it
-renders `bill/n`, and the printed working proves the arithmetic, not the
-premise.
+Cards themselves are not covered by it: a card lives entirely in its own URL and
+never touches this repository. Anyone can put any text in a link, so text on the
+domain is not published or endorsed by us, and never reaches us to moderate or
+remove.
