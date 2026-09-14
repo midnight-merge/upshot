@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- How the link looks when it is pasted somewhere. -->
-<meta name="description" content="Describe the tiny tool you need to your AI - a calculator, a checklist, a decision. Upshot turns it into a page that works, and the whole thing is the link it hands back. Free, no account, nothing stored.">
+<meta name="description" content="Tell any AI what you need - a calculator, a checklist, a decision. The link it hands back is the tool itself. Free, no account, nothing stored.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="upshot">
 <meta property="og:url" content="https://upshot.fyi/">
 <meta property="og:title" content="Make the tiny tool you wish existed">
-<meta property="og:description" content="Describe it to your AI. Upshot turns it into a page that works - and the whole thing is the link.">
+<meta property="og:description" content="Describe it to any AI you already use. It hands back a link, and the link is the tool.">
 <meta property="og:image" content="https://upshot.fyi/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -25,7 +25,7 @@
   "url": "https://upshot.fyi/",
   "applicationCategory": "UtilitiesApplication",
   "isAccessibleForFree": true,
-  "description": "Describe the tiny tool you need to your AI - a calculator, a checklist, a decision. Upshot turns it into a page that works, and the whole thing is the link it hands back."
+  "description": "Tell any AI what you need - a calculator, a checklist, a decision. The link it hands back is the tool itself. Free, no account, nothing stored."
 }
 </script>
 <script>
@@ -136,10 +136,6 @@ h1{
 
 
 p{margin:0 0 14px;font-size:15px;color:var(--dim)}
-/* The two lines that set up the command. The first says what the site is for
-   in one breath; the second is the cue, so the green block below reads as
-   something to type rather than a pull quote. */
-.sub{margin-bottom:18px}
 /* the page has no other italics - emphasis here is brightness, the same way
    the card separates a verdict from its reasons */
 em{font-style:normal;color:var(--ink)}
@@ -163,6 +159,11 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
    left, and the corner each bubble squares off is which side said it */
 .demos{margin:28px 0 0;padding-top:22px;border-top:1px solid var(--hair)}
 .demos + .note{margin-top:22px}
+/* what the set below is for. Without it the first SOMETHING TO POST arrives
+   as a category label for nothing in particular - the two axes the demos
+   actually vary, assistant and shape, are only legible once they are named. */
+.demos .lead{margin:0 0 24px}
+.demos .lead .us{color:var(--accent)}
 .demo{display:flex;flex-direction:column;gap:6px;margin:0 0 28px}
 /* what shape this one is - the breadth is the point of the set, and nobody
    opens four cards to find it out */
@@ -178,6 +179,13 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
   border-radius:15px 15px 5px 15px;
   background:rgba(247,247,244,.055);
   font-size:13.5px;line-height:1.5;color:var(--dim);
+}
+/* the same sender label the hero puts above its ask - without it a demo is
+   a quote, and the reply below it is not obviously a different speaker */
+.demo .ask::before{
+  display:block;margin:0 0 5px;text-align:right;
+  font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--faint);content:"you";
 }
 .demo .ask .say{display:block;margin-top:8px;color:var(--accent)}
 /* The reply IS the link. This started as a tinted bubble with a trailing
@@ -197,6 +205,31 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
   border-bottom:1px solid rgba(200,255,61,.42);
   background:rgba(200,255,61,.075);
   color:var(--ink);font-size:14.5px;line-height:1.4;letter-spacing:-.01em;
+}
+
+/* which assistant wrote it. The name is the claim - the format is not one
+   model's trick - so it has to be the model that actually wrote THAT card,
+   and the card's own m= says so to anyone who opens it. */
+.demo a.reply .reply-label{
+  display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  margin:0 0 5px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--faint);
+}
+/* A reader watching the page said "I did not know those were links" - on a
+   page that reads as a chat, a bubble is something someone said, not
+   something you press. The arrow glyph failed because it rode the end of a
+   wrapped line. So the affordance gets a fixed corner of its own and says the
+   word, lit the way every other live thing on the page is lit. */
+.demo a.reply .go{color:var(--accent)}
+.demo a.reply:hover .go{color:inherit}
+/* what the assistant actually sends back. Prose in this bubble was the
+   reason nobody knew it was tappable: a sentence is something said, a URL is
+   something you open. Truncated by the CSS rather than by hand, so it cannot
+   drift from the href above it. */
+.demo a.reply .reply-text{
+  display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-family:var(--mono);font-size:11.5px;line-height:1.4;letter-spacing:0;
 }
 
 .demo a.reply:hover{color:var(--accent);background:rgba(200,255,61,.15);border-color:var(--accent)}
@@ -353,9 +386,6 @@ pre{
   <main>
     <h1>Make the tiny tool you wish existed</h1>
 
-    <p class="sub">Describe it to your AI. Upshot turns it into a page that
-      works - and the whole thing is the link it hands back.</p>
-
     <!-- The hero is the product, not a description of it. The bubbles arrive
          in sequence and then the card itself opens underneath, in an iframe
          pointed at a REAL /v2/ URL - so what a first-time reader plays with is
@@ -381,37 +411,40 @@ pre{
       <p class="flow">Put 4 in People. Watch it change its mind.</p>
     </div>
 
-    <p class="after">That page is not stored anywhere - it <em>is</em> the link.
-      No account, no database, nothing we can see. Send it to anyone.</p>
+    <p class="after">That card is not stored anywhere. No account, no database,
+      nothing we can see - and you can send it to anyone.</p>
 
     <!-- Four reasons to make one, not four shapes of the same reason: to
          post, to decide, to plan, to face. The order climbs - read it,
          tick it, work it out, let it reach a verdict. The label says which,
          so the range is legible without opening four cards. -->
     <div class="demos">
+    <p class="lead"><span class="us">upshot</span> is a tool that lives in a
+      link. Whatever assistant you already use can write you one, and what it
+      writes depends on what you asked for.</p>
     <div class="demo">
       <p class="kind">Something to post</p>
       <p class="ask">work has me on a plane constantly - did 9 countries this year, 23 flights, 41 nights away, longest stretch 11 nights, about 31,400 miles. make me something I can post.
         <span class="say">read https://upshot.fyi and export this</span></p>
-      <a class="reply" href="/v2/#a=My+year+of+travel&amp;h=Nine+countries%2C+forty+one+nights+away&amp;v=Forty+one+nights+away+and+not+one+of+them+at+home%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=The+year&amp;f=Countries:9&amp;f=Flights:23&amp;f=Nights+away:41&amp;f=Miles+flown:31%2C400&amp;f=Longest+trip:11+nights">Nine countries, forty one nights away</a>
+      <a class="reply" href="/v2/#a=My+year+of+travel&amp;h=Nine+countries%2C+forty+one+nights+away&amp;v=Forty+one+nights+away+and+not+one+of+them+at+home%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=The+year&amp;f=Countries:9&amp;f=Flights:23&amp;f=Nights+away:41&amp;f=Miles+flown:31%2C400&amp;f=Longest+trip:11+nights"><span class="reply-label">ChatGPT<span class="go">open</span></span><span class="reply-text">upshot.fyi/v2/#a=My+year+of+travel&amp;h=Nine+countries%2C+forty+one+nights+away&amp;v=Forty+one+nights+away+and+not+one+of+them+at+home%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=The+year&amp;f=Countries:9&amp;f=Flights:23&amp;f=Nights+away:41&amp;f=Miles+flown:31%2C400&amp;f=Longest+trip:11+nights</span></a>
     </div>
     <div class="demo">
       <p class="kind">Something to check</p>
       <p class="ask">physicist here, I check measurements against predictions all day. want to know how many sigma apart they are and whether that is actually significant.
         <span class="say">read https://upshot.fyi and export this</span></p>
-      <a class="reply" href="/v2/#a=Whether+a+measurement+and+a+prediction+actually+disagree&amp;h=Five+sigma+or+it+is+not+a+discovery&amp;v=Physicists+call+it+significant+at+five+sigma+-+anything+less+is+probably+noise%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=Your+numbers&amp;i=Measured+value:0:measured&amp;i=Predicted+value:0:predicted&amp;i=One+sigma+uncertainty:1:sigma&amp;g=Result&amp;r=Difference:abs%28measured-predicted%29:diff&amp;r=Sigma+away:diff/sigma:z&amp;g=Verdict&amp;t=Significant:z%3E=5:Discovery-level+-+five+sigma+or+more:Not+yet+-+under+five+sigma">Five sigma or it is not a discovery</a>
+      <a class="reply" href="/v2/#a=Whether+a+measurement+and+a+prediction+actually+disagree&amp;h=Five+sigma+or+it+is+not+a+discovery&amp;v=Physicists+call+it+significant+at+five+sigma+-+anything+less+is+probably+noise%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=Your+numbers&amp;i=Measured+value:0:measured&amp;i=Predicted+value:0:predicted&amp;i=One+sigma+uncertainty:1:sigma&amp;g=Result&amp;r=Difference:abs%28measured-predicted%29:diff&amp;r=Sigma+away:diff/sigma:z&amp;g=Verdict&amp;t=Significant:z%3E=5:Discovery-level+-+five+sigma+or+more:Not+yet+-+under+five+sigma"><span class="reply-label">ChatGPT<span class="go">open</span></span><span class="reply-text">upshot.fyi/v2/#a=Whether+a+measurement+and+a+prediction+actually+disagree&amp;h=Five+sigma+or+it+is+not+a+discovery&amp;v=Physicists+call+it+significant+at+five+sigma+-+anything+less+is+probably+noise%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=Your+numbers&amp;i=Measured+value:0:measured&amp;i=Predicted+value:0:predicted&amp;i=One+sigma+uncertainty:1:sigma&amp;g=Result&amp;r=Difference:abs%28measured-predicted%29:diff&amp;r=Sigma+away:diff/sigma:z&amp;g=Verdict&amp;t=Significant:z%3E=5:Discovery-level+-+five+sigma+or+more:Not+yet+-+under+five+sigma</span></a>
     </div>
     <div class="demo">
       <p class="kind">Something to plan</p>
-      <p class="ask">trying to get back in shape - want to get from 85kg to 75kg. what is that actually going to take?
+      <p class="ask">buying a flat, borrowing 250k at 4.5%. should I take the 25 year term or stretch it to 35?
         <span class="say">read https://upshot.fyi and export this</span></p>
-      <a class="reply" href="/v2/#a=What+will+it+take+to+hit+your+goal%3F&amp;h=Turn+your+fitness+goal+into+a+real+plan&amp;v=See+your+estimated+timeline%2C+workouts+and+training+hours%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=Your+goal&amp;i=Current+weight+kg:85:current&amp;i=Target+weight+kg:75:target&amp;i=Workouts+per+week:3:workouts&amp;i=Minutes+per+workout:45:minutes&amp;i=Average+daily+calorie+deficit:400:deficit&amp;r=Weight+to+lose+kg:abs%28current-target%29:lose&amp;r=Estimated+days:lose%2A7700/deficit:days&amp;r=Estimated+weeks:days/7:weeks&amp;r=Total+workouts:weeks%2Aworkouts:totalworkouts&amp;r=Total+training+hours:totalworkouts%2Aminutes/60:traininghours">Turn your fitness goal into a real plan</a>
-    </div>
+      <a class="reply" href="/v2/#a=Which+mortgage+term+to+take&amp;h=A+longer+term+is+a+smaller+payment+and+a+much+bigger+bill&amp;v=Ten+more+years+costs+little+each+month+and+a+great+deal+in+total%2E&amp;m=Claude+Opus+5&amp;d=2026-09-14&amp;g=Your+term&amp;s=25+years:300:months&amp;s=30+years:360:months&amp;s=35+years:420:months&amp;g=Your+loan&amp;i=Amount+borrowed:250000:loan&amp;i=Interest+rate+percent:4.5:apr&amp;r=:apr/100/12:rate&amp;r=Monthly+payment:loan%2Arate/%281-pow%281+rate%2C0-months%29%29:pay&amp;r=Interest+over+the+term:pay%2Amonths-loan"><span class="reply-label">Claude<span class="go">open</span></span><span class="reply-text">upshot.fyi/v2/#a=Which+mortgage+term+to+take&amp;h=A+longer+term+is+a+smaller+payment+and+a+much+bigger+bill&amp;v=Ten+more+years+costs+little+each+month+and+a+great+deal+in+total%2E&amp;m=Claude+Opus+5&amp;d=2026-09-14&amp;g=Your+term&amp;s=25+years:300:months&amp;s=30+years:360:months&amp;s=35+years:420:months&amp;g=Your+loan&amp;i=Amount+borrowed:250000:loan&amp;i=Interest+rate+percent:4.5:apr&amp;r=:apr/100/12:rate&amp;r=Monthly+payment:loan%2Arate/%281-pow%281+rate%2C0-months%29%29:pay&amp;r=Interest+over+the+term:pay%2Amonths-loan</span></a>
+      </div>
     <div class="demo">
       <p class="kind">Something to settle</p>
       <p class="ask">review's coming up at work and I think I'm underpaid. do I actually have a case for a rise?
         <span class="say">read https://upshot.fyi and export this</span></p>
-      <a class="reply" href="/v2/#a=Whether+I+have+a+case+for+a+pay+rise&amp;h=Four+of+these+and+you+have+a+case&amp;v=Two+is+a+conversation%2E+Four+is+a+number+they+have+to+answer%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=What+you+have&amp;c=Hit+every+target+this+year&amp;c=Took+on+scope+nobody+replaced&amp;c=Checked+what+the+market+pays&amp;c=Someone+senior+who+will+back+you&amp;c=Six+months+since+you+last+asked&amp;g=So&amp;t=Verdict:ticks%3E=4:Ask+for+it:Not+yet">Four of these and you have a case</a>
+      <a class="reply" href="/v2/#a=Whether+you+have+a+case+for+a+pay+rise&amp;h=Two+or+more+ticks+gives+you+a+strong+case&amp;v=A+pay+rise+requires+either+increased+market+value%2C+expanded+responsibilities%2C+or+proven+high+performance%2E&amp;m=Gemini&amp;d=2026-09-14&amp;g=Your+checklist&amp;c=You+take+on+tasks+above+your+job+description:above&amp;c=Your+market+rate+is+higher+than+your+pay:market&amp;c=You+consistently+exceed+your+targets:targets&amp;c=You+haven%27t+had+a+pay+increase+in+over+a+year:time&amp;r=Score:ticks/boxes%2A100:pct&amp;t=Verdict:ticks%3E=2:Strong+case:Weak+case"><span class="reply-label">Gemini<span class="go">open</span></span><span class="reply-text">upshot.fyi/v2/#a=Whether+you+have+a+case+for+a+pay+rise&amp;h=Two+or+more+ticks+gives+you+a+strong+case&amp;v=A+pay+rise+requires+either+increased+market+value%2C+expanded+responsibilities%2C+or+proven+high+performance%2E&amp;m=Gemini&amp;d=2026-09-14&amp;g=Your+checklist&amp;c=You+take+on+tasks+above+your+job+description:above&amp;c=Your+market+rate+is+higher+than+your+pay:market&amp;c=You+consistently+exceed+your+targets:targets&amp;c=You+haven%27t+had+a+pay+increase+in+over+a+year:time&amp;r=Score:ticks/boxes%2A100:pct&amp;t=Verdict:ticks%3E=2:Strong+case:Weak+case</span></a>
     </div>
     </div>
 
@@ -473,6 +506,10 @@ One number that is the whole point:
 
 https://upshot.fyi/v2/#a=What+the+annual+plan+actually+saves&amp;h=Two+months+free%2C+near+enough&amp;v=The+discount+is+worth+more+than+the+interest+on+paying+up+front%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=The+saving&amp;f=Off+the+monthly+price:17%25
 
+A choice between options, where the option carries the number:
+
+https://upshot.fyi/v2/#a=What+I+repay+on+my+student+loan&amp;h=Nine+percent+of+everything+over+the+threshold&amp;v=The+plan+you+are+on+decides+the+threshold%2C+and+nothing+else+changes%2E&amp;m=GPT-5&amp;d=2026-09-14&amp;g=Your+plan&amp;s=Plan+1:26900:thr&amp;s=Plan+2:29385:thr&amp;s=Plan+4:33795:thr&amp;s=Plan+5:25000:thr&amp;g=Your+pay&amp;i=Annual+salary:40000:salary&amp;r=Repayment:max%280%2Csalary-thr%29%2A0%2E09
+
 An answer with boxes a formula can read:
 
 https://upshot.fyi/v2/#a=What+the+ticket+actually+costs+me&amp;h=The+railcard+pays+for+itself+on+this+trip&amp;v=Two+discounts+stack+here%2C+which+is+the+part+people+miss%2E&amp;m=GPT-5&amp;d=2026-09-11&amp;g=Your+ticket&amp;i=Full+fare:84:fare&amp;c=You+have+a+railcard:card&amp;c=Travelling+off+peak:offpeak&amp;r=Discount:card%2A0%2E34+offpeak%2A0%2E1:cut&amp;r=You+pay:fare-fare%2Acut
@@ -506,6 +543,7 @@ look. The card decides how things are drawn:
   Just saying something?      p
   Order matters?              o
   The reader ticks it off?    c
+  One of several, not any?    s
   A label and a known value?  f
   The reader changes it?      i
   Worked out from those?      r
@@ -517,6 +555,13 @@ o  step, under 25 words. A how-to, where order is the point.
 c  checklist item, under 20 words. The reader can tick these off, and the
    ticks are kept in the link they hold. A formula can read them - see ticks
    below. Do not send k=.
+s  one option of a pick-one, written Label:Value:name, e.g.
+   s=Plan+2:29385:thr. Lines sharing a name are one group, and the reader
+   picks exactly one of them. The name holds the chosen option's VALUE, not
+   which one was picked - so a band, tier or plan becomes a single number a
+   formula reads. Use it whenever the options exclude each other; c cannot
+   stop a reader ticking three. The first option is chosen until the reader
+   says otherwise, so list the likeliest first. Do not send x=.
 f  row, written Label:Value, e.g. f=Cold+start:180ms. One or two are drawn
    large, three or more become a spec sheet. You do not choose which.
 i  input, written Label:Start:name, e.g. i=Seats:4:seats. A box the reader

@@ -39,8 +39,8 @@ These ones are live. Open them, type in the boxes, watch the numbers move:
   of URL.
 - **[Do I have enough runway to quit?][runway]** — change a number and the
   verdict at the bottom changes its mind.
-- **[UK take-home pay, with student loan plans][payslip]** — tick a plan, and
-  the tick is written back into your copy of the link.
+- **[UK take-home pay, with student loan plans][payslip]** — pick your plan,
+  and the choice is written back into your copy of the link.
 
 More at [upshot.fyi/made](https://upshot.fyi/made/).
 
@@ -97,10 +97,17 @@ whatever mix of lines it needs:
 | `p` | a bullet |
 | `o` | a numbered step, where order is the point |
 | `c` | a checklist item you can tick off |
+| `s` | one option of a pick-one; the lines sharing a name are the group |
 | `f` | a `Label:Value` row |
 | `i` | a box you type a number into |
 | `r` | a `Label:Formula` result, worked out and shown with its working |
 | `t` | a `Label:Condition:When+true:When+false` decision |
+
+Where the options rule each other out — a tax band, a tier, a plan — `s=` is
+the one that says so. Each option carries its own number and the group's name
+holds whichever is chosen, so a whole table of thresholds collapses into
+`max(0,salary-thr)*0.09`. A checklist cannot do this: nothing stops a reader
+ticking three plans.
 
 The AI writes the formulas; you type the numbers. A `t=` handles a decision the
 same way — the condition and both outcomes are written in, and whichever one
@@ -213,4 +220,4 @@ remove.
 
 [dinner]: https://upshot.fyi/v2/#a=Splitting+dinner+three+ways&h=About+twenty+seven+each&v=Service+is+already+in+the+total%2C+so+there+is+nothing+more+to+add%2E&m=GPT-5&d=2026-09-10&g=Split+it&i=Bill:80:bill&i=People:3:n&r=Each+pays:bill/n
 [runway]: https://upshot.fyi/v2/#a=Whether+I+have+enough+runway+to+quit&h=Nine+months+is+the+number+to+beat&v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&m=GPT-5&d=2026-09-10&g=Runway&i=Cash+saved:18000:cash&i=Monthly+burn:2200:burn&i=Months+you+want:9:target&r=Runway:cash/burn:months&t=Ready+to+walk:months%3E=target:Go+now:Not+yet
-[payslip]: https://upshot.fyi/v2/#a=UK+take-home+pay+calculator+with+student+loan&h=Calculate+your+2026%2F27+take-home+pay&v=Enter+salary%2C+tick+one+student+loan+plan%2C+and+optionally+Postgraduate+Loan%2E&m=GPT-5%2E6+Sol&d=2026-09-11&g=Pay&i=Annual+salary:40000:salary&r=Personal+allowance:max%280%2C12570-max%280%2Csalary-100000%29%2F2%29:allowance&r=Taxable+income:max%280%2Csalary-allowance%29:taxable&r=Income+tax:min%28taxable%2C37700%29%2A0%2E2%2Bmax%280%2Cmin%28taxable-37700%2C87440%29%29%2A0%2E4%2Bmax%280%2Ctaxable-125140%29%2A0%2E45:tax&r=National+Insurance:min%28max%280%2Csalary-12570%29%2C37700%29%2A0%2E08%2Bmax%280%2Csalary-50270%29%2A0%2E02:ni&g=Student+loan&c=Plan+1+%28tick+one+plan%29:p1&c=Plan+2:p2&c=Plan+4:p4&c=Plan+5:p5&c=Postgraduate+Loan:pg&r=Student+loan:p1%2Amax%280%2Csalary-26900%29%2A0%2E09%2Bp2%2Amax%280%2Csalary-29385%29%2A0%2E09%2Bp4%2Amax%280%2Csalary-33795%29%2A0%2E09%2Bp5%2Amax%280%2Csalary-25000%29%2A0%2E09%2Bpg%2Amax%280%2Csalary-21000%29%2A0%2E06:loan&g=Take+home&r=Annual+take-home:salary-tax-ni-loan:net&r=Monthly+take-home:net%2F12
+[payslip]: https://upshot.fyi/v2/#a=UK+take-home+pay+calculator+with+student+loan&h=Calculate+your+2026%2F27+take-home+pay&v=Enter+your+salary%2C+pick+your+student+loan+plan%2C+and+tick+Postgraduate+if+you+have+one%2E&m=Claude+Opus+5&d=2026-09-14&g=Pay&i=Annual+salary:40000:salary&r=Personal+allowance:max%280%2C12570-max%280%2Csalary-100000%29/2%29:allowance&r=Taxable+income:max%280%2Csalary-allowance%29:taxable&r=Income+tax:min%28taxable%2C37700%29%2A0%2E2+max%280%2Cmin%28taxable-37700%2C87440%29%29%2A0%2E4+max%280%2Ctaxable-125140%29%2A0%2E45:tax&r=National+Insurance:min%28max%280%2Csalary-12570%29%2C37700%29%2A0%2E08+max%280%2Csalary-50270%29%2A0%2E02:ni&g=Student+loan&s=Plan+2:29385:thr&s=Plan+1:26900:thr&s=Plan+4:33795:thr&s=Plan+5:25000:thr&c=I+also+have+a+Postgraduate+Loan:pg&r=Student+loan:max%280%2Csalary-thr%29%2A0%2E09+pg%2Amax%280%2Csalary-21000%29%2A0%2E06:loan&g=Take+home&r=Annual+take-home:salary-tax-ni-loan:net&r=Monthly+take-home:net/12

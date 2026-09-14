@@ -215,6 +215,50 @@ p{margin:0 0 15px;font-size:15px;color:var(--dim)}
 .checks input:checked + span{color:var(--faint)}
 .checks input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 
+/* pick-one - the checklist row, drawn round. Same geometry to the pixel, so a
+   card carrying both reads as one list of questions rather than two widgets;
+   round against square is the only thing saying that this one is exclusive.
+   The chosen row stays lit while the others go quiet, which is the opposite of
+   a tick going quiet when it is done - here the choice IS the answer. */
+.picks{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.picks label{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  cursor:pointer;
+  font-size:15.5px;
+  line-height:1.5;
+  color:var(--faint);
+}
+.picks input{
+  appearance:none;
+  -webkit-appearance:none;
+  flex:none;
+  width:16px;
+  height:16px;
+  margin:3px 0 0;
+  border:1.5px solid var(--faint);
+  border-radius:50%;
+  background:transparent;
+  cursor:pointer;
+}
+/* the dot is an inset ring rather than a child element, so the control stays
+   one box and the row cannot reflow when the choice moves */
+.picks input:checked{
+  border-color:var(--accent);
+  background:var(--accent);
+  box-shadow:inset 0 0 0 3px var(--card);
+}
+.picks input:checked + span{color:var(--ink)}
+.picks input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
 /* inputs - a checklist row with a number in place of the tick. Same shape for
    the same reason: a control on the left the reader can change, and what it is
    called beside it. The width is fixed rather than fitted to the value, so a
@@ -480,12 +524,12 @@ function decodeOnce(v){
    up to three blocks stacked in the middle. g= starts a block and labels it;
    the key that follows decides what kind. Blocks come out in the order they
    appear in the URL, so the grammar needs no numbering and no nesting. */
-var BLOCK_KEYS = ['p', 'o', 'c', 'f', 'r', 't', 'i'];
+var BLOCK_KEYS = ['p', 'o', 'c', 'f', 'r', 't', 'i', 's'];
 var MAX_BLOCKS = 3;
 
 /* Keys whose value is several fields with a colon between them. They are the
    only ones that travel with a written colon still disguised - see MARK. */
-var FIELDED = ['f', 'i', 'r', 't', 'c'];
+var FIELDED = ['f', 'i', 'r', 't', 'c', 's'];
 
 /* A colon is the field separator and is also an ordinary character in English.
    Decoding %3A on the way in would make the two the same thing, which is why a
@@ -530,7 +574,7 @@ function parse(hash){
   var pairs = [];
   hash.replace(/^#/,'').split('&').forEach(function(pair){
     if(/^g=/.test(pair)){
-      var bits = pair.split(/\+(?=[gpocfir]=)/);
+      var bits = pair.split(/\+(?=[gpocfirs]=)/);
       if(bits.length > 1){ pairs = pairs.concat(bits); return; }
     }
     pairs.push(pair);
@@ -577,7 +621,7 @@ function parse(hash){
   out.blocks = out.blocks.filter(function(b){ return keep.indexOf(b.group) >= 0; });
   // worked out here rather than while drawing, so every reader of a parsed
   // card - the renderer, the share image, copy for AI - sees the same numbers
-  computeAll(out.blocks, out.w, out.k);
+  computeAll(out.blocks, out.w, out.k, out.x);
   return out;
 }
 
@@ -902,6 +946,54 @@ function checkField(item){
 
    Seeded AFTER the inputs, so an input that happens to be called `ticks`
    cannot quietly redefine what the spec says the word means. */
+/* Pick-one, as the number a formula reads.
+
+   Lines sharing a name are one group - a repeated key rather than a separator
+   or a nested list, which is the same bargain every other key makes. The name
+   does not resolve to WHICH option is chosen; it resolves to the chosen
+   option's value, which is the whole point. A tax band's threshold stops being
+   four multiplied-out terms and becomes one number that changes.
+
+   Groups run card-wide and in document order, so one x= covers all of them the
+   way one k= covers every checklist. The first option is chosen until the
+   reader says otherwise: a card has to be good before anyone touches it, and a
+   group defaulting to nothing would land every formula below it on a dash. */
+function readPicks(blocks, chosen, env){
+  var picked = String(chosen == null ? '' : chosen).split('~');
+  var order = [], byName = {};
+  blocks.forEach(function(b){
+    if(b.type !== 's') return;
+    b.options = b.items.map(function(item){
+      // Label:Value:name - an i= with the reader's choice in place of a box
+      var f = fields(item, 3);
+      var value = parseFloat(f[1].trim());
+      if(!isFinite(value)) value = 0;
+      var name = f[2].trim();
+      if(!Object.prototype.hasOwnProperty.call(byName, name)){
+        byName[name] = {name: name, index: order.length, options: []};
+        order.push(byName[name]);
+      }
+      var g = byName[name];
+      var opt = {label: f[0].trim(), value: value, name: name,
+                 group: g.index, slot: g.options.length, on: 0};
+      g.options.push(opt);
+      return opt;
+    });
+  });
+  order.forEach(function(g){
+    var at = parseInt(picked[g.index], 10);
+    if(!isFinite(at) || at < 0 || at >= g.options.length) at = 0;
+    g.chosen = at;
+    g.options.forEach(function(o, i){ o.on = i === at ? 1 : 0; });
+    // First claim on a name wins here too - an i= or an earlier group holding
+    // this name is not rebound, the same way a duplicate input is dropped.
+    if(g.name && !Object.prototype.hasOwnProperty.call(env, g.name)){
+      env[g.name] = g.options[at] ? g.options[at].value : 0;
+    }
+  });
+  return order;
+}
+
 function readTicks(blocks, ticked){
   var marks = String(ticked == null ? '' : ticked);
   var names = {}, boxes = 0, ticks = 0;
@@ -946,13 +1038,16 @@ function restorePlus(src){
     .replace(/ /g, '+');
 }
 
-function computeAll(blocks, written, ticked){
+function computeAll(blocks, written, ticked, chosen){
   var counted = readTicks(blocks, ticked);
   // ticks/boxes are reserved and claim their names first, so nothing later -
   // an input, a named box, or a result - can knock them out from under a
   // checklist formula that is already reading them.
   var env = {ticks: counted.ticks, boxes: counted.boxes};
   readInputs(blocks, written, env);
+  // after the inputs, so an i= holding the same name keeps it - and before the
+  // named boxes, for no reason beyond document order being the tie-break
+  readPicks(blocks, chosen, env);
   for(var name in counted.names){
     if(Object.prototype.hasOwnProperty.call(counted.names, name) &&
        !Object.prototype.hasOwnProperty.call(env, name)) env[name] = counted.names[name];
@@ -1091,6 +1186,22 @@ const BLOCKS = {
       }).join('') + '</div>';
     },
 
+  },
+
+  s: {
+    /* A real <input type=radio>, grouped by the name the options share - so
+       exclusivity is the browser's job and a screen reader calls it what it
+       is. Drawn round against the checklist's square for the same reason the
+       key exists: one-of and any-of are different questions, not two looks. */
+    body(items, _, block){
+      const options = block.options || [];
+      if(!options.length) return '';
+      return listHTML('picks', options, o =>
+        '<li><label><input type="radio" name="pick' + o.group + '"' +
+        (o.on ? ' checked' : '') +
+        ' data-group="' + o.group + '" data-slot="' + o.slot + '">' +
+        '<span>' + esc(o.label) + '</span></label></li>');
+    }
   },
 
   i: {
@@ -1247,6 +1358,14 @@ function copyText(d){
     if(b.type === 'i'){
       (b.fields || []).forEach(function(f){
         lines.push(f.label + ': ' + showNumber(f.value));
+      });
+      if(lines.length) parts.push(lines.join('\n'));
+      return;
+    }
+
+    if(b.type === 's'){
+      (b.options || []).forEach(function(o){
+        lines.push('(' + (o.on ? 'x' : ' ') + ') ' + o.label);
       });
       if(lines.length) parts.push(lines.join('\n'));
       return;
@@ -1419,6 +1538,29 @@ function writeFragment(key, value){
                          : frag + '&' + key + '=' + value));
 }
 
+/* Choosing rewrites the fragment the way a tick does. The browser already
+   enforces one-of within a radio name, so this only has to record which slot
+   won in each group - one x=, groups in document order, same as k=. */
+function bindPicks(){
+  var radios = [].slice.call(document.querySelectorAll('.picks input'));
+  if(!radios.length) return;
+  radios.forEach(function(radio){
+    radio.addEventListener('change', function(){
+      var choice = [];
+      radios.forEach(function(r){
+        var g = parseInt(r.getAttribute('data-group'), 10);
+        if(r.checked && isFinite(g)) choice[g] = r.getAttribute('data-slot');
+      });
+      for(var i = 0; i < choice.length; i++){
+        if(choice[i] === undefined) choice[i] = '0';
+      }
+      writeFragment('x', choice.join('~'));
+      // the chosen value is in scope for every formula on the card
+      repaintFromLink();
+    });
+  });
+}
+
 function bindInputs(){
   var boxes = [].slice.call(document.querySelectorAll('.ins input'));
   if(!boxes.length) return;
@@ -1489,6 +1631,7 @@ function draw(){
   bindShare();
   bindCopy();
   bindChecks();
+  bindPicks();
   bindInputs();
   window.scrollTo(0, 0);
 }

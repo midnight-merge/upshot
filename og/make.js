@@ -85,7 +85,7 @@ const PLATES = [
   {
     out: path.join(ROOT, 'og.png'),
     html: PLATE('Make the tiny tool you wish existed',
-                'Describe it to your AI. Upshot turns it into a page that works - and the whole thing is the link.')
+                'Describe it to any AI you already use.<br>It hands back a link, and the link is the tool.')
   },
   {
     out: path.join(ROOT, 'v2', 'og.png'),

@@ -154,8 +154,21 @@ const CASES = [
    // the lone f= here is a row, not a headline figure: it shares the block
    {blocks: 1, values: ['Value', '5,166.67'], stats: 0, facts: 2}],
 
+  /* pick-one. The option carries the number, so one formula covers every
+     option - written per-option instead it is four terms that can disagree. */
+  ['pickOne', `#m=GPT-5&d=2026-09-14&h=What I repay&v=Nine percent over the threshold&g=Your plan&s=Plan 1:26900:thr&s=Plan 2:29385:thr&i=Salary:40000:salary&r=Repayment:max(0,salary-thr)*0%2E09`,
+   {blocks: 1, values: ['1,179'], picked: '10'}],
+  ['pickOneChosen', `#m=GPT-5&d=2026-09-14&h=What I repay&v=Nine percent over the threshold&g=Your plan&s=Plan 1:26900:thr&s=Plan 2:29385:thr&i=Salary:40000:salary&r=Repayment:max(0,salary-thr)*0%2E09&x=1`,
+   {blocks: 1, values: ['955.35'], picked: '01'}],
+  // a hand-edited or truncated x= must not leave the group answering nothing
+  ['pickOneBadIndex', `#m=GPT-5&d=2026-09-14&h=What I repay&v=Nine percent over the threshold&g=Your plan&s=Plan 1:26900:thr&s=Plan 2:29385:thr&i=Salary:40000:salary&r=Repayment:max(0,salary-thr)*0%2E09&x=7`,
+   {blocks: 1, values: ['1,179'], picked: '10'}],
+  // a pick-one beside a checklist: two questions, drawn as two controls
+  ['pickAndCheck', `#m=GPT-5&d=2026-09-14&h=Both kinds&v=One of these, any of those&g=Mix&s=Basic:1:tier&s=Plus:2:tier&c=Add support&r=Tier:tier`,
+   {blocks: 1, values: ['1'], picked: '10', ticked: '0'}],
+
   // shapes of failure
-  ['unknownKey', `#s=explainer&h=An unknown key&v=s= is not in the grammar&g=Why&p=Anything not in the grammar is ignored`,
+  ['unknownKey', `#z=explainer&h=An unknown key&v=z= is not in the grammar&g=Why&p=Anything not in the grammar is ignored`,
    {blocks: 1, values: []}],
   ['longtoken', `#h=${'A'.repeat(120)}&v=ok&g=x&p=fine`, {blocks: 1, values: []}],
   ['absurd', `#h=Tall&v=v&g=Many${`&p=${WORDY}`.repeat(9)}`, {blocks: 1, values: []}]
@@ -394,6 +407,8 @@ addEventListener('load', () => {
           stats: document.querySelectorAll('#main .stat').length,
           label: (document.querySelector('#main .bl') || {}).textContent || '',
           ticked: [...document.querySelectorAll('.checks input')]
+                    .map(b => b.checked ? '1' : '0').join(''),
+          picked: [...document.querySelectorAll('.picks input')]
                     .map(b => b.checked ? '1' : '0').join('')
         };
       } catch(e){
@@ -477,6 +492,60 @@ addEventListener('load', () => {
     named.after = text('#main .fv');
     out.push({name: 'namedLive', ...named});
 
+    /* Choosing has to move the same three things a tick does: the rows on the
+       card, the x= in the link, and what a reader sees opening it fresh. The
+       radios share a name, so the browser enforces one-of - which is the point
+       of using a real control rather than drawing one. */
+    location.hash = '#h=x&v=y&g=Your plan&s=Plan 1:26900:thr&s=Plan 2:29385:thr' +
+                    '&s=Plan 4:33795:thr&i=Salary:40000:salary' +
+                    '&r=Repayment:max(0,salary-thr)*0.09';
+    draw();
+    const pickRows = () => text('#main .fv').concat(text('#main .fx'));
+    const radios = () => [...document.querySelectorAll('.picks input')];
+    const lit = () => radios().filter(r => r.checked).length;
+    const pick = {labels: text('.picks span'), count: radios().length,
+                  litAtStart: lit(), before: pickRows()};
+    const choose = i => { const r = radios()[i]; r.checked = true; r.dispatchEvent(new Event('change')); };
+    choose(1);
+    pick.after = pickRows();
+    pick.litAfter = lit();
+    pick.written = (/x=([^&]*)/.exec(location.hash) || [, ''])[1];
+    pick.copied = copyText(parse(location.hash));
+    const passedOnPick = location.hash;
+    location.hash = '#h=reset&v=reset';
+    draw();
+    location.hash = passedOnPick;
+    draw();
+    pick.reopened = pickRows();
+    pick.reopenedAt = radios().findIndex(r => r.checked);
+    choose(0);
+    pick.back = pickRows();
+    out.push({name: 'pickLive', ...pick});
+
+    // two groups on one card move independently, and one x= carries both
+    location.hash = '#h=x&v=y&g=Two&s=A:1:one&s=B:2:one&s=X:10:two&s=Y:20:two&r=Sum:one+two';
+    draw();
+    const two = {before: text('#main .fv')};
+    const pair = [...document.querySelectorAll('.picks input')];
+    pair[3].checked = true; pair[3].dispatchEvent(new Event('change'));
+    two.oneMoved = text('#main .fv');
+    two.written = (/x=([^&]*)/.exec(location.hash) || [, ''])[1];
+    two.lit = pair.filter(r => r.checked).length;
+    out.push({name: 'pickTwoGroups', ...two});
+
+    /* A group split across two blocks is still one group. If the radios were
+       grouped by block rather than by name the reader could hold two answers
+       to one question at once, which is the failure c= already has. */
+    location.hash = '#h=x&v=y&g=One&s=A:1:n&g=Two&s=B:2:n&g=Sum&r=V:n';
+    draw();
+    const split = {before: text('#main .fv')};
+    const across = [...document.querySelectorAll('.picks input')];
+    across[1].checked = true; across[1].dispatchEvent(new Event('change'));
+    split.after = text('#main .fv');
+    split.lit = [...document.querySelectorAll('.picks input')].filter(r => r.checked).length;
+    split.names = across.map(r => r.name).join(' ');
+    out.push({name: 'pickAcrossBlocks', ...split});
+
     // the evaluator and the number formatter, checked directly
     out.push({
       name: 'expressions',
@@ -556,7 +625,7 @@ function main(){
     const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
     let ok = got.blocks === want.blocks && same(got.values, want.values);
     let detail = `${got.blocks} block(s)` + (got.values.length ? '  ' + got.values.join(' ') : '');
-    for(const k of ['facts', 'stats', 'label', 'ticked']){
+    for(const k of ['facts', 'stats', 'label', 'ticked', 'picked']){
       if(want[k] === undefined) continue;
       if(got[k] !== want[k]){ ok = false; detail += `  ${k}=${got[k]} wanted ${want[k]}`; }
     }
@@ -607,6 +676,47 @@ function main(){
   check(same2(nm.before, ['84']) && same2(nm.after, ['55.44']),
         'and ticking it moves the formula that reads it',
         nm.before.join() + ' -> ' + nm.after.join());
+
+  const pk = byName.pickLive;
+  check(pk.count === 3 && pk.litAtStart === 1,
+        'a group arrives with exactly one option lit',
+        pk.count + ' options, ' + pk.litAtStart + ' lit');
+  check(same2(pk.labels, ['Plan 1', 'Plan 2', 'Plan 4']),
+        'an option name never reaches the reader', pk.labels.join('  |  '));
+  check(same2(pk.before, ['1,179', 'max(0,40000-26900)*0.09']),
+        'the card computes from the option it stands on', pk.before.join('  '));
+  check(same2(pk.after, ['955.35', 'max(0,40000-29385)*0.09']),
+        'choosing another option moves the result and its working with it',
+        pk.after.join('  '));
+  check(pk.litAfter === 1, 'and the one before it goes out - exactly one stays lit',
+        pk.litAfter + ' lit');
+  check(pk.written === '1', 'choosing writes the link', pk.written);
+  check(pk.copied.includes('(x) Plan 2') && pk.copied.includes('( ) Plan 1'),
+        'copy for AI carries which option was chosen',
+        (/\([ x]\) Plan 2/.exec(pk.copied) || [''])[0]);
+  check(same2(pk.reopened, pk.after) && pk.reopenedAt === 1,
+        'reopening the link shows the reader their own choice',
+        pk.reopened.join('  ') + '  at ' + pk.reopenedAt);
+  check(same2(pk.back, pk.before), 'and going back is going back', pk.back.join('  '));
+
+  const tg = byName.pickTwoGroups;
+  check(same2(tg.before, ['11']), 'two groups each stand on their own first option',
+        tg.before.join());
+  check(same2(tg.oneMoved, ['21']), 'and one moves without disturbing the other',
+        tg.oneMoved.join());
+  check(tg.written === '0~1', 'one x= carries both, in document order', tg.written);
+  check(tg.lit === 2, 'with one option lit in each', tg.lit + ' lit');
+
+  const ab = byName.pickAcrossBlocks;
+  check(same2(ab.before, ['1']) && same2(ab.after, ['2']),
+        'a group split across blocks still answers as one',
+        ab.before.join() + ' -> ' + ab.after.join());
+  check(ab.lit === 1,
+        'and holds one answer, not one per block - which is what c= cannot do',
+        ab.lit + ' lit');
+  check(ab.names.split(' ')[0] === ab.names.split(' ')[1],
+        'because the options are grouped by name, not by where they sit',
+        ab.names);
 
   const ex = byName.expressions;
   check(ex.bad.length === 0, 'the evaluator agrees on every expression', ex.bad.join('; '));

@@ -51,6 +51,10 @@ An answer the reader ticks their way to:
 
 https://upshot.fyi/v2/#a=Whether+I+need+income+protection&h=Two+of+these+and+it+is+worth+the+premium&v=Cover+costs+little+when+nothing+depends+on+you+and+a+lot+when+things+do%2E&m=GPT-5&d=2026-09-11&g=How+many+apply&c=You+have+a+mortgage&c=You+have+dependants&c=You+are+the+higher+earner&c=You+are+self+employed&r=Score:ticks/boxes%2A100:pct&t=Verdict:ticks%3E=2:Get+cover:Probably+fine
 
+A choice between options, where the option carries the number:
+
+https://upshot.fyi/v2/#a=What+I+repay+on+my+student+loan&h=Nine+percent+of+everything+over+the+threshold&v=The+plan+you+are+on+decides+the+threshold%2C+and+nothing+else+changes%2E&m=GPT-5&d=2026-09-14&g=Your+plan&s=Plan+1:26900:thr&s=Plan+2:29385:thr&s=Plan+4:33795:thr&s=Plan+5:25000:thr&g=Your+pay&i=Annual+salary:40000:salary&r=Repayment:max%280%2Csalary-thr%29%2A0%2E09
+
 An answer with boxes a formula can read:
 
 https://upshot.fyi/v2/#a=What+the+ticket+actually+costs+me&h=The+railcard+pays+for+itself+on+this+trip&v=Two+discounts+stack+here%2C+which+is+the+part+people+miss%2E&m=GPT-5&d=2026-09-11&g=Your+ticket&i=Full+fare:84:fare&c=You+have+a+railcard:card&c=Travelling+off+peak:offpeak&r=Discount:card%2A0%2E34+offpeak%2A0%2E1:cut&r=You+pay:fare-fare%2Acut
@@ -76,6 +80,7 @@ look. The card decides how things are drawn:
     Just saying something?      p
     Order matters?              o
     The reader ticks it off?    c
+    One of several, not any?    s
     A label and a known value?  f
     The reader changes it?      i
     Worked out from those?      r
@@ -87,6 +92,13 @@ look. The card decides how things are drawn:
 - c  checklist item, under 20 words. The reader can tick these off, and the
      ticks are kept in the link they hold. A formula can read them - see
      `ticks` below. Do not send `k=`.
+- s  one option of a pick-one, written `Label:Value:name`, e.g.
+     `s=Plan+2:29385:thr`. Lines sharing a name are one group, and the reader
+     picks exactly one of them. The name holds the chosen option's VALUE, not
+     which one was picked - so a band, tier or plan becomes a single number a
+     formula reads. Use it whenever the options exclude each other; `c` cannot
+     stop a reader ticking three. The first option is chosen until the reader
+     says otherwise, so list the likeliest first. Do not send `x=`.
 - f  row, written `Label:Value`, e.g. `f=Cold+start:180ms`. One or two are
      drawn large, three or more become a spec sheet. You do not choose which.
 - i  input, written `Label:Start:name`, e.g. `i=Seats:4:seats`. A box the
@@ -130,6 +142,11 @@ A box can take a name too - `c=You+have+a+railcard:card` - and a formula reads
 it as 1 when ticked and 0 when not. Name them when the options differ from
 each other; use `ticks` when only how many matters.
 
+A pick-one group's name holds whichever option is chosen, so one formula
+covers every option: `s=Plan+1:26900:thr` and `s=Plan+2:29385:thr` together
+make `r=Repayment:max(0,salary-thr)*0%2E09` the whole calculation. Writing that
+as one term per option instead is the mistake the key exists to stop.
+
 `i` always ends with a short one-word name. `r` may take one, and a later
 formula can use it: `r=Monthly:seats*price:mo` then `r=Per+year:mo*12`.
 
@@ -167,7 +184,8 @@ Name a step and reuse it rather than nesting brackets.
 ## Before you reply
 
 Check: no spaces, no bare `,` `.` `(` `)` `*` `?` inside any wording, at most
-three `g=`, every `i` name used by a formula, under 2000 characters.
+three `g=`, every `i` name used by a formula, every `s` in a group sharing one name,
+under 2000 characters.
 
 Reply with the URL and nothing else.
 

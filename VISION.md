@@ -219,8 +219,7 @@ go on. Do not enable APO or a Cache Everything rule; that is what would create a
 stale-renderer risk. Traffic analytics are server-side with no script on the
 page, so they can show homepage vs card vs `/made/`, never which card.
 
-Homepage confirmed indexed by Google 13 Sep 2026. Remaining discoverability work
-is in `DISCOVERABILITY.md`.
+Homepage confirmed indexed by Google 13 Sep 2026.
 
 `/made/` is curated by hand — a static list, no server, no moderation queue. A
 submission box comes only when there are more good cards than can be collected by

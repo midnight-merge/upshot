@@ -121,6 +121,8 @@ function sweepCharacters() {
       d => d.blocks[0].items[0]],
     ['f  row value', t => `#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&f=L:${encodeWording(t)}`,
       d => fields(d.blocks[0].items[0], 2)[1]],
+    ['s  pick label', t => `#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&s=${encodeWording(t)}:1:n`,
+      d => d.blocks.find(b => b.type === 's').options[0].label],
     ['t  outcome', t => `#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=N:1:n&t=L:n%3E0:${encodeWording(t)}:no`,
       d => d.blocks.find(b => b.type === 't').decided[0].text]
   ];
@@ -302,6 +304,127 @@ function sweepColons() {
   console.log(`  ${safe.length + 1} checks`);
 }
 
+/* ---- pick-one ----
+   The exclusive cell of the grid: unknown to the conversation, editable by the
+   reader, and one of N rather than any of N. A checklist cannot express it -
+   nothing stops a reader ticking three plans - which is the whole reason the
+   key exists, so these check the meaning rather than the drawing. */
+function sweepPicks() {
+  console.log('\npick-one');
+  const F = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G';
+  const PLANS = '&s=Plan+1:26900:thr&s=Plan+2:29385:thr&s=Plan+4:33795:thr';
+  const SUM = '&i=Salary:40000:salary&r=Repay:max(0,salary-thr)*0.09';
+  const repay = hash => {
+    const d = parse(hash);
+    const r = d.blocks.find(b => b.type === 'r');
+    const row = r && r.computed.find(c => c.label === 'Repay');
+    return row ? row.value : null;
+  };
+  const near = (a, b) => a !== null && Math.abs(a - b) < 0.005;
+
+  /* The card has to be good before anyone touches it, so a group is not
+     unanswered on arrival - it stands on its first option. */
+  check(near(repay(F + PLANS + SUM), 1179), 'a group stands on its first option',
+    'got ' + repay(F + PLANS + SUM) + ', wanted 1179 (40000-26900 at 9%)');
+
+  // the name holds the chosen option's VALUE - which is the entire point
+  check(near(repay(F + PLANS + SUM + '&x=1'), 955.35),
+    'choosing another option moves every formula that reads the name',
+    'got ' + repay(F + PLANS + SUM + '&x=1') + ', wanted 955.35');
+  check(near(repay(F + PLANS + SUM + '&x=2'), 558.45),
+    'and the third is the third, not the last',
+    'got ' + repay(F + PLANS + SUM + '&x=2'));
+
+  /* An index from a truncated or hand-edited link cannot be allowed to leave
+     the group answering nothing - it falls back to the default rather than
+     dashing every row below it. */
+  [['&x=9', 'past the end'], ['&x=-1', 'negative'], ['&x=plan2', 'not a number'],
+   ['&x=', 'empty'], ['&x=~1', 'blank in its own slot']].forEach(([tail, what]) => {
+    check(near(repay(F + PLANS + SUM + tail), 1179),
+      'a chosen index that is ' + what + ' falls back to the first',
+      'got ' + repay(F + PLANS + SUM + tail));
+  });
+
+  /* A link carrying more slots than the card has groups is not corrupt - a
+     model that trimmed a group, or a reader who kept an older link, must not
+     have the remaining group shifted out from under them. */
+  check(near(repay(F + PLANS + SUM + '&x=1~9~9'), 955.35),
+    'slots past the last group are ignored rather than shifting it',
+    'got ' + repay(F + PLANS + SUM + '&x=1~9~9') + ', wanted 955.35');
+
+  // exactly one option carries the choice, structurally - never two, never none
+  [undefined, '&x=0', '&x=2', '&x=9'].forEach(tail => {
+    const d = parse(F + PLANS + SUM + (tail || ''));
+    const on = d.blocks.find(b => b.type === 's').options.filter(o => o.on).length;
+    check(on === 1, 'exactly one option is chosen' + (tail ? ' at ' + tail : ' by default'),
+      on + ' of them');
+  });
+
+  /* Two groups are told apart by name, not by position or by block - the same
+     way a repeated key beats a separator everywhere else in the grammar. */
+  const TWO = F + '&s=A:1:one&s=B:2:one&s=X:10:two&s=Y:20:two&r=Sum:one+two';
+  const sum = hash => {
+    const r = parse(hash).blocks.find(b => b.type === 'r');
+    const row = r && r.computed.find(c => c.label === 'Sum');
+    return row ? row.value : null;
+  };
+  check(sum(TWO) === 11, 'two groups each stand on their own first option', 'got ' + sum(TWO));
+  check(sum(TWO + '&x=1~1') === 22, 'and each follows its own slot in x=', 'got ' + sum(TWO + '&x=1~1'));
+  check(sum(TWO + '&x=0~1') === 21, 'so one can move without the other', 'got ' + sum(TWO + '&x=0~1'));
+
+  /* A group is a name, not a run of lines - it survives being split across
+     blocks, which is what stops the reader ticking a plan in one block and a
+     contradicting one in another. */
+  const SPLIT = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=One&s=A:1:n&g=Two&s=B:2:n&g=Sum&r=V:n';
+  const val = hash => {
+    const r = parse(hash).blocks.find(b => b.type === 'r');
+    const row = r && r.computed.find(c => c.label === 'V');
+    return row ? row.value : null;
+  };
+  check(val(SPLIT) === 1, 'one name split across blocks is still one group', 'got ' + val(SPLIT));
+  check(val(SPLIT + '&x=1') === 2, 'and one x= slot still covers it', 'got ' + val(SPLIT + '&x=1'));
+  const spread = parse(SPLIT);
+  const chosen = spread.blocks.filter(b => b.type === 's')
+    .reduce((n, b) => n + b.options.filter(o => o.on).length, 0);
+  check(chosen === 1, 'with exactly one option chosen across both blocks', chosen + ' chosen');
+
+  // first claim on a name wins here as everywhere - an input is not rebound
+  const claimed = val('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=Threshold:5:n&s=Plan:99:n&g=S&r=V:n');
+  check(claimed === 5, 'a pick-one cannot rename the input it was named after',
+    'got ' + claimed + ', wanted 5');
+
+  // a value that is not a number is zero, exactly as a cleared input is
+  check(val('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&s=Free:free:n&r=V:n') === 0,
+    'an option whose value is not a number reads as zero');
+
+  // wording is wording: an encoded colon survives in a label the way it does
+  // in a bullet, and the field separators are untouched by it
+  const colon = parse(F + '&s=Be+there+by+9%3A30:1:n');
+  check(colon.blocks[0].options[0].label === 'Be there by 9:30',
+    'an encoded colon survives in an option label',
+    JSON.stringify(colon.blocks[0].options[0].label));
+  check(colon.blocks[0].options[0].value === 1 && colon.blocks[0].options[0].name === 'n',
+    'and the fields around it still come apart correctly');
+
+  /* ticks and boxes count a checklist. A pick-one is not one, so a card
+     carrying both must not have its score quietly inflated by the options. */
+  const mixed = parse('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&c=One&c=Two&s=A:1:n&s=B:2:n' +
+    '&r=Boxes:boxes:b&r=Ticks:ticks:t&k=10');
+  const rows = mixed.blocks.find(b => b.type === 'r').computed;
+  const box = rows.find(c => c.label === 'Boxes'), tk = rows.find(c => c.label === 'Ticks');
+  check(box && box.value === 2, 'options do not count as boxes', box && 'boxes came to ' + box.value);
+  check(tk && tk.value === 1, 'and choosing one is not a tick', tk && 'ticks came to ' + tk.value);
+
+  // nameless options are still a group: nothing can read them, but the reader
+  // can still be shown a choice rather than a list that lies about being one
+  const bare = parse(F + '&s=Yes:1&s=No:0');
+  check(bare.blocks[0].options.length === 2 &&
+        bare.blocks[0].options.filter(o => o.on).length === 1,
+    'options with no name still form one exclusive group');
+
+  console.log('  ' + 26 + ' checks');
+}
+
 /* ---- one shared name, claimed twice ----
    `ticks`, `boxes`, and every i= and named r= all live in one namespace.
    Nothing in the spec stops a model reusing a name - it only asks it not
@@ -444,6 +567,7 @@ if (process.argv[2]) {
 } else {
   sweepCharacters();
   sweepColons();
+  sweepPicks();
   sweepNamespace();
   sweepDecisions();
   sweepExamples();

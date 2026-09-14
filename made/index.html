@@ -178,6 +178,11 @@ h2{font-weight:600;font-size:13px;margin:30px 0 3px;padding-top:20px;border-top:
 /* fine print - sits in the same quiet register as .note and pre, so it
    recedes instead of competing with the pitch above it */
 .fine{font-size:12px;line-height:1.6;color:var(--faint);margin:0 0 10px;text-wrap:pretty}
+    /* the ask. The library only grows if this is legible - it is the one
+       line on the page with a job to do, so it sits above the fine print
+       rather than inside it, at reading weight. */
+    .ask{font-size:13px;line-height:1.6;color:var(--ink);margin:22px 0 14px}
+    .ask a{color:var(--accent);border-bottom-color:rgba(200,255,61,.4)}
 /* :first-of-type would mean "first <p>", which is the verdict - not this */
 h2 + .fine{margin-top:11px}
 pre{
@@ -209,16 +214,33 @@ pre{
     <h1>Made with upshot</h1>
 
     <div class="lib">
-      <a href="/v2/#a=UK+take-home+pay+calculator+with+student+loan&amp;h=Calculate+your+2026%2F27+take-home+pay&amp;v=Enter+salary%2C+tick+one+student+loan+plan%2C+and+optionally+Postgraduate+Loan%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-11&amp;g=Pay&amp;i=Annual+salary:40000:salary&amp;r=Personal+allowance:max%280%2C12570-max%280%2Csalary-100000%29%2F2%29:allowance&amp;r=Taxable+income:max%280%2Csalary-allowance%29:taxable&amp;r=Income+tax:min%28taxable%2C37700%29%2A0%2E2%2Bmax%280%2Cmin%28taxable-37700%2C87440%29%29%2A0%2E4%2Bmax%280%2Ctaxable-125140%29%2A0%2E45:tax&amp;r=National+Insurance:min%28max%280%2Csalary-12570%29%2C37700%29%2A0%2E08%2Bmax%280%2Csalary-50270%29%2A0%2E02:ni&amp;g=Student+loan&amp;c=Plan+1+%28tick+one+plan%29:p1&amp;c=Plan+2:p2&amp;c=Plan+4:p4&amp;c=Plan+5:p5&amp;c=Postgraduate+Loan:pg&amp;r=Student+loan:p1%2Amax%280%2Csalary-26900%29%2A0%2E09%2Bp2%2Amax%280%2Csalary-29385%29%2A0%2E09%2Bp4%2Amax%280%2Csalary-33795%29%2A0%2E09%2Bp5%2Amax%280%2Csalary-25000%29%2A0%2E09%2Bpg%2Amax%280%2Csalary-21000%29%2A0%2E06:loan&amp;g=Take+home&amp;r=Annual+take-home:salary-tax-ni-loan:net&amp;r=Monthly+take-home:net%2F12"><span class="q">What do I actually take home?</span>
-        <span class="d">Salary in, student loan plans to tick, take-home out. UK based.</span>
-        <span class="attrs"><b>GPT-5.6 Sol</b> &middot; 11 Sep &middot; inputs boxes results</span></a>
+      <a href="/v2/#a=Splitting+dinner+three+ways&amp;h=About+twenty+seven+each&amp;v=Service+is+already+in+the+total%2C+so+there+is+nothing+more+to+add%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Split+it&amp;i=Bill:80:bill&amp;i=People:3:n&amp;r=Each+pays:bill/n"><span class="q">What does dinner come to each?</span>
+        <span class="d">Type in the bill and how many of you. The whole card is 180 characters of URL.</span>
+        <span class="attrs"><b>GPT-5</b> &middot; 10 Sep &middot; inputs results</span></a>
+      <a href="/v2/#a=Whether+the+flat+is+ready+to+hand+back+to+the+landlord&amp;h=Four+of+these+and+the+deposit+is+usually+safe&amp;v=Deposit+disputes+turn+on+dated+evidence%2C+not+on+how+clean+the+oven+looked+on+the+day%2E&amp;m=Claude+Opus+5&amp;d=2026-09-14&amp;g=Before+you+hand+the+keys+back&amp;c=Oven%2C+hob+and+extractor+filter+cleaned&amp;c=Every+mark+on+the+inventory+photographed+again&amp;c=Meter+readings+taken+with+a+dated+photo&amp;c=Your+own+furniture+and+rubbish+all+removed&amp;c=Garden+and+bins+left+as+you+found+them&amp;r=Ready+percent:ticks/boxes%2A100:pct&amp;t=Verdict:ticks%3E=4:Hand+them+back:Not+yet"><span class="q">Is the flat ready to hand back?</span>
+        <span class="d">Tick what you have done. The verdict moves with it.</span>
+        <span class="attrs"><b>Claude Opus 5</b> &middot; 14 Sep &middot; boxes results decision</span></a>
+      <a href="/v2/#a=What+to+do+first+when+a+laptop+is+stolen&amp;h=Lock+the+account+before+you+wipe+the+laptop&amp;v=A+thief+with+an+unlocked+session+can+reset+your+recovery+email%2C+and+that+undoes+everything+you+do+after+it%2E&amp;m=Claude+Opus+5&amp;d=2026-09-14&amp;g=First+hour&amp;o=From+another+device%2C+change+the+password+on+the+account+the+laptop+is+signed+into%2E&amp;o=Sign+out+every+other+session+from+that+account+security+page%2E&amp;o=Put+the+laptop+into+lost+mode%2C+then+queue+a+remote+wipe%2E&amp;o=Report+it+and+keep+the+crime+reference+for+the+insurer%2E&amp;o=Tell+your+bank+if+card+details+were+saved+in+the+browser%2E"><span class="q">Laptop stolen. What do I do first?</span>
+        <span class="d">Order is the whole point - the first step is what protects the rest.</span>
+        <span class="attrs"><b>Claude Opus 5</b> &middot; 14 Sep &middot; steps</span></a>
+      <a href="/v2/#a=Whether+I+have+enough+runway+to+quit&amp;h=Nine+months+is+the+number+to+beat&amp;v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Runway&amp;i=Cash+saved:18000:cash&amp;i=Monthly+burn:2200:burn&amp;i=Months+you+want:9:target&amp;r=Runway:cash/burn:months&amp;t=Ready+to+walk:months%3E=target:Go+now:Not+yet"><span class="q">Do I have enough runway to quit?</span>
+        <span class="d">Change a number and the verdict at the bottom changes its mind.</span>
+        <span class="attrs"><b>GPT-5</b> &middot; 10 Sep &middot; inputs results decision</span></a>
+      <a href="/v2/#a=Whether+to+do+the+tax+return+myself+or+pay+an+accountant&amp;h=Pay+someone+the+first+year+anything+unusual+happens&amp;v=A+simple+return+is+an+evening+of+admin%3B+an+unusual+one+is+where+the+fee+pays+for+itself%2E&amp;m=Claude+Opus+5&amp;d=2026-09-14&amp;g=Do+it+yourself&amp;p=One+employment+and+some+savings+interest+is+genuinely+an+evening+of+form+filling%2E&amp;p=The+software+checks+the+arithmetic%2C+so+the+risk+is+what+you+forget+to+declare%2C+not+what+you+mistype%2E&amp;g=Pay+an+accountant&amp;p=Rental+income%2C+foreign+income+or+a+first+year+of+self+employment+all+carry+rules+you+do+not+know+you+are+breaking%2E&amp;p=The+fee+is+deductible+against+the+income+it+relates+to%2C+so+the+real+cost+is+lower+than+the+invoice%2E"><span class="q">Do my own tax return, or pay someone?</span>
+        <span class="d">Two columns and no arithmetic. Sometimes the answer is just reasons.</span>
+        <span class="attrs"><b>Claude Opus 5</b> &middot; 14 Sep &middot; compared</span></a>
+      <a href="/v2/#a=UK+take-home+pay+calculator+with+student+loan&amp;h=Calculate+your+2026%2F27+take-home+pay&amp;v=Enter+your+salary%2C+pick+your+student+loan+plan%2C+and+tick+Postgraduate+if+you+have+one%2E&amp;m=Claude+Opus+5&amp;d=2026-09-14&amp;g=Pay&amp;i=Annual+salary:40000:salary&amp;r=Personal+allowance:max%280%2C12570-max%280%2Csalary-100000%29/2%29:allowance&amp;r=Taxable+income:max%280%2Csalary-allowance%29:taxable&amp;r=Income+tax:min%28taxable%2C37700%29%2A0%2E2+max%280%2Cmin%28taxable-37700%2C87440%29%29%2A0%2E4+max%280%2Ctaxable-125140%29%2A0%2E45:tax&amp;r=National+Insurance:min%28max%280%2Csalary-12570%29%2C37700%29%2A0%2E08+max%280%2Csalary-50270%29%2A0%2E02:ni&amp;g=Student+loan&amp;s=Plan+2:29385:thr&amp;s=Plan+1:26900:thr&amp;s=Plan+4:33795:thr&amp;s=Plan+5:25000:thr&amp;c=I+also+have+a+Postgraduate+Loan:pg&amp;r=Student+loan:max%280%2Csalary-thr%29%2A0%2E09+pg%2Amax%280%2Csalary-21000%29%2A0%2E06:loan&amp;g=Take+home&amp;r=Annual+take-home:salary-tax-ni-loan:net&amp;r=Monthly+take-home:net/12"><span class="q">What do I actually take home?</span>
+        <span class="d">Salary in, one plan to pick, take-home out. UK based.</span>
+        <span class="attrs"><b>Claude Opus 5</b> &middot; 14 Sep &middot; pick-one boxes results</span></a>
       <a href="/v2/#a=Build+a+personal+launch-or-kill+decision+engine&amp;h=Turn+vibes+into+a+go-or-no-go+score&amp;v=Score+an+idea+against+upside%2C+effort%2C+confidence%2C+and+time%2C+then+let+the+card+call+it%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-10&amp;g=Signal&amp;i=Upside+0-10:8:upside&amp;i=Confidence+0-10:7:confidence&amp;i=Urgency+0-10:6:urgency&amp;r=Signal+score:%28upside%2Aconfidence%2Aurgency%29/10:signal&amp;g=Drag&amp;i=Effort+0-10:5:effort&amp;i=Weeks+to+ship:3:weeks&amp;i=Risk+0-10:4:risk&amp;r=Drag+score:effort%2Aweeks%2Brisk:drag&amp;g=Verdict&amp;r=Launch+score:signal-drag:score&amp;t=Decision:score%3E=20:SHIP+IT:KILL+OR+RESHAPE"><span class="q">Should I build this or kill it?</span>
         <span class="d">It invented the scoring system on the spot.</span>
         <span class="attrs"><b>GPT-5.6 Sol</b> &middot; 10 Sep &middot; inputs results decision</span></a>
     </div>
 
 
-    <p class="fine">All written by an AI when someone asked. If you have made one, <a href="https://github.com/midnight-merge/upshot/issues/new?title=Made+with+upshot&amp;body=Paste+your+link+here">send the link</a>. A card lives entirely in its link, so anything up here stays as it was written - only send one you are happy to leave.</p>
+    <p class="ask">Made one? <a href="https://github.com/midnight-merge/upshot/issues/new?title=Made+with+upshot&amp;body=Paste+your+link+here">Send the link</a> and it goes up here.</p>
+
+    <p class="fine">All written by an AI when someone asked. A card lives entirely in its link, so anything up here stays as it was written - only send one you are happy to leave.</p>
   </main>
 
   <div class="foot">
