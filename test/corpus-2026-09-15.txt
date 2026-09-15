@@ -1,0 +1,76 @@
+# First corpus run against the new grammar. 15 Sep 2026.
+#
+# Fifteen asks from test/asks.txt, one fresh chat each, llms.txt pasted
+# verbatim rather than fetched - so these are the optimistic number: pasted
+# text arrives as the user's own instruction and gets followed more obediently
+# than text a model went and got. Re-run through the fetch path once deployed.
+#
+#   15/15 valid first render
+#    0/15 wrote syntax the grammar does not have
+#
+# What it settled, none of which reasoning got right on its own:
+#
+#   Banded numbers are NOT a missing primitive. The income tax card built the
+#   whole band structure out of min/max clamping, live off its input, cold.
+#   LANGUAGE.md had recorded this as the one remaining wall.
+#
+#   f= is being misused exactly as VISION predicted. The stamp duty card
+#   states a worked-out answer as a fact and has no inputs at all, while the
+#   income tax card in the same run does the harder version properly. That is
+#   the case the decision-table recut needs.
+#
+#   Money wanted two decimal places. Card 1 split £38 four ways and drew
+#   £9.5, which reads as a typo. Fixed.
+#
+# Two asks are weak and should be rewritten, but not until they have been run
+# at least twice more - the list is fixed on purpose:
+#
+#   7  assumes a laptop was discussed earlier, so the model correctly had
+#      nothing to export
+#   11 invites medical advice, so the model correctly declined to put a
+#      threshold on a crying child
+#
+1:
+https://upshot.fyi/v2/#a=Splitting+the+taxi+fare+four+ways&h=%C2%A39%2E50+each&v=Four+people+splitting+%C2%A338+equally+owe+%C2%A39%2E50+each%2E&m=GPT-5%2E6+Sol&d=2026-09-15&g=Split&i=b:38:Taxi+fare&i=n:4:People&r=:b/n:Each+owes
+
+2:
+https://upshot.fyi/v2/#a=What+my+weekday+takeaway+coffee+habit+costs+a+year&h=%C2%A3884+a+year&v=At+%C2%A33%2E40+a+cup+on+five+weekdays+a+week%2C+that+is+about+%C2%A3884+a+year%2E&m=GPT-5%2E6+Sol&d=2026-09-15&g=Coffee&i=c:3%2E40:Price+per+cup&i=d:5:Days+per+week&i=w:52:Weeks+per+year&r=:c%2Ad%2Aw:Annual+cost
+
+3:
+https://upshot.fyi/v2/#a=How+long+the+card+takes+to+clear&h=About+five+years&v=At+%C2%A3120+a+month%2C+the+balance+takes+about+five+years+to+clear%2E&m=GPT-5%2E6+Sol&d=2026-09-15&g=Debt&i=b:4200:Balance&i=apr:24:Interest+rate+percent&i=p:120:Monthly+payment&r=r:apr/100/12:Monthly+rate&r=:round%280-ln%281-b%2Ar/p%29/ln%281+r%29%29:Months+to+clear
+
+4:
+https://upshot.fyi/v2/#a=What+14+grand+could+be+worth+in+eleven+years&h=About+28+grand+at+6%2E5+percent&v=Assuming+6%2E5+percent+annual+growth+and+no+withdrawals%2C+the+14+grand+roughly+doubles+over+eleven+years%2E&m=GPT-5%2E6+Sol&d=2026-09-15&g=Growth&i=p:14000:Starting+amount&i=r:6%2E5:Annual+return+percent&i=y:11:Years&r=:p%2Aexp%28y%2Aln%281+r/100%29%29:Future+value&u=p:%C2%A3
+
+5:
+https://upshot.fyi/v2/#a=How+to+bleed+a+radiator+without+soaking+the+carpet&h=Catch+the+water+before+opening+the+valve&v=Protect+the+floor%2C+open+the+bleed+valve+slowly%2C+then+close+it+as+soon+as+water+runs+steadily%2E&m=GPT-5%2E6+Sol&d=2026-09-15&g=Steps&o=Turn+the+heating+off+and+let+the+radiator+cool%2E&o=Put+a+towel+under+the+valve+and+hold+a+cup+beneath+it%2E&o=Open+the+bleed+valve+slowly+until+air+hisses+out%2E&o=Close+the+valve+when+water+flows+steadily%2E
+
+6:
+https://upshot.fyi/v2/#a=Train+or+drive+from+London+to+Leeds&h=Train+for+city+centre+to+city+centre&v=Train+is+usually+more+convenient%2C+while+driving+suits+several+passengers%2C+lots+of+luggage+or+onward+rural+travel%2E&m=GPT-5%2E6+Sol&d=2026-09-15&g=Train&p=Direct+services+can+take+about+2h10-2h15%2E&p=Advance+fares+can+start+around+%C2%A328%2E60+each+way%2E&g=Drive&p=Roughly+195-196+miles%2E&p=Around+3%2E5-5+hours+depending+on+traffic%2E&p=More+useful+if+you+need+a+car+after+Leeds%2E
+
+7: 
+https://upshot.fyi/v2/#a=Summarise+the+laptop+specs&h=Laptop+specs+not+captured&v=The+specifications+are+not+present+in+the+conversation+available+for+this+export%2E&m=GPT-5%2E6+Sol&d=2026-09-15&g=Status&p=No+laptop+model+or+specifications+were+established%2E
+
+8:
+https://upshot.fyi/v2/#a=Getting+my+rental+deposit+back&h=Leave+evidence+and+no+debts&v=Meet+the+tenancy+terms%2C+avoid+damage%2C+and+clear+rent+and+bills+to+support+getting+your+deposit+back%2E&m=GPT-5%2E6+Sol&d=2026-09-15&g=Before+leaving&c=:Check+the+tenancy+terms&c=:Photograph+the+property+condition&c=:Deal+with+any+damage+you+caused&c=:Pay+outstanding+rent+and+bills&g=Deposit&c=:Keep+your+check-in+and+check-out+evidence&c=:Request+the+deposit+back&c=:Use+the+deposit+scheme+if+there+is+a+dispute
+
+9:
+https://upshot.fyi/v2/#a=Whether+I+need+income+protection+insurance&h=Check+what+already+protects+your+income&v=Cover+matters+more+when+losing+earnings+would+leave+essential+costs+unsupported%2E&m=GPT-5%2E6+Sol&d=2026-09-15&g=How+many+apply&c=:You+have+essential+housing+costs&c=:Other+people+depend+on+your+income&c=:Your+employer+sick+pay+is+limited&c=:Your+savings+would+not+last+long&r=pct:ticks/boxes%2A100:Score
+
+10:
+https://upshot.fyi/v2/#a=What+I+repay+on+my+student+loan&h=Your+plan+sets+the+threshold&v=For+Plans+1%2C+2%2C+4+and+5%2C+you+repay+9%25+of+earnings+above+your+plan%27s+threshold%2E&m=GPT-5%2E6+Sol&d=2026-09-15&g=Your+plan&s=thr:26900:Plan+1&s=thr:29385:Plan+2&s=thr:33795:Plan+4&s=thr:25000:Plan+5&g=Your+pay&i=salary:40000:Annual+salary&r=:max%280%2Csalary-thr%29%2A0%2E09:Annual+repayment&u=salary:%C2%A3
+
+11:
+https://upshot.fyi/v2/#a=How+worried+to+be+about+a+toddler+crying&h=Duration+alone+cannot+tell+you&v=Continuous+or+inconsolable+crying+matters+more+than+a+fixed+number+of+minutes%2E&m=GPT-5%2E6+Sol&d=2026-09-15&g=Warning+signs&p=Call+NHS+111+if+they+are+crying+constantly+and+cannot+be+comforted+or+distracted%2E&p=Call+999+for+a+weak%2C+high-pitched+or+continuous+cry%2C+breathing+difficulty%2C+blue+or+pale+skin%2C+a+seizure%2C+or+difficulty+waking%2E&p=Trust+your+instincts+if+something+seems+seriously+wrong%2E
+
+12:
+https://upshot.fyi/v2/#a=Whether+a+30-year-old+can+get+the+26-30+Railcard&h=Yes%2C+you+are+still+eligible&v=At+30+you+can+buy+it+before+your+31st+birthday+and+use+it+until+expiry%2E&m=GPT-5%2E6+Sol&d=2026-09-15&g=Eligibility&f=Age:30&f=Railcard:26-30+Railcard&f=Price:%C2%A335&f=Discount:One+third+off
+
+13:
+https://upshot.fyi/v2/#a=Income+tax+on+62000+using+the+proper+bands&h=Calculate+each+tax+band+separately&v=For+England%2C+Wales+or+Northern+Ireland%2C+the+2026-27+bands+are+used+with+the+standard+Personal+Allowance%2E&m=GPT-5%2E6+Sol&d=2026-09-15&g=Income&i=s:62000:Annual+salary&r=pa:max%280%2C12570-max%280%2Cs-100000%29/2%29:Personal+Allowance&r=x:max%280%2Cs-pa%29:Taxable+income&u=s:%C2%A3&u=pa:%C2%A3&u=x:%C2%A3&g=Tax&r=b:min%28x%2C37700%29%2A0%2E20:Basic+rate&r=h:min%28max%280%2Cx-37700%29%2C87440%29%2A0%2E40:Higher+rate&r=a:max%280%2Cx-125140%29%2A0%2E45:Additional+rate&r=:b+h+a:Income+tax&u=b:%C2%A3&u=h:%C2%A3&u=a:%C2%A3
+
+14:
+https://upshot.fyi/v2/#a=Stamp+duty+on+a+420000+first+home&h=The+stamp+duty+is+6000&v=In+England+or+Northern+Ireland%2C+first-time+buyer+relief+charges+5%25+only+on+the+amount+above+300000%2E&m=GPT-5%2E6+Sol&d=2026-09-15&g=Purchase&f=House+price:%C2%A3420000&f=First+300000:0%25&f=Remaining+120000:5%25&g=Tax&f=Stamp+duty:%C2%A36000
+
+15:
+https://upshot.fyi/v2/#a=Drive+time+for+290+miles+at+62+mph+with+two+20-minute+stops&h=About+five+hours+twenty-one+minutes&v=The+driving+takes+about+four+hours+forty-one+minutes%2C+then+the+stops+add+forty+minutes%2E&m=GPT-5%2E6+Sol&d=2026-09-15&g=Journey&i=mi:290:Distance&i=mph:62:Average+speed&i=stop:40:Stop+time&r=t:mi/mph+stop/60:Total+time&u=mi:miles&u=mph:mph&u=stop:min&u=t:hr

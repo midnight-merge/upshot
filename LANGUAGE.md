@@ -205,7 +205,7 @@ formula reads.
 
 **Fixed by addition.** No `exp` or `pi`. Chained comparison.
 
-**Not fixed, and worse than it looks.** A branching *number* -
+**Thought to be a wall; was not.** A branching *number* -
 `r=Band:n>3?10:20:band` - is dead because `?:` collides with the field
 separator, and law 1 does not save it: a formula is a machine field, so it is
 never last.
@@ -213,22 +213,33 @@ never last.
 The `t=` cascade does not cover this, and the earlier draft of this document
 was wrong to imply it might. A decision yields *wording*, not a number, so
 nothing can compute with it - naming a `t=` makes it groupable and labellable,
-not citable. A banded number is a genuine wall of the same class as `t=` being
-binary: a tax band derived from a salary, a tier derived from a count, a rate
-that steps. `s=` only helps when the *reader* picks the band; it cannot derive
-one.
+not citable. So a banded number looked like a genuine wall of the same class
+as `t=` being binary - a tax band from a salary, a tier from a count, a rate
+that steps - since `s=` only helps when the *reader* picks the band.
 
-So there are three options and no free one:
+**The corpus settled this on 15 Sep 2026, and the answer is that it is not a
+wall.** Asked for income tax on 62k with the proper bands, a model wrote the
+whole thing cold and invented no syntax:
 
-1. A conditional in formulas with a non-colon syntax.
-2. A cascade that yields a number rather than wording - `t=` and this would be
-   the same shape with different outputs, which argues for one key with the
-   distinction in the name it declares.
-3. Leave the wall and let the corpus say how often models hit it.
+    r=pa:max(0,12570-max(0,s-100000)/2):Personal Allowance
+    r=x:max(0,s-pa):Taxable income
+    r=b:min(x,37700)*0.20:Basic rate
+    r=h:min(max(0,x-37700),87440)*0.40:Higher rate
+    r=a:max(0,x-125140)*0.45:Additional rate
+    r=:b+h+a:Income tax
 
-Option 2 is the most consistent with the rest of this document and the most
-work. Do not pick from reasoning alone - this is exactly the kind of wall the
-corpus run is for, and the cost of guessing wrong is a key nobody uses.
+One row per band, each clamped with `min` and `max`, every row live off the
+salary input. A piecewise function is just arithmetic, and `min`/`max` were
+already in the list. It even got the taper on the Personal Allowance.
+
+So no new primitive, and the ternary stays gone. What still cannot be written
+is a banded *rate* as a single citable value - but nobody wants that, they
+want the banded amount, and the amount is directly expressible.
+
+Worth keeping as the cautionary note it is. This was recorded here as the one
+remaining missing primitive, in confident detail, reasoned from the grammar.
+One real generation overturned it, which is the whole argument for the corpus
+over another afternoon of reasoning.
 
 **Deliberately unresolved.** Most key distinctions remain advisory rather than
 structural. Nothing stops `c` holding settled facts, `p` holding ordered
@@ -258,7 +269,19 @@ ahead of the decision table it is needed for.
 ticks it off?") rather than what the information is, which is how a settled
 fact falls through into a checklist. VISION has the 2x2 - who knows it, and
 can the reader change it. Add the type axis and it becomes the real question.
-Validate against real generations rather than reasoning.
+
+**The first corpus run gave this its evidence, 15 Sep 2026.** A stamp duty
+card came back answered entirely in `f=` rows - `f=Stamp duty:£6000`, with the
+bands pushed into the labels as `f=First 300000:0%`. The model worked the
+answer out itself and stated it as a fact, so that card has no inputs,
+recomputes nothing, and is a picture of an answer rather than a tool. In the
+same run, the income tax card - the harder version of the same question - did
+it properly as live rows off an input.
+
+So the failure is real, observed rather than hypothesised, and it is not an
+argument against `f=`. `f=` earns its place; the table has to stop letting a
+worked-out number fall into it. That is the recut, and it now has a case to
+be tested against.
 
 ## Versioning
 
@@ -348,6 +371,138 @@ card anyone could write. `exp` only made it easy to notice.
 
 **Invariant 4 is now enforced**, in `sweepWorking`. It was a stated principle
 of the format with no test behind it, and it failed the moment it got one.
+
+## The channel scare, and what measuring it actually showed
+
+**Read the correction at the end of this section before believing any of it.**
+The two bugs described here were reasoned from notes, written up as class 1
+with confidence, and then tested against a real phone and found not to exist.
+The section is kept in full because the error is more instructive than the
+finding would have been.
+
+It started from the right question: **how many symbols are there in the world,
+and are WhatsApp links safe?**
+
+The answer to the first half was already right and already written down. The
+encoding rule is a whitelist - keep letters, digits and a hyphen, encode
+everything else - so a character nobody has thought of is encoded by default.
+The set of characters in the world does not need enumerating, which is the
+whole reason that rule replaced a list.
+
+The answer to the second half was no.
+
+The answer to the second half looked like no, and was yes.
+
+WhatsApp marks strikethrough with `~text~`, and the separator joining reader
+state inside `w=`, `k=` and `x=` was a tilde. So any card with three or more
+inputs produced `w=80~30~30~2` once a reader typed in it, and `~30~` is a
+pair. Simulated, that arrives as `&w=803030~2` and the card prints an answer
+worked out from eight hundred and three thousand.
+
+It was changed to a slash - already in the alphabet as division, and unlike
+`-` it cannot collide with a negative number.
+
+**Why nothing caught it.** Three separate reasons, and each is worth keeping:
+
+1. `markdownEaten` modelled `*` and `_` but not `~`. The one client-eaten
+   character the renderer emitted itself was the one character the channel
+   simulator could not see.
+2. No model writes this separator. It never appears in a generation, never
+   appears in the spec, and only exists after a reader has touched a card and
+   passed it on - which is the entire point of the format.
+3. `run.js` has asserted "no example carries a bare `~` or `*`" for days, so
+   the danger was known. That check only covered the `llms.txt` examples.
+   Nothing checked the homepage's own demos, and two of them carried three
+   tildes each.
+
+**The same gap hid a second bug.** Those unchecked homepage demos also carried
+`i=apr:4.5:...` with a raw full stop - which WhatsApp cuts the link at, and
+which the spec has forbidden in writing since the beginning. Live on the
+homepage, on `main`, for days.
+
+**And a third, in the same place, found by asking what else the renderer
+writes.** A reader typing `4.5` produced `w=4.5` - a raw full stop in a link,
+which the spec has forbidden in writing since the beginning, and which the
+6 Sep note says stops WhatsApp linkifying.
+
+The renderer was the one writer on a card exempt from the card's own encoding
+rule. Every model is told to keep letters, digits and a hyphen and encode the
+rest; the state writer kept whatever `parseFloat` handed it. It now encodes by
+the same rule, and reading is unaffected either way because the fragment is
+decoded on the way in - `w=4%2E5` and `w=4.5` both come back as 4.5.
+
+Note what these three have in common: none of them is written by a model, none
+appears in the spec, and all three only exist once a reader has typed in a
+card and passed it on. That is the half of the product the corpus cannot see,
+because a corpus is generations and this is interaction.
+
+**The fixes that scale, rather than three patches.**
+
+`ALPHABET` asserts the rule instead of a list: nothing outside
+`[A-Za-z0-9%+&=:_/-]` may reach a card URL. A whitelist rule checked by
+enumerating 103 characters can only ever prove what somebody listed. Asserting
+the closed alphabet covers every character that exists, including the ones
+invented next year, and it is one regex.
+
+`shippedURLs()` is now the single list of every card URL the project ships, and
+every channel check runs over all of it. The old code read `llms.txt` and
+`made/index.html` and nothing else, which is precisely why the homepage's own
+four demos carried both bugs for days. A file added later is covered by adding
+it to that one function rather than by remembering to.
+
+And in `run.js`, the alphabet is asserted on what the RENDERER writes, not only
+on what a model writes: type a decimal, a negative, a tiny number and a huge
+one, tick a box, choose an option, then check the whole fragment. Reverting
+both fixes makes that single assertion fail with `link carries ".~"` - both
+classes, one check.
+
+Enumerating symbols is the endless battle. Proving the alphabet is closed, over
+one list of everything shipped, on both sides of the reader, ends it.
+
+### The correction, measured on a real phone, 15 Sep 2026
+
+Four cards were built to prove all of the above - tildes, slashes, a raw
+decimal, an encoded one - each carrying a total that would read differently if
+the link were mangled. Sent through WhatsApp and opened.
+
+**All four arrived intact. Every total correct, every link tappable.**
+
+So neither bug was real. WhatsApp does not eat a tilde pair inside a URL and
+does not cut at a mid-URL full stop, because its linkifier claims the whole URL
+token before any formatting is applied to the message. The marks only bite text
+that is not already part of a link.
+
+That also puts a question against the 6 Sep finding the encoding rule is built
+on. A raw comma or full stop was recorded as stopping WhatsApp linkifying; a
+raw full stop demonstrably does not, at least mid-URL in 2026. Either the
+original observation was about a different position - a trailing `.` before a
+space, where a linkifier does drop the stop - or the client changed. The
+encoding rule stays regardless: it is a whitelist, it costs nothing on the
+worked examples, and being conservative about a channel nobody controls is
+cheap. But it is insurance, not a measured necessity, and this document should
+stop implying otherwise.
+
+**What survives this, and is worth more than the bug would have been:**
+
+- The closed-alphabet assertion and `shippedURLs()`. Both stand on their own:
+  one list of everything shipped, one rule instead of a list of characters.
+  They found real inconsistencies with the spec whether or not a client cares.
+- The renderer obeying its own encoding rule. It was the one writer on a card
+  exempt from the rule every model is given. That is a consistency argument and
+  always was; it was never load-bearing on a channel bug.
+- **A model of the channel is not the channel.** VISION already says "model the
+  channel, not the renderer", and this is the sharper version: a simulator
+  built from notes will confirm whatever the notes said. `markdownEaten` did
+  not model `~` for months; adding `~` did not discover a bug, it encoded an
+  assumption and then agreed with it. Ten minutes with a phone beat a day of
+  reasoning, and the reasoning was mine.
+- The separator change to `/` is now unjustified by anything measured. Keep it
+  or revert it on taste, not on evidence.
+
+The honest score for the day: the grammar work was right and externally
+validated by the corpus. The channel work found two inconsistencies with our
+own spec and zero bugs, while being written up as two class 1 failures. That
+overclaim is the thing to remember.
 
 ## The first cold batch
 

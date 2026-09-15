@@ -468,6 +468,34 @@ addEventListener('load', () => {
     out.push({name: 'roundTrip', sent, typed, written, reopened: shown(),
               values: [...document.querySelectorAll('.ins input')].map(el => el.value).join(' ')});
 
+    /* The renderer is the one writer on a card that is not a model, and it was
+       the one writer exempt from the card's own encoding rule. A reader typing
+       4.5 wrote w=4.5, a raw full stop in a link; three inputs wrote
+       w=a~b~c, and a tilde pair is WhatsApp strikethrough.
+
+       So this types the nastiest values a reader can and asserts the whole
+       fragment stays inside the alphabet - which is the rule itself rather
+       than a list of characters, and therefore covers what nobody thought of.
+
+       Everything the reader can touch at once: decimals, negatives, a huge
+       number, a tiny one, ticks and a pick-one. */
+    location.hash = '#h=x&v=y&g=n&i=a:1:A&i=b:1:B&i=c:1:C&i=d:1:D' +
+                    '&r=:a+b+c+d:Sum&c=:One&c=:Two&s=k:1:First&s=k:2:Second';
+    draw();
+    const typeAll = vals => {
+      [...document.querySelectorAll('.ins input')].forEach((el, i) => {
+        el.value = vals[i]; el.dispatchEvent(new Event('input'));
+      });
+    };
+    typeAll(['4.5', '-3.25', '1e-9', '12345678.9']);
+    const ticks2 = [...document.querySelectorAll('.checks input')];
+    if (ticks2[0]) { ticks2[0].checked = true; ticks2[0].dispatchEvent(new Event('change')); }
+    const radios2 = [...document.querySelectorAll('.picks input')];
+    if (radios2[1]) { radios2[1].checked = true; radios2[1].dispatchEvent(new Event('change')); }
+    out.push({name: 'stateAlphabet',
+              frag: location.hash.replace(/^#/, ''),
+              reread: (() => { draw(); return text('#main .fv').join(' '); })()});
+
     /* A decision is recomputed by the same numbers a result is, and both are
        repainted in place rather than redrawn - so the card can tell the reader
        two different stories about one set of inputs if only one is updated. */
@@ -671,7 +699,7 @@ function main(){
   const rt = byName.roundTrip;
   check(rt.sent === '72 864', 'results follow the numbers they were sent', rt.sent);
   check(rt.typed === '180 2,160', 'and follow what the reader types', rt.typed);
-  check(rt.written === '10~18', 'typing writes every input into the link', rt.written);
+  check(rt.written === '10/18', 'typing writes every input into the link', rt.written);
   check(rt.reopened === rt.typed, 'reopening the link shows what the reader saw', rt.reopened);
   check(rt.values === '10 18', 'and the boxes come back filled in', rt.values);
 
@@ -693,12 +721,22 @@ function main(){
      beside a verdict saying otherwise - a proof that refutes itself in front
      of the reader. Found 15 Sep 2026 by looking at a card, where a growth
      step holding 1.9991314 printed round(14000*2) under an answer of 27,988. */
+  /* The alphabet, asserted on what the RENDERER wrote rather than on what a
+     model wrote. Both of the channel bugs found on 15 Sep were here: a raw
+     full stop from a typed decimal, and a tilde separator WhatsApp eats. */
+  const sa = byName.stateAlphabet;
+  const strayInState = [...new Set((sa.frag || '').replace(/[A-Za-z0-9%+&=:_\/-]/g, ''))];
+  check(strayInState.length === 0,
+    'nothing the reader types can push the link outside its alphabet',
+    strayInState.length ? `link carries ${JSON.stringify(strayInState.join(''))}` : '');
+  check(/w=/.test(sa.frag || ''), 'and the typed values did reach the link', sa.frag);
+
   const live = byName.decisionLive;
   check(same2(live.before, ['8.18', 'Not yet', '18000/2200', '8.18182>=9']),
         'a decision draws with the numbers it was sent', live.before.join('  '));
   check(same2(live.crossed, ['8.18', 'Go now', '18000/2200', '8.18182>=8']),
         'and flips the moment the reader crosses the threshold', live.crossed.join('  '));
-  check(live.link === '18000~2200~8', 'the link follows it', live.link);
+  check(live.link === '18000/2200/8', 'the link follows it', live.link);
   check(live.copied.includes('Ready to walk: Go now'),
         'copy for AI reads the card as it stands, not as it was drawn',
         (/Ready to walk:[^\n]*/.exec(live.copied) || [''])[0]);
@@ -739,7 +777,7 @@ function main(){
         tg.before.join());
   check(same2(tg.oneMoved, ['21']), 'and one moves without disturbing the other',
         tg.oneMoved.join());
-  check(tg.written === '0~1', 'one x= carries both, in document order', tg.written);
+  check(tg.written === '0/1', 'one x= carries both, in document order', tg.written);
   check(tg.lit === 2, 'with one option lit in each', tg.lit + ' lit');
 
   const ab = byName.pickAcrossBlocks;

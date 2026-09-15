@@ -540,6 +540,22 @@ var FIELDED = ['f', 'i', 'r', 't', 'c', 's', 'u'];
    take it back out, and esc() does too, so it cannot reach the page even by a
    route nobody thought of. */
 var MARK = '\u0001';
+
+/* The separator inside w=, k= and x=, which is reader state rather than
+   anything a model writes.
+
+   It was a tilde until 15 Sep 2026, and a tilde is WhatsApp's strikethrough
+   mark. Any card with three or more inputs produced w=80~30~30~2 the moment a
+   reader typed in it, and ~30~ is a pair - so the link arrived as w=803030~2
+   and the card confidently printed an answer worked out from eight hundred
+   thousand. Nobody writes this separator, so nobody could have spotted it by
+   reading a spec; it only appears once a reader touches a card and passes it
+   on, which is the whole point of the format.
+
+   A slash is in the alphabet already, being division in a formula, and is not
+   a mark in any chat client. It cannot collide with a number the way - would,
+   and it is not eaten the way * _ and ~ are. */
+var STATE = '/';
 function text(s){
   return String(s == null ? '' : s).split(MARK).join(':');
 }
@@ -811,30 +827,57 @@ var CREDIT = '<footer><div class="how">Paste it into any AI to dig in. Or make '
    already carry ms and kb and no closed list would hold them. A few reformat,
    and those are a closed list, because changing how a number reads is not
    something to infer from free text. */
-var MONEY = {'£':1, '$':1, '€':1, '¥':1};
-var CLOCK = {hr: 60, min: 60};
+/* Which units REFORMAT the number rather than sitting beside it. One table,
+   so money and duration are the same kind of thing.
+
+   The first version of money was not this. It asked showNumber for the
+   number, which trims trailing zeros, and then patched the string back with
+   two regexes to put a zero it had just removed - fighting the formatter
+   instead of asking it for what was wanted, and sitting in the decorate
+   branch with a patch on the end when what it actually does is reformat.
+   Number formatting was already in four places and that made it five. */
+var REFORMAT = {
+  hr:  function(v){ return clock(v, 60); },
+  min: function(v){ return clock(v, 60); },
+  '£': money, '$': money, '€': money, '¥': money
+};
 
 /* 5.64 hours is 5:38, and printing 5.64 was the oldest soft spot in the
-   format. The fraction is the part that needs converting, and it rounds, so
-   59.6 minutes reads 1:00 rather than 0:60. */
-function inUnit(value, unit){
-  if(!Object.prototype.hasOwnProperty.call(CLOCK, unit)) return null;
-  if(value === null || !isFinite(value) || value < 0) return null;
+   format. The fraction is the part that converts, and it rounds, so 59.6
+   minutes reads 1:00 rather than 0:60. */
+function clock(value, per){
+  if(value < 0) return null;
   var whole = Math.floor(value);
-  var part = Math.round((value - whole) * CLOCK[unit]);
-  if(part === CLOCK[unit]){ whole++; part = 0; }
+  var part = Math.round((value - whole) * per);
+  if(part === per){ whole++; part = 0; }
   return whole + ':' + (part < 10 ? '0' : '') + part;
 }
 
+/* Money takes both decimal places or neither. Trailing zeros are trimmed
+   everywhere else on a card because 5.10 is a false precision, but £9.5 is
+   not a price - it is a typo as far as a reader is concerned, and £12,232.4
+   is worse. Whole pounds stay whole, because £38 reads correctly and £38.00
+   is fussy. Observed in the first corpus run, where a card split £38 four
+   ways and drew £9.5.
+
+   The sign leads the symbol: -£3.50 is how a debt is written. */
+function money(value, unit){
+  var v = Math.round(value * 100) / 100;
+  var a = Math.abs(v);
+  return (v < 0 ? '-' : '') + unit +
+         group(a % 1 === 0 ? String(a) : a.toFixed(2));
+}
+
 /* The number as the card prints it, wearing whatever unit its name declared.
-   Money leads, because that is how money is written; everything else trails. */
+   A unit either reformats the number or sits beside it, and nothing else. */
 function withUnit(value, unit){
-  var shown = showNumber(value);
-  if(!unit || value === null) return shown;
-  var clock = inUnit(value, unit);
-  if(clock !== null) return clock;
-  return Object.prototype.hasOwnProperty.call(MONEY, unit)
-    ? unit + shown : shown + unit;
+  if(value === null) return showNumber(null);
+  if(!unit) return showNumber(value);
+  if(Object.prototype.hasOwnProperty.call(REFORMAT, unit) && isFinite(value)){
+    var out = REFORMAT[unit](value, unit);
+    if(out !== null) return out;
+  }
+  return showNumber(value) + unit;
 }
 
 /* pi only, and deliberately not e.
@@ -1048,15 +1091,21 @@ function twoPlaces(v){
   return v.toFixed(2).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
 }
 
-function showNumber(v){
-  if(v === null) return '\u2014';
-  var s = twoPlaces(v);
+/* Thousands separators, on an already-formatted numeric string. Its own
+   function because money needs it too, and reaching into showNumber's output
+   to get it was how money ended up patching a formatted string with a
+   regex. */
+function group(s){
   var sign = s.charAt(0) === '-' ? '-' : '';
   if(sign) s = s.slice(1);
   var dot = s.indexOf('.');
   var whole = dot < 0 ? s : s.slice(0, dot);
   return sign + whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',') +
          (dot < 0 ? '' : s.slice(dot));
+}
+
+function showNumber(v){
+  return v === null ? '\u2014' : group(twoPlaces(v));
 }
 
 /* A number as the printed WORKING cites it, which is a different job from
@@ -1099,7 +1148,7 @@ var plainNumber = function(v){
    which is what makes the link theirs once they have touched it. */
 function readInputs(blocks, written, env, units){
   units = units || {};
-  var typed = String(written == null ? '' : written).split('~');
+  var typed = String(written == null ? '' : written).split(STATE);
   env = env || {};
   var seen = 0;
   blocks.forEach(function(b){
@@ -1161,7 +1210,7 @@ function checkField(item){
    group defaulting to nothing would land every formula below it on a dash. */
 function readPicks(blocks, chosen, env, units){
   units = units || {};
-  var picked = String(chosen == null ? '' : chosen).split('~');
+  var picked = String(chosen == null ? '' : chosen).split(STATE);
   var order = [], byName = {};
   blocks.forEach(function(b){
     if(b.type !== 's') return;
@@ -1895,6 +1944,23 @@ function bindChecks(){
    The card is never redrawn, only written into. Redrawing would take the
    focus out of the field mid-keystroke, and replaceState leaves the back
    button alone and fires no hashchange, so this cannot loop back into draw(). */
+/* A number on its way into the link, encoded by the same rule as everything
+   else on the card: keep letters, digits and a hyphen, encode the rest.
+
+   The renderer was the one writer on the card exempt from its own rule. A
+   reader typing 4.5 got w=4.5 - a raw full stop in a link, which the spec has
+   forbidden in writing from the beginning and which a chat client can cut the
+   link at. Nobody spotted it because no model writes reader state; it only
+   exists after someone has typed in a card and passed it on.
+
+   Reading is unaffected either way, since the fragment is decoded on the way
+   in - w=4%2E5 and w=4.5 both come back as 4.5. */
+function stateNumber(v){
+  return String(v).replace(/[^A-Za-z0-9-]/g, function(ch){
+    return '%' + ch.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0');
+  });
+}
+
 function writeFragment(key, value){
   var frag = location.hash.replace(/^#/, '');
   var re = new RegExp('(^|&)' + key + '=[^&]*');
@@ -1919,7 +1985,7 @@ function bindPicks(){
       for(var i = 0; i < choice.length; i++){
         if(choice[i] === undefined) choice[i] = '0';
       }
-      writeFragment('x', choice.join('~'));
+      writeFragment('x', choice.join(STATE));
       // the chosen value is in scope for every formula on the card
       repaintFromLink();
     });
@@ -1936,8 +2002,8 @@ function bindInputs(){
         // a field cleared to nothing is a zero, not a hole: the alternative is
         // every formula below it going to a dash while someone retypes a digit
         var v = parseFloat(b.value);
-        return isFinite(v) ? v : 0;
-      }).join('~'));
+        return stateNumber(isFinite(v) ? v : 0);
+      }).join(STATE));
 
       repaintFromLink();
     });

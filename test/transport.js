@@ -97,7 +97,11 @@ function truncatedBy(url) {
    leaving the lone p*6 alone. */
 function markdownEaten(text) {
   let out = text;
-  for (const mark of ['*', '_']) {
+  // WhatsApp: *bold* _italic_ ~strikethrough~. The tilde was missing here for
+  // as long as the format used a tilde to join reader state, so the one
+  // client-eaten character the renderer emitted itself was the one character
+  // this function could not see.
+  for (const mark of ['*', '_', '~']) {
     const m = '\\' + mark;
     out = out.replace(new RegExp(m + '([^' + m + '\\s][^' + m + ']*?)' + m, 'g'), '$1');
   }
@@ -183,11 +187,16 @@ function sweepCharacters() {
 /* ---- sweep 2: everything we ship, through the channel ---- */
 function sweepExamples() {
   console.log('\nshipped examples through the channel');
-  const llms = fs.readFileSync(path.join(ROOT, 'llms.txt'), 'utf8');
-  const made = fs.readFileSync(path.join(ROOT, 'made', 'index.html'), 'utf8');
-  const urls = (llms.match(/https:\/\/upshot\.fyi\/v2\/#\S+/g) || [])
-    .concat((made.match(/href="\/v2\/#[^"]*"/g) || [])
-      .map(h => 'https://upshot.fyi' + h.slice(6, -1).replace(/&amp;/g, '&')));
+  /* EVERY url the project ships, from one place.
+
+     This read llms.txt and made/index.html and nothing else, which is how two
+     live bugs sat on the homepage for days: a raw full stop in 4.5, and three
+     tildes of reader state that WhatsApp eats as strikethrough. The homepage's
+     own four demos were never put through the channel at all.
+
+     One list, every check. A file added later is covered by adding it here
+     rather than by remembering to. */
+  const urls = shippedURLs();
 
   urls.forEach(url => {
     const name = (/[#&]h=([^&]*)/.exec(url) || [, '?'])[1].replace(/\+/g, ' ').slice(0, 38);
@@ -341,7 +350,7 @@ function sweepPicks() {
      the group answering nothing - it falls back to the default rather than
      dashing every row below it. */
   [['&x=9', 'past the end'], ['&x=-1', 'negative'], ['&x=plan2', 'not a number'],
-   ['&x=', 'empty'], ['&x=~1', 'blank in its own slot']].forEach(([tail, what]) => {
+   ['&x=', 'empty'], ['&x=/1', 'blank in its own slot']].forEach(([tail, what]) => {
     check(near(repay(F + PLANS + SUM + tail), 1179),
       'a chosen index that is ' + what + ' falls back to the first',
       'got ' + repay(F + PLANS + SUM + tail));
@@ -350,9 +359,9 @@ function sweepPicks() {
   /* A link carrying more slots than the card has groups is not corrupt - a
      model that trimmed a group, or a reader who kept an older link, must not
      have the remaining group shifted out from under them. */
-  check(near(repay(F + PLANS + SUM + '&x=1~9~9'), 955.35),
+  check(near(repay(F + PLANS + SUM + '&x=1/9/9'), 955.35),
     'slots past the last group are ignored rather than shifting it',
-    'got ' + repay(F + PLANS + SUM + '&x=1~9~9') + ', wanted 955.35');
+    'got ' + repay(F + PLANS + SUM + '&x=1/9/9') + ', wanted 955.35');
 
   // exactly one option carries the choice, structurally - never two, never none
   [undefined, '&x=0', '&x=2', '&x=9'].forEach(tail => {
@@ -371,8 +380,8 @@ function sweepPicks() {
     return row ? row.value : null;
   };
   check(sum(TWO) === 11, 'two groups each stand on their own first option', 'got ' + sum(TWO));
-  check(sum(TWO + '&x=1~1') === 22, 'and each follows its own slot in x=', 'got ' + sum(TWO + '&x=1~1'));
-  check(sum(TWO + '&x=0~1') === 21, 'so one can move without the other', 'got ' + sum(TWO + '&x=0~1'));
+  check(sum(TWO + '&x=1/1') === 22, 'and each follows its own slot in x=', 'got ' + sum(TWO + '&x=1/1'));
+  check(sum(TWO + '&x=0/1') === 21, 'so one can move without the other', 'got ' + sum(TWO + '&x=0/1'));
 
   /* A group is a name, not a run of lines - it survives being split across
      blocks, which is what stops the reader ticking a plan in one block and a
@@ -453,6 +462,53 @@ function sweepNamespace() {
   check(score && score.value === 100, 'a result cannot rename the reserved ticks/boxes',
     score ? `Score came to ${score.value}, wanted 100 (2 ticked of 2)` : 'no Score row');
   console.log('  2 checks');
+}
+
+/* Every card URL the project ships, wherever it lives. The homepage writes
+   its links as HTML so its separators arrive as &amp;, and a raw ... is an
+   elision in prose rather than anything a card carries. */
+function shippedURLs() {
+  const out = [];
+  ['llms.txt', 'index.html', 'README.md', 'made/index.html'].forEach(f => {
+    const text = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    [...text.matchAll(/\/v2\/#([^\s"'<>)\]]+)/g)].forEach(m => {
+      const hash = m[1].replace(/&amp;/g, '&');
+      if (hash.includes('...')) return;
+      const url = 'https://upshot.fyi/v2/#' + hash;
+      if (out.indexOf(url) < 0) out.push(url);
+    });
+  });
+  return out;
+}
+
+/* ---- the alphabet a card URL is allowed to use ----
+   The encoding rule is a whitelist - keep letters, digits and a hyphen, encode
+   everything else - so a character nobody thought about is safe by default.
+   That is the only defence that scales, because the set of characters in the
+   world cannot be enumerated and the set of chat clients cannot either.
+
+   But the sweep above enumerates: 103 characters in 10 fields. A whitelist
+   rule checked with a blacklist-shaped test can only ever prove what somebody
+   listed. So this asserts the rule itself instead - that nothing outside the
+   alphabet ever reaches a URL - which covers every character that exists,
+   including the ones invented next year.
+
+   It runs over everything the project ships, index.html included. Nothing
+   checked the homepage's own demos before, and on 15 Sep 2026 two of them
+   carried a raw full stop in 4.5 - which WhatsApp cuts the link at, and which
+   the spec has forbidden in writing the whole time. */
+const ALPHABET = /^[A-Za-z0-9%+&=:_\/-]*$/;
+
+function sweepAlphabet() {
+  console.log('\nthe alphabet of a card URL');
+  const urls = shippedURLs();
+  urls.forEach(url => {
+    const hash = url.slice(url.indexOf('#') + 1);
+    const strays = [...new Set(hash.replace(/[A-Za-z0-9%+&=:_\/-]/g, ''))];
+    check(ALPHABET.test(hash), hash.slice(0, 34),
+      strays.length ? `carries ${JSON.stringify(strays.join(''))}` : '');
+  });
+  console.log(`  ${urls.length} checks`);
 }
 
 /* ---- the printed working must reproduce the answer ----
@@ -576,7 +632,30 @@ function sweepUnits() {
   // a dash has no unit to wear
   is(drawn('&r=x:nope:Out&u=x:£', 'Out'), '\u2014', 'a dash stays a dash');
 
-  console.log('  9 checks');
+  /* Money with a fraction takes both places or neither. Trailing zeros are
+     trimmed everywhere else because 5.10 is false precision, but £9.5 reads
+     as a typo and £12,232.4 is worse. Found in the first real corpus run,
+     where a card split £38 four ways and drew £9.5. */
+  is(drawn('&i=n:38:N&r=each:n/4:Each&u=each:£', 'Each'), '£9.50',
+    'money takes both decimal places');
+  is(drawn('&i=n:38:N&r=each:n:Each&u=each:£', 'Each'), '£38',
+    'and whole pounds stay whole');
+  is(drawn('&i=n:9%2E05:N&r=each:n:Each&u=each:£', 'Each'), '£9.05',
+    'a value already at two places is left alone');
+  is(drawn('&i=n:-3%2E5:N&r=each:n:Each&u=each:£', 'Each'), '-£3.50',
+    'the sign goes outside the symbol');
+  is(drawn('&i=n:12232%2E4:N&r=each:n:Each&u=each:£', 'Each'), '£12,232.40',
+    'grouping and the second place together');
+  is(drawn('&i=n:9%2E999:N&r=each:n:Each&u=each:£', 'Each'), '£10',
+    'a fraction that rounds away leaves a whole number whole');
+
+  /* A unit either reformats the number or sits beside it. A reformatter that
+     cannot answer - a negative duration is not a clock reading - falls back
+     to sitting beside it rather than inventing something. */
+  is(drawn('&i=n:-2:N&r=t:n:Owed&u=t:hr', 'Owed'), '-2hr',
+    'a negative duration decorates rather than pretending to be a clock');
+
+  console.log('  16 checks');
 }
 
 /* ---- the functions that were missing ----
@@ -929,6 +1008,7 @@ if (process.argv[2]) {
   sweepColons();
   sweepPicks();
   sweepNamespace();
+  sweepAlphabet();
   sweepWorking();
   sweepRefusals();
   sweepUnits();
