@@ -32,9 +32,10 @@ if (cut < 0) throw new Error('cannot find the cut point in v2/index.html');
 const mod = {exports: {}};
 new Function('module', 'exports', js.slice(0, cut) +
   '\nmodule.exports={parse:parse,evaluate:evaluate,restorePlus:restorePlus,' +
-  'fields:fields,text:text};'
+  'fields:fields,text:text,checkField:checkField,withUnit:withUnit,' +
+  'showNumber:showNumber};'
 )(mod, mod.exports);
-const {parse, fields} = mod.exports;
+const {parse, fields, checkField, withUnit, showNumber} = mod.exports;
 if (typeof parse !== 'function') throw new Error('engine did not load');
 
 let failures = 0, checks = 0;
@@ -121,9 +122,9 @@ function sweepCharacters() {
       d => d.blocks[0].items[0]],
     ['f  row value', t => `#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&f=L:${encodeWording(t)}`,
       d => fields(d.blocks[0].items[0], 2)[1]],
-    ['s  pick label', t => `#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&s=${encodeWording(t)}:1:n`,
+    ['s  pick label', t => `#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&s=n:1:${encodeWording(t)}`,
       d => d.blocks.find(b => b.type === 's').options[0].label],
-    ['t  outcome', t => `#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=N:1:n&t=L:n%3E0:${encodeWording(t)}:no`,
+    ['t  outcome', t => `#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=n:1:N&t=L:n%3E0:${encodeWording(t)}`,
       d => d.blocks.find(b => b.type === 't').decided[0].text]
   ];
 
@@ -259,7 +260,7 @@ function sweepFormulas() {
     const hash = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G' +
       Object.keys(NAMES).map(k =>
         `&i=${k}:${String(NAMES[k]).replace('.', '%2E')}:${k}`).join('') +
-      `&r=X:${encodeFormula(f)}`;
+      `&r=:${encodeFormula(f)}:X`;
     const url = 'https://upshot.fyi/v2/' + hash;
     if (truncatedBy(url) || markdownEaten(url) !== url) {
       unsendable++;
@@ -286,7 +287,8 @@ function sweepColons() {
     ['p  bullet', F + '&p=Bring+ID:+passport', d => d.blocks[0].items[0], 'Bring ID: passport'],
     ['o  step', F + '&o=Be+there+by+9:30', d => d.blocks[0].items[0], 'Be there by 9:30'],
     ['f  value', F + '&f=Meet:9:30am', d => fields(d.blocks[0].items[0], 2)[1], '9:30am'],
-    ['c  item', F + '&c=Be+there+by+9:30', d => d.blocks[0].items[0], 'Be there by 9:30']
+    ['c  item', F + '&c=:Be+there+by+9:30',
+      d => checkField(d.blocks[0].items[0]).label, 'Be there by 9:30']
   ];
   safe.forEach(([name, hash, read, want]) => {
     let got; try { got = read(parse(hash)); } catch (e) { got = 'threw'; }
@@ -312,8 +314,8 @@ function sweepColons() {
 function sweepPicks() {
   console.log('\npick-one');
   const F = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G';
-  const PLANS = '&s=Plan+1:26900:thr&s=Plan+2:29385:thr&s=Plan+4:33795:thr';
-  const SUM = '&i=Salary:40000:salary&r=Repay:max(0,salary-thr)*0.09';
+  const PLANS = '&s=thr:26900:Plan+1&s=thr:29385:Plan+2&s=thr:33795:Plan+4';
+  const SUM = '&i=salary:40000:Salary&r=:max(0,salary-thr)*0.09:Repay';
   const repay = hash => {
     const d = parse(hash);
     const r = d.blocks.find(b => b.type === 'r');
@@ -362,7 +364,7 @@ function sweepPicks() {
 
   /* Two groups are told apart by name, not by position or by block - the same
      way a repeated key beats a separator everywhere else in the grammar. */
-  const TWO = F + '&s=A:1:one&s=B:2:one&s=X:10:two&s=Y:20:two&r=Sum:one+two';
+  const TWO = F + '&s=one:1:A&s=one:2:B&s=two:10:X&s=two:20:Y&r=:one+two:Sum';
   const sum = hash => {
     const r = parse(hash).blocks.find(b => b.type === 'r');
     const row = r && r.computed.find(c => c.label === 'Sum');
@@ -375,7 +377,7 @@ function sweepPicks() {
   /* A group is a name, not a run of lines - it survives being split across
      blocks, which is what stops the reader ticking a plan in one block and a
      contradicting one in another. */
-  const SPLIT = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=One&s=A:1:n&g=Two&s=B:2:n&g=Sum&r=V:n';
+  const SPLIT = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=One&s=n:1:A&g=Two&s=n:2:B&g=Sum&r=:n:V';
   const val = hash => {
     const r = parse(hash).blocks.find(b => b.type === 'r');
     const row = r && r.computed.find(c => c.label === 'V');
@@ -389,17 +391,17 @@ function sweepPicks() {
   check(chosen === 1, 'with exactly one option chosen across both blocks', chosen + ' chosen');
 
   // first claim on a name wins here as everywhere - an input is not rebound
-  const claimed = val('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=Threshold:5:n&s=Plan:99:n&g=S&r=V:n');
+  const claimed = val('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=n:5:Threshold&s=n:99:Plan&g=S&r=:n:V');
   check(claimed === 5, 'a pick-one cannot rename the input it was named after',
     'got ' + claimed + ', wanted 5');
 
   // a value that is not a number is zero, exactly as a cleared input is
-  check(val('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&s=Free:free:n&r=V:n') === 0,
+  check(val('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&s=n:free:Free&r=:n:V') === 0,
     'an option whose value is not a number reads as zero');
 
   // wording is wording: an encoded colon survives in a label the way it does
   // in a bullet, and the field separators are untouched by it
-  const colon = parse(F + '&s=Be+there+by+9%3A30:1:n');
+  const colon = parse(F + '&s=n:1:Be+there+by+9%3A30');
   check(colon.blocks[0].options[0].label === 'Be there by 9:30',
     'an encoded colon survives in an option label',
     JSON.stringify(colon.blocks[0].options[0].label));
@@ -408,8 +410,8 @@ function sweepPicks() {
 
   /* ticks and boxes count a checklist. A pick-one is not one, so a card
      carrying both must not have its score quietly inflated by the options. */
-  const mixed = parse('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&c=One&c=Two&s=A:1:n&s=B:2:n' +
-    '&r=Boxes:boxes:b&r=Ticks:ticks:t&k=10');
+  const mixed = parse('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&c=:One&c=:Two&s=n:1:A&s=n:2:B' +
+    '&r=b:boxes:Boxes&r=t:ticks:Ticks&k=10');
   const rows = mixed.blocks.find(b => b.type === 'r').computed;
   const box = rows.find(c => c.label === 'Boxes'), tk = rows.find(c => c.label === 'Ticks');
   check(box && box.value === 2, 'options do not count as boxes', box && 'boxes came to ' + box.value);
@@ -417,7 +419,7 @@ function sweepPicks() {
 
   // nameless options are still a group: nothing can read them, but the reader
   // can still be shown a choice rather than a list that lies about being one
-  const bare = parse(F + '&s=Yes:1&s=No:0');
+  const bare = parse(F + '&s=:1:Yes&s=:0:No');
   check(bare.blocks[0].options.length === 2 &&
         bare.blocks[0].options.filter(o => o.on).length === 1,
     'options with no name still form one exclusive group');
@@ -438,55 +440,330 @@ function sweepNamespace() {
   const F = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G';
 
   // an r= reusing an i='s name must not rewire a later formula
-  const d1 = parse(F + '&i=Seats:4:seats&r=Double:seats*2:seats&r=Check:seats+1');
+  const d1 = parse(F + '&i=seats:4:Seats&r=seats:seats*2:Double&r=:seats+1:Check');
   const check1 = d1.blocks.find(b => b.type === 'r').computed.find(c => c.label === 'Check');
   check(check1 && check1.value === 5, 'a result cannot rename the input it was named after',
     check1 ? `Check came to ${check1.value}, wanted 5 (the original seats)` : 'no Check row');
 
   // a result named "ticks" must not corrupt a checklist score - k=11 ticks
   // both boxes, so a correct score is 2/2*100
-  const d2 = parse('#k=11&a=A&h=H&v=V&m=M&d=2026-01-01&g=List&c=One&c=Two' +
-    '&r=Ticks:5:ticks&r=Score:ticks/boxes*100:score');
+  const d2 = parse('#k=11&a=A&h=H&v=V&m=M&d=2026-01-01&g=List&c=:One&c=:Two' +
+    '&r=ticks:5:Ticks&r=score:ticks/boxes*100:Score');
   const score = d2.blocks.find(b => b.type === 'r').computed.find(c => c.label === 'Score');
   check(score && score.value === 100, 'a result cannot rename the reserved ticks/boxes',
     score ? `Score came to ${score.value}, wanted 100 (2 ticked of 2)` : 'no Score row');
   console.log('  2 checks');
 }
 
-/* ---- a decision is a comparison, or it is not a decision ----
-   Every t= in the spec is Label:Condition:When+true:When+false, and
-   Condition always compares something. `fields()` only protects the LAST
-   of those four from an embedded colon - so an unencoded colon anywhere in
-   the label or the true-text shifts the rest by one, and the wrong slot
-   lands where Condition should be. Found 13 Sep 2026: when that slot ends
-   up holding a bare number, truthy-coercing it picked a real-looking
-   branch with full authority - exactly the false confidence the existing
-   null-draws-a-dash rule already refuses to allow. A condition with no
-   comparison operator now can never decide, whatever shifted into it. */
+/* ---- the printed working must reproduce the answer ----
+   A stated principle of the format that had no test until 15 Sep 2026, and
+   was broken when it got one. A compound growth step held 1.9991314; the
+   working printed round(14000*2), which recomputes to 28,000 beside an answer
+   reading 27,988. The card was right and its own working said otherwise,
+   which is worse than showing no working at all.
+
+   This is invariant 4 from LANGUAGE.md. It is cheap, and it caught a real bug
+   that every structural check passed - the scorer cannot see a wrong number. */
+function sweepWorking() {
+  console.log('\nthe working reproduces the answer');
+  const A = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G';
+  const ev = mod.exports.evaluate;
+  let n = 0;
+
+  // each of these cites a NAMED step, which is where the rounding used to bite
+  const cards = [
+    ['compound growth', '&i=pot:14000:Pot&i=rate:6%2E5:Rate&i=yrs:11:Years' +
+      '&r=growth:exp(yrs*ln(1+rate/100)):Multiplier' +
+      '&r=:round(pot*growth):Worth'],
+    ['a third, which never ends', '&i=n:100:N&r=third:n/3:Third&r=:third*3:Back'],
+    ['a long division', '&i=n:18000:N&i=b:2200:B&r=m:n/b:Runway&r=:m*12:Over+a+year'],
+    ['a tiny rate', '&i=apr:7:Apr&r=d:apr/100/365:Daily&r=:d*1000000:On+a+million'],
+    ['a square root', '&i=n:2:N&r=root:sqrt(n):Root&r=:root*root:Squared']
+  ];
+
+  cards.forEach(function(pair){
+    const name = pair[0], tail = pair[1];
+    parse(A + tail).blocks.forEach(b => (b.computed || []).forEach(c => {
+      if (!c.label || !c.expr || c.value === null) return;
+      // the working as a reader would retype it, commas and all
+      const again = ev(c.expr.replace(/,/g, ''), {});
+      const want = showNumber(c.value);
+      const got = again === null ? 'could not be recomputed' : showNumber(again);
+      n++;
+      check(got === want, `${name}: "${c.label}"`,
+        got === want ? '' : `shows ${want}, working "${c.expr}" gives ${got}`);
+    }));
+  });
+  console.log(`  ${n} checks`);
+}
+
+/* ---- what the card refuses to draw ----
+   All of these rendered before, and rendered wrongly: a duplicate name drew a
+   control no formula read, a non-numeric start computed as zero. A dash is for
+   a question that cannot be answered; this is a card that does not make
+   sense, and there is no honest way to draw part of it. */
+function sweepRefusals() {
+  console.log('\nrefusals');
+  const A = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G';
+  const bad = (hash, name) => {
+    const p = parse(A + hash).problems;
+    check(p.length > 0, name, p.length ? '' : 'drew the card anyway');
+  };
+  const fine = (hash, name) => {
+    const p = parse(A + hash).problems;
+    check(p.length === 0, name, p.length ? `refused: ${p.join('. ')}` : '');
+  };
+
+  bad('&i=n:1:One&i=n:2:Two', 'a name claimed by two inputs');
+  bad('&i=n:1:One&r=n:1:Two', 'a name claimed by an input and a result');
+  bad('&c=n:One&i=n:1:Two', 'a name claimed by a box and an input');
+  bad('&i=ticks:1:One', 'an input called ticks');
+  bad('&i=boxes:1:One', 'an input called boxes');
+  bad('&i=pi:1:One', 'an input called pi');
+  // e is NOT reserved: two real generations used it for energy, which is what
+  // e is for in any physics card, and exp(1) costs nothing to write instead
+  fine('&i=e:1:Energy&r=:e*2:Out', 'an input called e, which physics cards need');
+  fine('&i=mass:5%2E972e24:Mass+kg', 'a start value in scientific notation');
+  bad('&i=mass:80kg:Mass', 'a start value with a unit stuck to it');
+  bad('&i=n:abc:One', 'an input that does not start at a number');
+  bad('&i=n::One', 'an input with no start value');
+  bad('&u=n:£', 'a unit for a name nothing declares');
+  bad('&i=n:1:One&u=n:£&u=n:$', 'a unit declared twice');
+
+  // the things that must still be allowed
+  fine('&i=n:1:One&i=m:2:Two', 'two inputs with different names');
+  fine('&s=thr:1:A&s=thr:2:B', 'a pick-one group sharing one name, which is the point');
+  fine('&i=n:-1%2E5:One', 'a negative decimal start');
+  fine('&r=:1+1:Sum', 'a result with no name');
+  fine('&c=:One&c=:Two', 'boxes with no names');
+  fine('&i=n:1:One&u=n:£', 'a unit for a name that exists');
+
+  console.log('  19 checks');
+}
+
+/* ---- units ----
+   Every numeric card used to smuggle its unit into the label and print its
+   answer bare, so "Payment 222" never said of what. And 5.64 hours printed
+   5.64, which was the oldest soft spot in the format. */
+function sweepUnits() {
+  console.log('\nunits');
+  const A = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G';
+  const drawn = (hash, label) => {
+    const d = parse(A + hash);
+    const row = d.blocks.flatMap(b => b.computed || []).find(c => c.label === label);
+    return row ? withUnit(row.value, row.unit) : 'no such row';
+  };
+  const is = (got, want, name) => check(got === want, name,
+    got === want ? '' : `got ${JSON.stringify(got)}, wanted ${JSON.stringify(want)}`);
+
+  is(drawn('&i=n:222:N&r=pay:n:Payment&u=pay:£', 'Payment'), '£222',
+    'money leads the number');
+  is(drawn('&i=n:17:N&r=off:n:Off&u=off:%', 'Off'), '17%', 'a percentage trails it');
+  is(drawn('&i=n:42:N&r=size:n:Bundle&u=size:kb', 'Bundle'), '42kb',
+    'free text trails it, because kb is in no closed list');
+  is(drawn('&i=n:222:N&r=pay:n:Payment', 'Payment'), '222',
+    'no unit declared, no unit drawn');
+
+  // the 5.64 soft spot
+  is(drawn('&i=n:5%2E64:N&r=t:n:Took&u=t:hr', 'Took'), '5:38',
+    '5.64 hours reads 5:38');
+  is(drawn('&i=n:5:N&r=t:n:Took&u=t:hr', 'Took'), '5:00', 'a whole number of hours');
+  is(drawn('&i=n:0%2E5:N&r=t:n:Took&u=t:min', 'Took'), '0:30', 'half a minute');
+  // 59.6 minutes must not read 0:60
+  is(drawn('&i=n:0%2E993:N&r=t:n:Took&u=t:hr', 'Took'), '1:00',
+    'a fraction that rounds up carries into the whole');
+
+  // a dash has no unit to wear
+  is(drawn('&r=x:nope:Out&u=x:£', 'Out'), '\u2014', 'a dash stays a dash');
+
+  console.log('  9 checks');
+}
+
+/* ---- the functions that were missing ----
+   ln could say how long something takes; nothing could say what it grows to,
+   because ln had no inverse. And a chained comparison drew a dash, which was
+   honest but not enough - a model writes 18<=age<65. */
+function sweepFunctions() {
+  console.log('\nfunctions and chained comparison');
+  const ev = mod.exports.evaluate;
+  const is = (expr, env, want, name) => {
+    const got = ev(expr, env || {});
+    check(got === want, name || expr,
+      got === want ? '' : `got ${got}, wanted ${want}`);
+  };
+
+  is('exp(1)', {}, Math.E, 'exp');
+  is('pi', {}, Math.PI, 'pi is a constant, not a call');
+  is('round(exp(ln(2)))', {}, 2, 'exp undoes ln');
+  // the thing that was unreachable: what a rate compounds to
+  is('round(1000*exp(5*ln(1+0%2E07)))'.replace(/%2E/g, '.'), {}, 1403,
+    'compound growth is expressible at last');
+
+  // a chain means both comparisons, as it does in English and in maths -
+  // not (18<=age) compared to 65, which is what C would say
+  is('18<=age<65', {age: 30}, 1, 'inside the range');
+  is('18<=age<65', {age: 70}, 0, 'above the range');
+  is('18<=age<65', {age: 10}, 0, 'below the range');
+  is('1<2<3<4<5', {}, 1, 'a long chain');
+  is('1<2<1', {}, 0, 'a chain that fails at the end');
+  is('a<b', {a: 1, b: 2}, 1, 'a single comparison still works');
+
+  // a card cannot claim a constant out from under a formula
+  const d = parse('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=pi:9:Pi&r=:pi:Out');
+  const out = d.blocks.flatMap(b => b.computed || []).find(c => c.label === 'Out');
+  check(out && out.value === Math.PI, 'an input cannot shadow pi',
+    out ? `Out came to ${out.value}` : 'no Out row');
+
+  console.log('  12 checks');
+}
+
+/* ---- ticks and boxes belong to a block, not to the card ----
+   Two checklists on one card used to share a single count, so a score
+   written for the first list counted the second as well. The formula read
+   correctly and the number was wrong. */
+function sweepScopes() {
+  console.log('\nticks and boxes are scoped');
+  const A = '#a=A&h=H&v=V&m=M&d=2026-01-01';
+  const val = (hash, label) => {
+    const all = parse(A + hash).blocks.flatMap(b => b.computed || []);
+    const row = all.find(c => c.label === label);
+    return row ? row.value : 'no such row';
+  };
+
+  // two lists, two counts. All four boxes ticked, so the first list is 2 of 2
+  // and the second is 3 of 3 - one shared count would make both 5.
+  const TWO = '&g=One&c=:a&c=:b&r=:boxes:First' +
+              '&g=Two&c=:c&c=:d&c=:e&r=:boxes:Second&k=11111';
+  check(val(TWO, 'First') === 2, 'the first list counts only itself',
+    `First came to ${val(TWO, 'First')}`);
+  check(val(TWO, 'Second') === 3, 'the second list counts only itself',
+    `Second came to ${val(TWO, 'Second')}`);
+
+  // the ticks follow the same split, and k= still runs across the whole card
+  const T = '&g=One&c=:a&c=:b&r=:ticks:First' +
+            '&g=Two&c=:c&c=:d&c=:e&r=:ticks:Second&k=10110';
+  check(val(T, 'First') === 1, 'ticks split by block as well',
+    `First came to ${val(T, 'First')}`);
+  check(val(T, 'Second') === 2, 'and the second block reads its own ticks',
+    `Second came to ${val(T, 'Second')}`);
+
+  // a block with no list at all must not answer 0 of 0
+  check(val('&g=List&c=:a&c=:b&g=Sum&r=:ticks/boxes:Score&k=11', 'Score') === null,
+    'a block with no checklist draws a dash rather than 0/0');
+
+  // and a single list still works, which is every shipped card
+  check(val('&g=List&c=:a&c=:b&r=:ticks/boxes*100:Pct&k=10', 'Pct') === 50,
+    'one list on the card behaves exactly as before');
+
+  // naming the boxes is how a card scores across two lists now
+  check(val('&g=One&c=p:a&g=Two&c=q:b&g=Sum&r=:p+q:Both&k=11', 'Both') === 2,
+    'named boxes stay card-wide, so a card can still total two lists');
+
+  console.log('  8 checks');
+}
+
+/* ---- results resolve by need, not by document order ----
+   A formula citing a step written below it used to draw a dash, which
+   punished the way people actually write: the headline number first, its
+   workings underneath. Order now carries no meaning, and the only thing that
+   cannot be resolved is a genuine loop. */
+function sweepOrder() {
+  console.log('\nresults in any order');
+  const F = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=n:10:N';
+  const val = (hash, label) => {
+    const d = parse(F + hash);
+    const all = d.blocks.flatMap(b => b.computed || []);
+    const row = all.find(c => c.label === label);
+    return row ? row.value : 'no such row';
+  };
+
+  // the workings below the answer, which is the case that used to dash
+  check(val('&r=:mo*12:Year&r=mo:n*2:Month', 'Year') === 240,
+    'a result may cite a step written below it',
+    `Year came to ${val('&r=:mo*12:Year&r=mo:n*2:Month', 'Year')}`);
+
+  // and the same card the other way round still works
+  check(val('&r=mo:n*2:Month&r=:mo*12:Year', 'Year') === 240,
+    'and the same card written the other way round agrees');
+
+  // three deep, shuffled, to prove it is a graph and not one extra pass
+  check(val('&r=:c*2:Out&r=c:b+1:C&r=b:a*3:B&r=a:n:A', 'Out') === 62,
+    'a chain resolves however it is shuffled',
+    `Out came to ${val('&r=:c*2:Out&r=c:b+1:C&r=b:a*3:B&r=a:n:A', 'Out')}`);
+
+  // a name defined nowhere is absent, not pending - it must not look like a
+  // loop, or a typo would hang every row on the card
+  check(val('&r=:nope*2:Out', 'Out') === null,
+    'a name defined nowhere draws a dash');
+  check(val('&r=:nope*2:Out&r=x:n:X', 'X') === 10,
+    'and it does not stop the rest of the card resolving');
+
+  // a genuine loop is the one thing that cannot resolve
+  check(val('&r=a:b+1:A&r=b:a+1:B', 'A') === null,
+    'a cycle draws a dash');
+  check(val('&r=a:b+1:A&r=b:a+1:B&r=:n*2:Fine', 'Fine') === 20,
+    'and a cycle does not take the rest of the card with it');
+  check(val('&r=a:a+1:A', 'A') === null, 'a row citing itself draws a dash');
+
+  console.log('  8 checks');
+}
+
+/* ---- the decision cascade ----
+   t= is Label:Condition:Wording, rows sharing a label are one decision, and
+   the first true condition wins. Three fields rather than four puts the
+   wording last, so the key that used to be the most fragile to parse is now
+   one of the safest.
+
+   Two rules carry the weight, and both are about refusing to answer. A
+   condition with no comparator can never decide, whatever shifted into it -
+   found 13 Sep 2026, when a bare number in that slot was truthy-coerced into
+   a real-looking branch. And a condition that cannot be worked out dashes the
+   whole decision rather than falling through, because falling through treats
+   unknown as false and prints a later outcome with full authority. */
 function sweepDecisions() {
-  console.log('\na decision without a comparison');
-  const F = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=N:1:n';
+  console.log('\nthe decision cascade');
+  // n is a parameter, not a constant - the first claim on a name wins, so a
+  // second i= appended to the same card cannot override the first
+  const card = (n, hash) => '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=n:' + n + ':N' + hash;
+  const dec = (n, hash, at) => parse(card(n, hash)).blocks.find(b => b.type === 't').decided[at || 0];
+  const is = (got, want, name) => check(got === want, name,
+    got === want ? '' : `got ${JSON.stringify(got)}, wanted ${JSON.stringify(want)}`);
 
-  // the exact failure: an unencoded colon in the label shifts every field
-  const d1 = parse(F + '&t=Ratio+3:2+exceeded:n%3E0:Yes:No');
-  const t1 = d1.blocks.find(b => b.type === 't').decided[0];
-  check(t1.text === '', 'a colon-mangled label draws a dash, not a wrong verdict',
-    t1.text === '' ? '' : `text came to ${JSON.stringify(t1.text)}`);
+  // the wall this key was rebuilt for: three outcomes, which four positional
+  // fields could not say, so a live generation invented syntax instead
+  const THREE = '&t=Threat:n%3E=80:Do+not+negotiate' +
+                '&t=Threat:n%3E=40:Snacks+may+help' +
+                '&t=Threat::Suspiciously+reasonable';
+  is(dec(1, THREE).text, 'Suspiciously reasonable', 'nothing true falls through to the fallback');
+  is(dec(50, THREE).text, 'Snacks may help', 'the first true row wins, not the last');
+  is(dec(90, THREE).text, 'Do not negotiate', 'an earlier row beats a later one');
 
-  // the general rule, isolated from the colon bug that first found it: any
-  // condition without a comparator is unanswerable, not truthy
-  const d2 = parse(F + '&t=Weird:5:Yes:No');
-  const t2 = d2.blocks.find(b => b.type === 't').decided[0];
-  check(t2.text === '', 'a bare number never stands in for a comparison',
-    t2.text === '' ? '' : `text came to ${JSON.stringify(t2.text)}`);
+  // binary is just two rows, and needs no special case
+  is(dec(1, '&t=Real:n%3E0:Yes&t=Real::No').text, 'Yes', 'binary is two rows');
+  is(dec(-1, '&t=Real:n%3E0:Yes&t=Real::No').text, 'No', 'and the other way');
 
-  // and a real comparison still decides normally - the guard must not
-  // swallow legitimate decisions along with malformed ones
-  const d3 = parse(F + '&t=Real:n%3E0:Yes:No');
-  const t3 = d3.blocks.find(b => b.type === 't').decided[0];
-  check(t3.text === 'Yes', 'a real comparison still decides',
-    t3.text === 'Yes' ? '' : `text came to ${JSON.stringify(t3.text)}`);
-  console.log('  3 checks');
+  // the wording is last now, so nothing can shift into the comparator slot -
+  // but the rule is kept for whatever else lands there
+  is(dec(1, '&t=Weird:5:Yes').text, '', 'a bare number never stands in for a comparison');
+  is(dec(1, '&t=Gone:missing%3E0:Yes').text, '', 'an unworkable condition dashes');
+  is(dec(1, '&t=Gone:missing%3E0:Yes&t=Gone::No').text, '',
+     'an unworkable condition dashes rather than falling through to the fallback');
+
+  // a fallback that is not last makes every row after it unreachable
+  is(dec(1, '&t=Bad::Fallback&t=Bad:n%3E0:Yes').text, '', 'a fallback out of place dashes');
+
+  // rows sharing a label are ONE decision, so the card draws one row
+  const all = parse(card(1, THREE)).blocks.find(b => b.type === 't').decided;
+  check(all.length === 1, 'three rows sharing a label draw one decision',
+    all.length === 1 ? '' : `drew ${all.length} rows`);
+
+  // and two labels are two decisions, in the order they appear
+  const two = parse(card(1, '&t=One:n%3E0:A&t=Two:n%3C0:B')).blocks.find(b => b.type === 't').decided;
+  check(two.length === 2 && two[0].label === 'One' && two[1].label === 'Two',
+    'two labels are two decisions, in order',
+    `drew ${JSON.stringify(two.map(d => d.label))}`);
+
+  console.log('  12 checks');
 }
 
 /* ---- scoring a batch of real generations ----
@@ -496,6 +773,73 @@ function sweepDecisions() {
    the model. Opening it in a browser proves nothing, because the address bar
    is not the channel - it never truncates, never renders markdown, and is
    blind to every failure this file exists to catch. */
+/* ---- invented syntax ----
+   A separate count from validity, and the more valuable one.
+
+   A card that fails to render tells you a model got the spec wrong. A card
+   where a model wrote something the grammar does not HAVE tells you the
+   grammar is missing something - it wanted to say a thing, found no way to
+   say it, and made one up. That is how the t= wall was found: a live
+   generation wanted a three-way threshold, had only two slots, and chained a
+   second condition into the false one, printing spec syntax at a reader.
+
+   A rising count here names the next missing primitive without anyone
+   reasoning about it. Read the examples, not just the number: one invention
+   turning up again and again is a feature request. Lots of different ones
+   mean the vocabulary is too weak. */
+const KEYS = 'a h v m d g p o c s f i r t u k w x'.split(' ');
+const FUNCTIONS = 'min max round abs sqrt pow floor ceil ln exp'.split(' ');
+const CONSTANTS = ['pi'];
+const FIELD_COUNT = {f: 2, c: 2, i: 3, s: 3, r: 3, t: 3, u: 2};
+
+function inventedSyntax(url) {
+  const found = [];
+  const hash = url.slice(url.indexOf('#') + 1);
+
+  hash.split('&').forEach(pair => {
+    if (!pair) return;
+    const eq = pair.indexOf('=');
+    if (eq < 0) { found.push(`"${pair.slice(0, 24)}" is not a key=value at all`); return; }
+    const k = pair.slice(0, eq);
+    const v = pair.slice(eq + 1).replace(/%3A/gi, '\u0001');
+
+    if (KEYS.indexOf(k) < 0) { found.push(`a key the grammar does not have: ${k}=`); return; }
+
+    // a key written with the wrong number of fields is usually an older or
+    // imagined shape of it - a four-field t= is the one that started this
+    const want = FIELD_COUNT[k];
+    if (want) {
+      const got = v.split(':').length;
+      if (got > want) found.push(`${k}= written with ${got} fields, not ${want}`);
+      if (got < want) found.push(`${k}= written with only ${got} field${got > 1 ? 's' : ''}, not ${want}`);
+    }
+
+    // formulas: the condition of a t=, and the middle field of an r=
+    let expr = null;
+    if (k === 'r') expr = v.split(':')[1];
+    if (k === 't') expr = v.split(':')[1];
+    if (expr == null) return;
+    expr = decodeURIComponent(expr.replace(/\+/g, ' ')).replace(/\s+/g, '');
+
+    if (expr.indexOf('?') >= 0) found.push('a ternary a?b:c, which the grammar has no conditional for');
+    // the stand-in for an encoded colon is not something a model wrote, and a
+    // formula holding one is already reported as the ternary it came from
+    const strays = expr.replace(/\u0001/g, '').match(/[^A-Za-z0-9_.,()+\-*/<>=!]/g);
+    if (strays) [...new Set(strays)].forEach(ch =>
+      found.push(`${JSON.stringify(ch)} in a formula, which is not an operator here`));
+    if (/&&|\|\||(?<![<>!])=(?!=)/.test(expr))
+      found.push('a logical operator the grammar does not have');
+
+    // a word followed by ( is a call, and we hold the list of real ones
+    const calls = expr.match(/[A-Za-z_][A-Za-z0-9_]*(?=\()/g) || [];
+    calls.forEach(fn => {
+      if (FUNCTIONS.indexOf(fn) < 0) found.push(`a function that does not exist: ${fn}()`);
+    });
+  });
+
+  return [...new Set(found)];
+}
+
 function scoreBatch(file) {
   const raw = fs.readFileSync(file, 'utf8');
   const urls = raw.split(/\s+/).filter(t => /^https?:\/\/[^\s]*#/.test(t));
@@ -517,35 +861,51 @@ function scoreBatch(file) {
     try { d = parse(url.slice(url.indexOf('#'))); } catch (e) { why.push('does not parse'); }
     if (d) {
       ['h', 'v', 'm', 'd'].forEach(k => { if (!d[k]) why.push(`no ${k}=`); });
-      const groups = new Set(d.blocks.map(b => b.group));
-      if (groups.size > 3) why.push(`${groups.size} blocks, cap is 3`);
       if (!d.blocks.length) why.push('no blocks');
       d.blocks.forEach(b => {
         (b.computed || []).forEach(c => { if (c.label && c.value === null) why.push(`"${c.label}" draws a dash`); });
         (b.decided || []).forEach(c => { if (c.label && !c.text) why.push(`"${c.label}" cannot be decided`); });
         if (b.type === 't') b.items.forEach(it => {
-          if (it.split(':').length !== 4) why.push('a t= does not have its four fields');
+          if (it.split(':').length < 3) why.push('a t= does not have its three fields');
         });
       });
       // an input nothing refers to is a box the reader fills in for no reason
       const named = [];
       d.blocks.forEach(b => { if (b.type === 'i') b.items.forEach(it => {
-        const p = it.split(':'); if (p.length >= 3) named.push(p[2]); }); });
+        const p = it.split(':'); if (p.length >= 3) named.push(p[0]); }); });
       const formulas = d.blocks.flatMap(b =>
         (b.type === 'r' || b.type === 't') ? b.items.join(' ') : []).join(' ');
       named.forEach(n => {
         if (!new RegExp('\\b' + n + '\\b').test(formulas)) why.push(`input "${n}" is never used`);
       });
     }
-    verdicts.push({url, why});
+    const made = inventedSyntax(url);
+    verdicts.push({url, why, made});
     const head = (/[#&]h=([^&]*)/.exec(url) || [, '?'])[1].replace(/\+/g, ' ').slice(0, 44);
     console.log(`${why.length ? 'BAD ' : 'ok  '} ${String(i + 1).padStart(3)}  ${head}`);
     why.forEach(w => console.log(`        - ${w}`));
+    made.forEach(m => console.log(`        ! invented: ${m}`));
   });
 
   const bad = verdicts.filter(v => v.why.length);
   const rate = ((urls.length - bad.length) / urls.length * 100).toFixed(1);
   console.log(`\n${urls.length - bad.length}/${urls.length} valid first render  (${rate}%)`);
+
+  /* The count that matters more. A model inventing syntax is not a model
+     getting it wrong - it is the grammar coming up short, and this is the
+     only place that shows up as a number. */
+  const invented = verdicts.filter(v => v.made.length);
+  console.log(`${invented.length}/${urls.length} wrote syntax the grammar does not have`);
+  if (invented.length) {
+    const tally = {};
+    invented.forEach(v => v.made.forEach(m => { tally[m] = (tally[m] || 0) + 1; }));
+    console.log('\nwhat they reached for and could not find:');
+    Object.entries(tally).sort((a, b) => b[1] - a[1])
+      .forEach(([k, n]) => console.log(`  ${String(n).padStart(3)}  ${k}`));
+    console.log('\nRead these, not just the count. One invention turning up again');
+    console.log('and again is a feature request. Many different ones mean the');
+    console.log('vocabulary is too weak.');
+  }
 
   if (bad.length) {
     const tally = {};
@@ -569,6 +929,12 @@ if (process.argv[2]) {
   sweepColons();
   sweepPicks();
   sweepNamespace();
+  sweepWorking();
+  sweepRefusals();
+  sweepUnits();
+  sweepFunctions();
+  sweepScopes();
+  sweepOrder();
   sweepDecisions();
   sweepExamples();
   sweepFormulas();

@@ -300,6 +300,8 @@ p{margin:0 0 15px;font-size:15px;color:var(--dim)}
 .ins input::-webkit-outer-spin-button,
 .ins input::-webkit-inner-spin-button{appearance:none;margin:0}
 .ins input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* the unit a name is printed in, on the label of the box that carries it */
+.iu{margin-left:6px;font-family:var(--mono);font-size:12.5px;color:var(--faint)}
 
 /* steps - ordered, so the marker is the number itself rather than a dot. It
    carries the row's font and line-height so the two line boxes are identical
@@ -525,11 +527,10 @@ function decodeOnce(v){
    the key that follows decides what kind. Blocks come out in the order they
    appear in the URL, so the grammar needs no numbering and no nesting. */
 var BLOCK_KEYS = ['p', 'o', 'c', 'f', 'r', 't', 'i', 's'];
-var MAX_BLOCKS = 3;
 
 /* Keys whose value is several fields with a colon between them. They are the
    only ones that travel with a written colon still disguised - see MARK. */
-var FIELDED = ['f', 'i', 'r', 't', 'c', 's'];
+var FIELDED = ['f', 'i', 'r', 't', 'c', 's', 'u'];
 
 /* A colon is the field separator and is also an ordinary character in English.
    Decoding %3A on the way in would make the two the same thing, which is why a
@@ -548,6 +549,25 @@ function text(s){
    them and quietly truncate in others. n is how many fields the key has, and
    the last one keeps whatever is left, so trailing prose may hold colons.
 
+   That last part is now the grammar's central law rather than a convenience:
+   every key puts its machine fields first and its one human field last. A
+   name, a number, a formula and a condition all have restricted character
+   sets and cannot be ambiguous; wording can hold anything, and is safe
+   precisely because nothing follows it. So a raw colon in a label is no
+   longer a silent mis-split - "Be there by 9:30" splits and rejoins intact,
+   encoded or not. Where a field is optional it is still present and may be
+   empty, because an empty leading field costs one character and an empty one
+   removes a heuristic.
+
+   f= is the one exception, and stays Label:Value. It is the only key with
+   TWO human fields - "Licence: MIT", "Cold start: 180ms", "Runtime: Node 20"
+   - so the law cannot protect both, and reordering it only moves the exposure
+   from the label onto the value. The value is the field more likely to carry
+   a colon, being a time, a ratio or a version, while an f= label is a short
+   noun phrase. So the value keeps the protected slot it already had. The law
+   holds wherever there is exactly one human field, which is every other key
+   in the language.
+
    Deliberately does not trim. A label wants trimming and the caller does it;
    a formula must not be touched, because parse() has already turned its plus
    signs into spaces and a trailing one is a + that has to come back. Trimming
@@ -560,8 +580,71 @@ function fields(item, n){
   return out.map(text);
 }
 
+/* What the card refuses to draw.
+
+   These were all silent before, and silence is the failure this format exists
+   to avoid: a duplicate name drew a live-looking control that no formula read,
+   and an input whose start value was not a number computed as zero. Both
+   rendered perfectly and were wrong, with nothing for a reader to notice.
+
+   A dash is for a question that cannot be answered. This is different - the
+   card itself does not make sense, so there is nothing to draw and no honest
+   way to draw part of it. */
+var RESERVED = {ticks: 1, boxes: 1, pi: 1};
+
+function audit(out){
+  var claimed = {};
+
+  function claim(name, what){
+    if(!name) return;
+    if(Object.prototype.hasOwnProperty.call(RESERVED, name)){
+      out.problems.push('"' + name + '" is a reserved name and cannot be ' + what);
+      return;
+    }
+    if(Object.prototype.hasOwnProperty.call(claimed, name)){
+      out.problems.push('the name "' + name + '" is claimed twice');
+      return;
+    }
+    claimed[name] = what;
+  }
+
+  out.blocks.forEach(function(b){
+    b.items.forEach(function(item){
+      if(b.type === 'i'){
+        var f = fields(item, 3);
+        claim(f[0].trim(), 'an input');
+        // a start value that is not a number used to compute as zero
+        var start = f[1].trim();
+        if(start === '' || !isFinite(parseFloat(start)) ||
+           !/^-?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/.test(start))
+          out.problems.push('the input "' + f[2].trim() + '" starts at "' +
+                            start + '", which is not a number');
+      }
+      if(b.type === 'c') claim(checkField(item).name, 'a box');
+      if(b.type === 'r') claim(fields(item, 3)[0].trim(), 'a result');
+    });
+  });
+
+  /* A pick-one is the exception, and the only one: its rows SHARE a name on
+     purpose, because that is what makes them one group. So the group is what
+     claims the name, not each option. */
+  var groups = {};
+  out.blocks.forEach(function(b){
+    if(b.type !== 's') return;
+    b.items.forEach(function(item){ groups[fields(item, 3)[0].trim()] = 1; });
+  });
+  for(var g in groups) if(Object.prototype.hasOwnProperty.call(groups, g)) claim(g, 'a pick-one');
+
+  // a unit for a name nothing declares is a typo, and a silent one
+  for(var u in out.units){
+    if(!Object.prototype.hasOwnProperty.call(out.units, u)) continue;
+    if(!Object.prototype.hasOwnProperty.call(claimed, u))
+      out.problems.push('a unit is declared for "' + u + '", which nothing on the card names');
+  }
+}
+
 function parse(hash){
-  var out = {blocks: []};
+  var out = {blocks: [], units: {}, problems: []};
   var current = null;
   var pendingLabel = null;
   var group = -1;
@@ -599,6 +682,16 @@ function parse(hash){
       group++;
       return;
     }
+    if(k === 'u'){
+      // u=name:unit. Declared once; twice is a contradiction, not a rebinding.
+      var uf = fields(v, 2);
+      var un = uf[0].trim(), uu = uf[1].trim();
+      if(!un) return;
+      if(Object.prototype.hasOwnProperty.call(out.units, un))
+        out.problems.push('the unit for "' + un + '" is declared twice');
+      else out.units[un] = uu;
+      return;
+    }
     if(BLOCK_KEYS.indexOf(k) >= 0){
       if(group < 0) group = 0;          // lines before any g= are block one
       if(!current || current.type !== k){
@@ -613,15 +706,18 @@ function parse(hash){
   });
 
   out.blocks = out.blocks.filter(function(b){ return b.items.length; });
-  // three BLOCKS, which is three g= groups - not three runs. A calculator is
-  // one block now however many kinds of line it takes to draw.
-  var keep = [];
-  out.blocks.forEach(function(b){ if(keep.indexOf(b.group) < 0) keep.push(b.group); });
-  keep = keep.slice(0, MAX_BLOCKS);
-  out.blocks = out.blocks.filter(function(b){ return keep.indexOf(b.group) >= 0; });
+  audit(out);
+  /* There was a cap of three blocks here, and it truncated - a fourth block
+     vanished with no dash and nothing in /broken/, so a card labelled
+     IMPORTANT disappeared in test. It measured the wrong thing anyway: three
+     blocks of five long bullets is far taller than six f= rows, so block
+     count barely tracks height. Length is capped where it is real, at 2000
+     characters of URL, and the frame comes first, so the verdict is above the
+     fold however many blocks follow. Two or three is now shape shown in the
+     examples rather than a rule enforced by a slice. */
   // worked out here rather than while drawing, so every reader of a parsed
   // card - the renderer, the share image, copy for AI - sees the same numbers
-  computeAll(out.blocks, out.w, out.k, out.x);
+  computeAll(out.blocks, out.w, out.k, out.x, out.units);
   return out;
 }
 
@@ -699,6 +795,57 @@ var CREDIT = '<footer><div class="how">Paste it into any AI to dig in. Or make '
    Everything that goes wrong - unknown name, bad syntax, divide by zero -
    comes back as null and draws as a dash. A number that is not a number must
    never reach the card looking like one. */
+/* A unit attached to a name, declared once with u=name:unit.
+
+   Every numeric card used to smuggle its units into a label - "Interest rate
+   percent" - and print its answers bare, so "Payment 222" never said of
+   what. An ambiguous number is not a cosmetic problem.
+
+   Two fields rather than three, and the unit last. An earlier draft had u=
+   carrying a display label too, for a t= that was to be grouped by name; t=
+   groups by its label instead, so nothing needed the binding and the field
+   went.
+
+   A unit does one of two jobs. Most decorate: the number is untouched and the
+   unit is printed beside it, which has to be free text because shipped cards
+   already carry ms and kb and no closed list would hold them. A few reformat,
+   and those are a closed list, because changing how a number reads is not
+   something to infer from free text. */
+var MONEY = {'£':1, '$':1, '€':1, '¥':1};
+var CLOCK = {hr: 60, min: 60};
+
+/* 5.64 hours is 5:38, and printing 5.64 was the oldest soft spot in the
+   format. The fraction is the part that needs converting, and it rounds, so
+   59.6 minutes reads 1:00 rather than 0:60. */
+function inUnit(value, unit){
+  if(!Object.prototype.hasOwnProperty.call(CLOCK, unit)) return null;
+  if(value === null || !isFinite(value) || value < 0) return null;
+  var whole = Math.floor(value);
+  var part = Math.round((value - whole) * CLOCK[unit]);
+  if(part === CLOCK[unit]){ whole++; part = 0; }
+  return whole + ':' + (part < 10 ? '0' : '') + part;
+}
+
+/* The number as the card prints it, wearing whatever unit its name declared.
+   Money leads, because that is how money is written; everything else trails. */
+function withUnit(value, unit){
+  var shown = showNumber(value);
+  if(!unit || value === null) return shown;
+  var clock = inUnit(value, unit);
+  if(clock !== null) return clock;
+  return Object.prototype.hasOwnProperty.call(MONEY, unit)
+    ? unit + shown : shown + unit;
+}
+
+/* pi only, and deliberately not e.
+
+   e was here for one afternoon. Then the corpus was rescored and two real
+   generations broke on it: a model had used e as the name for energy, which
+   is what e is for in any physics card anyone would write. Reserving a single
+   common letter to save writing exp(1) is a bad trade, and the corpus said so
+   before any of this shipped. Nobody names a variable pi. */
+var CONSTS = {pi: Math.PI};
+
 var FUNCS = {
   min: Math.min, max: Math.max, abs: Math.abs, sqrt: Math.sqrt,
   pow: Math.pow, floor: Math.floor, ceil: Math.ceil,
@@ -708,6 +855,11 @@ var FUNCS = {
      It is what turns a rate into a how-long - months to clear a balance,
      years to double - which nothing else here could express. */
   ln: Math.log,
+  /* The inverse ln never had, which is why compound growth was unreachable:
+     ln could say how long something takes but nothing could say what it grows
+     to. A rate compounded n times is exp(n*ln(1+r)), and without exp the
+     whole geometric half of the language was missing. */
+  exp: Math.exp,
   round: function(x, dp){
     var f = Math.pow(10, dp || 0);
     return Math.round(x * f) / f;
@@ -760,13 +912,28 @@ function parseExpr(tokens){
     eat(':');
     return {op: '?', c: cond, a: yes, b: ternary()};
   }
+  var CMP = {'<':1, '>':1, '<=':1, '>=':1, '==':1, '!=':1};
+  /* A chain means what it means in English and in maths, not what it means in
+     C: 18<=age<65 is both comparisons, not (18<=age) compared to 65. It used
+     to draw a dash - honest, but a model writes this, so honest was not
+     enough.
+
+     The middle operand is shared between the two halves, which is the whole
+     point of a chain and the reason this cannot just be a loop over
+     additive(). */
   function comparison(){
     var left = additive();
-    var t = peek().t;
-    if(t !== '<' && t !== '>' && t !== '<=' && t !== '>=' &&
-       t !== '==' && t !== '!=') return left;
-    pos++;
-    return {op: t, l: left, r: additive()};
+    if(!CMP[peek().t]) return left;
+    var op = tokens[pos++].t;
+    var mid = additive();
+    var node = {op: op, l: left, r: mid};
+    while(CMP[peek().t]){
+      var next = tokens[pos++].t;
+      var right = additive();
+      node = {op: 'and', l: node, r: {op: next, l: mid, r: right}};
+      mid = right;
+    }
+    return node;
   }
   function additive(){
     var left = multiplicative();
@@ -821,6 +988,10 @@ function evalNode(node, env){
   switch(node.op){
     case 'num': return node.v;
     case 'ref':
+      /* pi is a constant rather than a function, so it is a name with no
+         brackets. A card cannot claim it - see the refusals - so looking here
+         first can never shadow something the author wrote. */
+      if(Object.prototype.hasOwnProperty.call(CONSTS, node.v)) return CONSTS[node.v];
       if(!Object.prototype.hasOwnProperty.call(env, node.v)) throw 0;
       return env[node.v];
     case 'neg': return -evalNode(node.l, env);
@@ -844,6 +1015,8 @@ function evalNode(node, env){
     case '>=': return l >= r ? 1 : 0;
     case '==': return l === r ? 1 : 0;
     case '!=': return l !== r ? 1 : 0;
+    // only ever built by a chained comparison, so both sides are already 1 or 0
+    case 'and': return (l && r) ? 1 : 0;
   }
   throw 0;
 }
@@ -867,11 +1040,10 @@ function evaluate(src, env){
    is the smallest change that keeps a small number honest. */
 function twoPlaces(v){
   var a = Math.abs(v);
-  /* Six figures, not three. The printed working has to reproduce the answer
-     when a reader recomputes it, and a physical constant entered as
-     0.000000000066743 shown as 6.67e-11 puts the escape speed of the Earth out
-     by four metres a second. Six is enough for the constants that turn up on a
-     card and still short enough to read. */
+  /* Six figures, not three, for a number whose whole magnitude sits below two
+     decimal places - a physical constant entered as 0.000000000066743 shown
+     as 0 is not a small number, it is a wrong one. The printed working has
+     its own rule now; see plainNumber. */
   if(a !== 0 && a < 0.01) return String(Number(v.toPrecision(6)));
   return v.toFixed(2).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
 }
@@ -887,8 +1059,34 @@ function showNumber(v){
          (dot < 0 ? '' : s.slice(dot));
 }
 
+/* A number as the printed WORKING cites it, which is a different job from
+   showNumber and now formats differently.
+
+   showNumber presents: two places is right for money and for most answers a
+   reader wants to read. plainNumber proves, and a proof that does not
+   reproduce the answer is worse than no proof at all - it refutes itself in
+   front of the reader.
+
+   Found 15 Sep 2026, by looking at a card rather than by a test. A compound
+   growth step held 1.9991314 and the working printed round(14000*2), which
+   recomputes to 28,000 under an answer reading 27,988. The card was right and
+   its own working said otherwise.
+
+   twoPlaces already carried half this fix - below a hundredth it switches to
+   six significant figures, with a comment about exactly this - but the hole
+   above a hundredth stayed open until `exp` went in and made multipliers like
+   1.9991314 an ordinary thing for a card to hold.
+
+   Six figures, which is the number twoPlaces already reached for below a
+   hundredth and for the same reason - enough for anything a card really
+   carries, short enough to still read as a number. One precision for all
+   working rather than two rules meeting at 0.01. A condition gets it too: a
+   runway of 8.999 against a target of 9 printed as 9>=9 reads true beside a
+   verdict saying otherwise, which is the same proof refuting itself. */
 var plainNumber = function(v){
-  return v === null ? '\u2014' : twoPlaces(v);
+  if(v === null) return '\u2014';
+  if(v === 0) return '0';
+  return String(Number(v.toPrecision(6)));
 };
 
 /* Inputs are read before anything is worked out, so a formula can name one
@@ -899,17 +1097,18 @@ var plainNumber = function(v){
    One w= carries every input on the card, in document order, exactly as one k=
    carries every tick. What the reader typed wins over what the sender sent,
    which is what makes the link theirs once they have touched it. */
-function readInputs(blocks, written, env){
+function readInputs(blocks, written, env, units){
+  units = units || {};
   var typed = String(written == null ? '' : written).split('~');
   env = env || {};
   var seen = 0;
   blocks.forEach(function(b){
     if(b.type !== 'i') return;
     b.fields = b.items.map(function(item){
-      // Label:Start:name. The name is last because every plain row on the card
-      // is Label:Value, and an input is that row with a handle on the end.
+      // name:Start:Label. The label is last so it can hold a colon; the name
+      // and the start value are both machine fields and cannot.
       var f = fields(item, 3);
-      var label = f[0].trim(), sent = f[1].trim(), name = f[2].trim();
+      var name = f[0].trim(), sent = f[1].trim(), label = f[2].trim();
       var mine = typed[seen++];
       var value = parseFloat(mine !== undefined && mine !== '' ? mine : sent);
       if(!isFinite(value)) value = 0;
@@ -917,7 +1116,8 @@ function readInputs(blocks, written, env){
       // c= or r= reusing one is a mistake, not a rebinding, so it is dropped
       // rather than silently rewiring every formula that already reads it.
       if(name && !Object.prototype.hasOwnProperty.call(env, name)) env[name] = value;
-      return {name: name, label: label, value: value};
+      return {name: name, label: label, value: value,
+              unit: Object.prototype.hasOwnProperty.call(units, name) ? units[name] : ''};
     });
   });
   return env;
@@ -931,13 +1131,14 @@ function readInputs(blocks, written, env){
    anything with a space in it is still part of the label, which is what keeps
    "Bring ID: passport" prose and "Be there by 9:30" a time. */
 function checkField(item){
-  /* A name is a bare word after the LAST real colon. A written colon arrives
-     disguised, so it cannot be mistaken for the separator here either - which
-     is what lets "Bring ID: passport" stay prose while "...:card" is a name. */
-  var raw = String(item == null ? '' : item);
-  var m = /^(.*):([A-Za-z_][A-Za-z0-9_]*)$/.exec(raw);
-  return m ? {label: text(m[1]), name: m[2]}
-           : {label: text(raw), name: ''};
+  /* name:Wording, and the name comes first so the wording is last and safe.
+     It used to be a bare word after the last colon, which is a heuristic and
+     behaved like one: "Bring one thing:passport" lost the passport, while
+     "Bring ID: passport" survived purely because of the space. An unnamed box
+     writes the field empty - c=:You have a mortgage - which costs a character
+     and removes the guess. */
+  var f = fields(item, 2);
+  return {name: f[0].trim(), label: f[1].trim()};
 }
 
 /* The checklist, as numbers a formula can use. One k= covers every
@@ -958,23 +1159,25 @@ function checkField(item){
    way one k= covers every checklist. The first option is chosen until the
    reader says otherwise: a card has to be good before anyone touches it, and a
    group defaulting to nothing would land every formula below it on a dash. */
-function readPicks(blocks, chosen, env){
+function readPicks(blocks, chosen, env, units){
+  units = units || {};
   var picked = String(chosen == null ? '' : chosen).split('~');
   var order = [], byName = {};
   blocks.forEach(function(b){
     if(b.type !== 's') return;
     b.options = b.items.map(function(item){
-      // Label:Value:name - an i= with the reader's choice in place of a box
+      // name:Value:Label - an i= with the reader's choice in place of a box
       var f = fields(item, 3);
       var value = parseFloat(f[1].trim());
       if(!isFinite(value)) value = 0;
-      var name = f[2].trim();
+      var name = f[0].trim();
       if(!Object.prototype.hasOwnProperty.call(byName, name)){
         byName[name] = {name: name, index: order.length, options: []};
         order.push(byName[name]);
       }
       var g = byName[name];
-      var opt = {label: f[0].trim(), value: value, name: name,
+      var opt = {label: f[2].trim(), value: value, name: name,
+                 unit: Object.prototype.hasOwnProperty.call(units, name) ? units[name] : '',
                  group: g.index, slot: g.options.length, on: 0};
       g.options.push(opt);
       return opt;
@@ -994,20 +1197,53 @@ function readPicks(blocks, chosen, env){
   return order;
 }
 
+/* The checklist, as numbers a formula can use.
+
+   One k= still covers every box on the card in document order - that is the
+   reader's state and it has to stay one string - but the COUNTS are scoped to
+   the block. Card-wide was never a decision, it was the absence of one, and
+   it was silently wrong: two checklists on one card shared a single count, so
+   a score written for the first list counted the second as well. The formula
+   read correctly and the number was wrong, which is the worst failure this
+   format has.
+
+   A block with no checklist in it does not get ticks and boxes at all, rather
+   than getting zero. Zero would make ticks/boxes a nonsense 0/0 and, worse,
+   would answer a question the card cannot answer. An absent name draws a
+   dash, which is what a formula asking about a list that is not there
+   deserves.
+
+   Named boxes stay card-wide, because a name is explicit - naming the boxes
+   is how a card scores across two lists now that counting cannot. */
 function readTicks(blocks, ticked){
   var marks = String(ticked == null ? '' : ticked);
-  var names = {}, boxes = 0, ticks = 0;
+  var names = {}, seen = 0, byGroup = {};
   blocks.forEach(function(b){
     if(b.type !== 'c') return;
+    if(!Object.prototype.hasOwnProperty.call(byGroup, b.group))
+      byGroup[b.group] = {ticks: 0, boxes: 0};
+    var scope = byGroup[b.group];
     b.items.forEach(function(item){
-      var on = marks.charAt(boxes) === '1' ? 1 : 0;
+      var on = marks.charAt(seen++) === '1' ? 1 : 0;
       var name = checkField(item).name;
       if(name) names[name] = on;
-      ticks += on;
-      boxes++;
+      scope.ticks += on;
+      scope.boxes++;
     });
   });
-  return {ticks: ticks, boxes: boxes, names: names};
+  return {byGroup: byGroup, names: names};
+}
+
+/* The names a formula in this block can see: the card's, plus whatever the
+   block's own checklist means by ticks and boxes. */
+function scopedEnv(env, group, counted){
+  var scope = counted.byGroup[group];
+  if(!scope) return env;
+  var out = Object.create(null);
+  for(var k in env) if(Object.prototype.hasOwnProperty.call(env, k)) out[k] = env[k];
+  out.ticks = scope.ticks;
+  out.boxes = scope.boxes;
+  return out;
 }
 
 /* Restoring the + that parse() turned into a space.
@@ -1038,87 +1274,202 @@ function restorePlus(src){
     .replace(/ /g, '+');
 }
 
-function computeAll(blocks, written, ticked, chosen){
+/* The printed working, with every name replaced by what it held. A name is
+   the one thing in a formula a reader cannot check, so showing the algebra
+   instead of the numbers would make the working decorative. One owner,
+   because it was two identical regexes in t= and r=. */
+function substitute(expr, env){
+  return String(expr).replace(/[A-Za-z_][A-Za-z0-9_]*/g, function(word){
+    return Object.prototype.hasOwnProperty.call(env, word)
+      ? plainNumber(env[word]) : word;
+  });
+}
+
+function computeAll(blocks, written, ticked, chosen, units){
+  units = units || {};
   var counted = readTicks(blocks, ticked);
-  // ticks/boxes are reserved and claim their names first, so nothing later -
-  // an input, a named box, or a result - can knock them out from under a
-  // checklist formula that is already reading them.
-  var env = {ticks: counted.ticks, boxes: counted.boxes};
-  readInputs(blocks, written, env);
+  // ticks and boxes are scoped to a block rather than to the card, so they
+  // are layered on per row by scopedEnv rather than seeded here
+  var env = Object.create(null);
+  readInputs(blocks, written, env, units);
   // after the inputs, so an i= holding the same name keeps it - and before the
   // named boxes, for no reason beyond document order being the tie-break
-  readPicks(blocks, chosen, env);
+  readPicks(blocks, chosen, env, units);
   for(var name in counted.names){
     if(Object.prototype.hasOwnProperty.call(counted.names, name) &&
        !Object.prototype.hasOwnProperty.call(env, name)) env[name] = counted.names[name];
   }
-  blocks.forEach(function(b){
-    /* A condition is only ever read out, never referred to, so it needs no
-       name - which is what keeps four fields unambiguous: everything after
-       the second colon splits once more and stops. */
-    if(b.type === 't'){
-      b.decided = b.items.map(function(item){
-        var f = fields(item, 4);
-        var label = f[0].trim(), yes = f[2].trim(), no = f[3].trim();
-        var cond = restorePlus(f[1]);
-        /* null is "could not be worked out", not "false". Treating the two
-           alike is how a card ends up printing the losing branch with full
-           authority - "Stay home. The numbers have spoken." - when in fact
-           nothing spoke: the condition cited a result that was itself a dash.
-           An unanswerable question draws a dash here, exactly as r does.
+  /* Results resolve by need, not by document order.
 
-           A decision is a comparison by definition - every field in the spec
-           is Label:Condition:When+true:When+false, and Condition always
-           compares something. A bare number here is not a quiet decision, it
-           is four fields that came apart at a colon nobody encoded - a
-           trueText or label spilling a comparator's slot. Truthy-coercing
-           that number would pick a real-looking branch with the same false
-           authority the paragraph above already refuses to allow for null,
-           so it draws the same dash. */
-        var hit = (cond && /<=|>=|==|!=|<|>/.test(cond)) ? evaluate(cond, env) : null;
-        var shown = cond.replace(/[A-Za-z_][A-Za-z0-9_]*/g, function(word){
-          return Object.prototype.hasOwnProperty.call(env, word)
-            ? plainNumber(env[word]) : word;
-        });
-        return {label: label, expr: shown,
-                text: hit === null ? '' : (hit ? yes : no)};
-      });
-      return;
-    }
+     They used to run top to bottom, each joining the pool the next could see,
+     so a formula that cited a step written below it drew a dash. That is a
+     wall with nothing behind it: writing the headline number first and its
+     workings underneath is how people write, and the card punished it. Order
+     now carries no meaning at all - the only thing that cannot be resolved is
+     a genuine loop, and a loop draws a dash, which is the honest answer.
+
+     Names are claimed in document order even though evaluation is not, so
+     which row owns a duplicated name stays deterministic. First claim wins,
+     exactly as it does for an input. */
+  var rows = [];
+  blocks.forEach(function(b){
     if(b.type !== 'r') return;
     b.computed = b.items.map(function(item){
-      var f = fields(item, 2);
-      var label = f[0].trim();
-      var parts = [f[1]];
-      var name = '';
-      // a?b:c uses the same colon the fields do, so the spec says a branching
-      // result may not be named - which makes this unambiguous rather than a
-      // guess: no ? in the formula, and a trailing :word is the name
-      var tail = /^(.+):([A-Za-z_][A-Za-z0-9_]*)$/.exec(parts[0]);
-      if(tail && parts[0].indexOf('?') < 0){ parts = [tail[1]]; name = tail[2]; }
-      var expr = restorePlus(parts.join(':'));
-      var value = expr ? evaluate(expr, env) : null;
+      var f = fields(item, 3);
+      var row = {name: f[0].trim(), expr: restorePlus(f[1]), label: f[2].trim(),
+                 group: b.group, value: null, done: false};
+      row.unit = Object.prototype.hasOwnProperty.call(units, row.name)
+        ? units[row.name] : '';
+      rows.push(row);
+      return row;
+    });
+  });
 
-      /* The formula is printed so the number can be checked, and a name is
-         the one thing in it a reader cannot check - a step with no label is
-         not on the card at all, so "s*18" cites something invisible. Names
-         resolve to what they held here, which is the difference between
-         showing your working and showing your algebra. Substituted before
-         this row joins env, so a row can never cite itself. */
-      var shown = expr.replace(/[A-Za-z_][A-Za-z0-9_]*/g, function(word){
-        return Object.prototype.hasOwnProperty.call(env, word)
-          ? plainNumber(env[word]) : word;
+  // claim names first, in document order, so a duplicate is dropped rather
+  // than silently rewiring every formula that already reads the name
+  var pending = {};
+  rows.forEach(function(row){
+    if(row.name && !Object.prototype.hasOwnProperty.call(env, row.name)
+       && !Object.prototype.hasOwnProperty.call(pending, row.name)){
+      pending[row.name] = row;
+    } else {
+      row.name = '';
+    }
+  });
+
+  /* A row is ready when nothing it cites is still waiting to be worked out.
+     A name that is never defined anywhere is not waiting - it is absent, and
+     evaluate() already draws a dash for it, so it must not block the row
+     forever or a typo would look like a cycle. */
+  function ready(row){
+    var words = row.expr.match(/[A-Za-z_][A-Za-z0-9_]*/g) || [];
+    for(var i = 0; i < words.length; i++){
+      if(words[i] === row.name) continue;
+      if(Object.prototype.hasOwnProperty.call(pending, words[i])) return false;
+    }
+    return true;
+  }
+
+  function settle(row){
+    var seen = scopedEnv(env, row.group, counted);
+    row.done = true;
+    row.value = row.expr ? evaluate(row.expr, seen) : null;
+
+    /* The formula is printed so the number can be checked, and a name is the
+       one thing in it a reader cannot check - a step with no label is not on
+       the card at all, so "s*18" cites something invisible. Substituted
+       before this row joins env, so a row can never cite itself. */
+    row.expr = substitute(row.expr, seen);
+
+    // a row that just cites a step restates its own number - "59700" under
+    // 59,700 is noise, not working
+    if(row.expr === plainNumber(row.value)) row.expr = '';
+
+    if(row.name){
+      delete pending[row.name];
+      if(row.value !== null) env[row.name] = row.value;
+    }
+  }
+
+  for(var moved = true; moved; ){
+    moved = false;
+    rows.forEach(function(row){
+      if(row.done || !ready(row)) return;
+      settle(row);
+      moved = true;
+    });
+  }
+
+  // whatever is left cites something that cites it back. Settling them drops
+  // them out of pending so the working still prints, and the dash is real.
+  rows.forEach(function(row){ if(!row.done){ delete pending[row.name]; } });
+  rows.forEach(function(row){ if(!row.done) settle(row); });
+
+  /* Decisions last, and all of them, so a condition may cite any result on
+     the card rather than only the ones above it. */
+  blocks.forEach(function(b){
+    if(b.type !== 't') return;
+    /* A cascade. Rows sharing a label are one decision, the first true
+       condition wins, and a row with an empty condition is the fallback.
+
+       It used to be four positional fields - Label:Condition:Yes:No - which
+       made it both the most fragile key to parse and the only one that could
+       not say what people actually mean by a threshold. Under / about right /
+       over is three outcomes, and a live generation that wanted three found
+       none, chained a second condition into the false slot, and printed
+       "c>=40:Snacks may stabilise the situation:Suspiciously reasonable" at a
+       reader. A rule that forbids without offering an alternative gets
+       broken.
+
+       Three fields puts the WORDING last, so the most fragile key in the
+       language becomes one of the safest. Binary is two rows. Outcomes are
+       uncapped. The grouping rule is the one s= already uses, and it is what
+       the model reached for unprompted when it hit the wall.
+
+       The label leads, and is the one field here not protected from a raw
+       colon - the same trade f= makes, and for the same reason: a label is a
+       short noun phrase while wording is a sentence, so the sentence gets the
+       safe slot. */
+      var order = [], byLabel = {};
+      b.items.forEach(function(item){
+        var f = fields(item, 3);
+        var label = f[0].trim();
+        if(!Object.prototype.hasOwnProperty.call(byLabel, label)){
+          byLabel[label] = {label: label, rows: []};
+          order.push(byLabel[label]);
+        }
+        byLabel[label].rows.push({cond: restorePlus(f[1]), text: f[2].trim()});
       });
 
-      // a row that just cites a step restates its own number - "59700"
-      // under 59,700 is noise, not working
-      if(shown === plainNumber(value)) shown = '';
+      var seen = scopedEnv(env, b.group, counted);
+      b.decided = order.map(function(g){
+        var dash = {label: g.label, expr: '', text: ''};
+        /* What a fallback shows as its working. A row that wins is its own
+           proof - the condition is true, so that is why this wording. A
+           fallback wins because every condition failed, so the failed ones
+           ARE the proof, and printing nothing would hand the reader a verdict
+           with nothing behind it. For a two-row decision this comes to the
+           single condition the old four-field key used to print, which is
+           what it should be. */
+        var failed = [];
 
-      // First claim wins - see readInputs. A result naming itself after an
-      // input or an earlier result does not rewire it, it just goes unnamed.
-      if(name && value !== null && !Object.prototype.hasOwnProperty.call(env, name)) env[name] = value;
-      return {label: label, expr: shown, value: value};
-    });
+        /* A fallback that is not last makes every row after it unreachable.
+           That is malformed rather than merely unanswerable, and guessing
+           which row was meant to win is the kind of repair this format
+           refuses. */
+        for(var j = 0; j < g.rows.length - 1; j++) if(!g.rows[j].cond) return dash;
+
+        for(var i = 0; i < g.rows.length; i++){
+          var row = g.rows[i];
+
+          // the fallback, which can only be last by the check above
+          if(!row.cond)
+            return {label: g.label, expr: failed.join(', '), text: row.text};
+
+          /* A decision is a comparison by definition. A bare number here is
+             not a quiet decision, it is fields that came apart at a colon
+             nobody encoded - a label or a piece of wording spilling into the
+             comparator's slot. Truthy-coercing it would pick a real-looking
+             branch with false authority. */
+          if(!/<=|>=|==|!=|<|>/.test(row.cond)) return dash;
+
+          var hit = evaluate(row.cond, seen);
+
+          /* null is "could not be worked out", not "false", and the whole
+             decision dashes rather than falling through to the next row.
+             Falling through would treat unknown as false and print a later
+             outcome with full authority - "Stay home. The numbers have
+             spoken." - when nothing spoke: the condition cited a result that
+             was itself a dash. */
+          if(hit === null) return {label: g.label, expr: substitute(row.cond, seen), text: ''};
+          if(hit) return {label: g.label, expr: substitute(row.cond, seen), text: row.text};
+          failed.push(substitute(row.cond, seen));
+        }
+
+        // every condition was false and the author wrote no fallback
+        return dash;
+      });
+
   });
 }
 
@@ -1177,7 +1528,7 @@ const BLOCKS = {
 
   n: {
     // no longer a key the model writes - just how f draws when there are one
-    // or two of it. Label:Value, same order as every other row.
+    // or two of it. Label:Value, the f= exception to the wording-last law.
     body(items){
       return '<div class="stats">' + items.map(row => {
         const [label, value] = fields(row, 2);
@@ -1200,7 +1551,9 @@ const BLOCKS = {
         '<li><label><input type="radio" name="pick' + o.group + '"' +
         (o.on ? ' checked' : '') +
         ' data-group="' + o.group + '" data-slot="' + o.slot + '">' +
-        '<span>' + esc(o.label) + '</span></label></li>');
+        '<span>' + esc(o.label) +
+        (o.unit ? '<span class="iu">' + esc(withUnit(o.value, o.unit)) + '</span>' : '') +
+        '</span></label></li>');
     }
   },
 
@@ -1210,9 +1563,21 @@ const BLOCKS = {
     body(items, _, block){
       const fields = block.fields || [];
       if(!fields.length) return '';
+      /* The unit rides on the label rather than beside the box. A number
+         input cannot hold a £, and a third column would shift the label
+         column by however wide the unit happened to be, which is the
+         alignment the fixed-width box exists to protect.
+
+         This is the same place the model used to smuggle its units into -
+         "Interest rate percent" - and it reads the same, which is the point:
+         what changed is that it is now declared once as data instead. The
+         card decides how to draw it, and the same declaration also puts £ on
+         the result and turns 5.64 into 5:38. */
       return listHTML('ins', fields, f =>
         '<li><label><input type="number" inputmode="decimal" step="any" ' +
-        'value="' + esc(f.value) + '"><span>' + esc(f.label) + '</span></label></li>'
+        'value="' + esc(f.value) + '"><span>' + esc(f.label) +
+        (f.unit ? '<span class="iu">' + esc(f.unit) + '</span>' : '') +
+        '</span></label></li>'
       );
     },
 
@@ -1246,7 +1611,7 @@ const BLOCKS = {
       if(!rows.length) return '';
       return '<div class="facts calc" data-rows="r">' + rows.map(c =>
         '<div class="fact"><span class="fk">' + esc(c.label) + '</span>' +
-        '<span class="fv">' + esc(showNumber(c.value)) + '</span>' +
+        '<span class="fv">' + esc(withUnit(c.value, c.unit)) + '</span>' +
         (c.expr ? '<span class="fx">' + esc(c.expr) + '</span>' : '') +
         '</div>'
       ).join('') + '</div>';
@@ -1485,7 +1850,7 @@ function repaintFromLink(){
     if(b.type === 'r') computed = computed.concat(computedRows(b));
     if(b.type === 't') decided  = decided.concat(decidedRows(b));
   });
-  paintRows('[data-rows="r"] .fact', computed, function(c){ return showNumber(c.value); });
+  paintRows('[data-rows="r"] .fact', computed, function(c){ return withUnit(c.value, c.unit); });
   paintRows('[data-rows="t"] .fact', decided,  function(c){ return c.text || '\u2014'; });
 }
 
@@ -1611,12 +1976,55 @@ function asEmbed(){
   fit();
 }
 
+/* What a refused card says. The scope line survives because it is the one
+   part of a malformed card that is still trustworthy - it is plain wording
+   and nothing computed from it - so the reader at least learns what they were
+   sent. Everything below it is replaced by the reason. */
+function refusalHead(d){
+  var head = '<a class="brand mark" href="/">' + LOGO + '<span>upshot.fyi</span></a>';
+  if(d.a) head += '<div class="brand scope"><span>' + esc(d.a) + '</span></div>';
+  return head;
+}
+
+function refusalMain(d){
+  return '<h1>This card could not be drawn</h1>' +
+    '<p class="verdict">The link arrived whole, but the card it describes ' +
+    'does not make sense, so nothing was drawn rather than something that ' +
+    'looked right and was not.</p>' +
+    '<section class="block">' +
+    listHTML('points', d.problems, function(why){
+      return '<li><span class="n">&bull;</span><span>' + esc(why) + '</span></li>';
+    }) +
+    '</section>' +
+    '<p class="verdict">Ask the AI that wrote it to export this again.</p>';
+}
+
 function draw(){
   var d = parse(location.hash);
   // Nothing renderable in the link - no headline, no verdict, no blocks. That
   // is its own page, not a card that says it is not a card: this document only
   // ever draws exports, and /broken/ only ever explains a bad link.
   if(!d.h && !d.v && !d.blocks.length){ location.replace('../broken/'); return; }
+
+  /* A card that does not make sense is not drawn at all. Drawing part of it
+     is what the old behaviour did - a duplicate name became a dead control, a
+     non-numeric start became zero - and both looked right.
+
+     It says so here rather than at /broken/, which is for a link with nothing
+     in it and stays static HTML on purpose: it is the page that has to work
+     when everything else has not. This link arrived whole and parsed, so
+     sending its reader off to look for a truncation would point them at a
+     problem that is not there. The card explains itself instead, and keeps
+     the frame, so whoever was sent it can still see what it was meant to be
+     about. */
+  if(d.problems && d.problems.length){
+    document.title = 'upshot';
+    document.getElementById('head').innerHTML = refusalHead(d);
+    document.getElementById('main').innerHTML = refusalMain(d);
+    document.getElementById('foot').innerHTML = render({m: d.m, d: d.d, blocks: []}).foot;
+    window.scrollTo(0, 0);
+    return;
+  }
   var r = render(d);
   /* The tab, and what a browser hands over when you copy the link with its
      title. The og: tags cannot carry the headline - a crawler never sees the
