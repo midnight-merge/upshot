@@ -265,10 +265,43 @@ what models do with this language, which is the one thing the design cannot
 reason its way to. Collecting a fresh corpus is the first thing to do next,
 ahead of the decision table it is needed for.
 
-**Re-cutting the decision table.** It asks about widget behaviour ("the reader
-ticks it off?") rather than what the information is, which is how a settled
-fact falls through into a checklist. VISION has the 2x2 - who knows it, and
-can the reader change it. Add the type axis and it becomes the real question.
+**Re-cutting the decision table. Done 15 Sep 2026, and unvalidated.** It asked
+about widget behaviour - "a label and a known value?" - which is an invitation
+to put your own arithmetic in an `f` row, because a model that has just worked
+out £6000 does have a label and a known value. It now asks where the
+information came from, and asks the failing question first:
+
+    Did you work the number out yourself?        r, never f
+    Does the wording change with the numbers?    t
+    A number the conversation settled, and
+      the reader may want to change it           i
+    A fact the conversation settled, fixed       f
+    Only the reader knows it, one of several     s
+    Only the reader knows it, yes or no          c
+    Steps, where the order is the point          o
+    Anything else you are simply saying          p
+
+First match wins, so the `r`-not-`f` gate is passed before anything else can
+claim the row. It is the same shape as the `t=` cascade, which is a reasonable
+sign it is the right shape.
+
+One regression was caught in the recut itself before it shipped: the `f` row
+first read "a number the conversation settled", and an `f` value is very often
+not a number - `Chip: M4 Pro`, `Licence: MIT`. That wording would have sent
+every spec sheet falling through to `p` and drawn it as bullets. It reads "a
+fact" now.
+
+**This is the one change in the whole document that cannot be validated by
+reasoning or by a renderer test, because it is about how a model reads a
+sentence.** The suites say nothing about it. The eight keys it routes are
+exactly the eight the fifteen real cards used, which is the most that can be
+checked from here.
+
+The test is the next corpus run, and the case to watch is ask 14: stamp duty
+came back as four `f` rows stating a worked-out answer, with no inputs at all,
+while ask 13 did the harder version properly. If 14 comes back as live `r`
+rows, the recut worked. If it comes back as `f` rows again, the wording is
+still wrong and the evidence is a second data point rather than an argument.
 
 **The first corpus run gave this its evidence, 15 Sep 2026.** A stamp duty
 card came back answered entirely in `f=` rows - `f=Stamp duty:£6000`, with the

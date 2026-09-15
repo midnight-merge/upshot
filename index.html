@@ -538,17 +538,24 @@ A g= starts a block and nothing else does, so one block holds whatever mix of
 lines it needs. Two or three blocks is usual; more than that and it is a
 document rather than a card.
 
-Choose a meaning by what the information is, never by how you want it to
-look. The card decides how things are drawn:
+Choose a key by where the information came from, never by how you want it
+drawn. The card decides how it is drawn. Ask in this order:
 
-  Just saying something?      p
-  Order matters?              o
-  The reader ticks it off?    c
-  One of several, not any?    s
-  A label and a known value?  f
-  The reader changes it?      i
-  Worked out from those?      r
-  Wording that depends on it? t
+  Did you work the number out yourself?        r, never f
+  Does the wording change with the numbers?    t
+  A number the conversation settled, and
+    the reader may want to change it           i
+  A fact the conversation settled, fixed       f
+  Only the reader knows it, one of several     s
+  Only the reader knows it, yes or no          c
+  Steps, where the order is the point          o
+  Anything else you are simply saying          p
+
+The first question is the one that goes wrong. r prints its working and
+follows the reader's numbers. A number you calculated and then wrote as an f
+row is a picture of an answer rather than a tool: nothing recomputes, and a
+card with no inputs cannot be one. Several steps is several r rows, and the
+last is the answer.
 
 Every key that takes fields writes its names, numbers and formulas first and
 its wording LAST. Wording is the only field that may hold anything, and it is
