@@ -11,6 +11,88 @@ the failure this format exists to avoid.
 This is a language change, not a patch, and it goes into `/v2/` in place.
 See **Versioning**.
 
+---
+
+## Where to pick up
+
+Written at the end of 15 Sep 2026. Three commits on `ft/language-rewrite`,
+pushed, `main` untouched. Both suites green: 373 checks in
+`test/transport.js`, `test/run.js` green against real Chrome.
+
+**Nothing is deployed.** `upshot.fyi` still serves `main`, so the live
+`/llms.txt` is the old grammar and the live `/v2/` is the old renderer. That
+matters for one thing in particular: do not re-run the corpus by asking a
+model to *read* the domain until this is merged, or it fetches the old spec
+and you measure the thing that was replaced. Paste `llms.txt` until then.
+
+### Do these in order
+
+1. **Re-run the fifteen asks in `test/asks.txt`.** It does double duty: it
+   tests the decision-table recut, which nothing else can, and it is the only
+   thing that has ever caught a design mistake in this document. Score with
+   `node test/transport.js <file>`, then READ THE NUMBERS ON THE CARDS. The
+   pass rate cannot see a wrong answer and twice now that is where the worst
+   bug was.
+2. **Watch ask 14.** It is a clean before-and-after. Stamp duty came back as
+   four dead `f` rows stating a worked-out answer with no inputs; income tax,
+   the harder version, came back correct in the same run. If 14 is live `r`
+   rows now, the recut worked.
+3. **Then merge and deploy**, and re-run once more through the fetch path,
+   which has never been measured against this grammar.
+
+### What to scrutinise, worst risk first
+
+Ranked by how likely it is to be wrong, not by how much work it was.
+
+1. **The decision-table recut.** Shipped and completely unvalidated. It is
+   wording, aimed at how a model reads a sentence, and no test touches it.
+2. **The field reorder.** The largest blast radius in the change - every
+   fielded key moved. The suites cover it and all 21 shipped cards render, but
+   open a few by hand anyway.
+3. **`plainNumber` at six significant figures.** This changed how the working
+   prints on every card that cites a named step. It is correct - it has to
+   be, or the working refutes the answer - but six figures beside a two-place
+   answer is a judgement about readability, and judgements are mine to get
+   wrong.
+4. **Money at two decimal places.** Same kind of judgement. `£38` stays whole
+   and `£9.50` takes both places; that felt right and was not measured.
+5. **`u=`.** A new key. Twelve of the fifteen real cards used it unprompted,
+   which is encouraging, but adoption over time is unknown.
+6. **The state separator, now `/` rather than `~`.** Its justification was
+   disproved - see the correction below. Keep or revert on taste. One line.
+
+### What I got wrong yesterday, so you can weigh the rest
+
+Four things, all corrected in place, listed because a reviewer should know
+where the judgement was poor:
+
+- **Two "class 1" channel bugs that did not exist.** Reasoned from the 6 Sep
+  notes, written up with confidence, then measured on a real phone: all four
+  test links arrived intact, totals right, tappable. Worse, `markdownEaten`
+  had never modelled `~`; adding it did not discover anything, it encoded an
+  assumption and then agreed with it.
+- **The banded-number wall.** Recorded here as the one remaining missing
+  primitive, in detail, from reasoning. One real generation built the whole
+  band structure out of `min`/`max` clamping, cold.
+- **Naming `t=`.** Recommended, then killed by building it: the name bought
+  nothing and cost a mandatory second line whose absence made the decision
+  vanish.
+- **The money fix.** First attempt patched a formatted string with two
+  regexes, then I refactored my own mess and reported the cleanup as progress.
+
+The pattern in all four: refining a layer past the point of evidence. The
+grammar work was right and the corpus confirmed it; every error above came
+from reasoning where something could have been measured instead.
+
+### Loose ends
+
+- `links.txt` is a duplicate of `test/corpus-2026-09-15.txt`, which has the
+  findings in its header. Safe to delete.
+- `POSTS.md` is untracked and says so itself.
+- Two asks are weak and deliberately unchanged, because the list is fixed: 7
+  assumes a laptop was discussed earlier, and 11 invites medical advice. Run
+  them at least twice more before rewording.
+
 ## Root cause
 
 Seventeen findings were reproduced against the real renderer. They are three
