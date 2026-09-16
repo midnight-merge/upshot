@@ -1,5 +1,19 @@
 # Real generations, kept as a corpus.
 #
+# WRITTEN AGAINST THE PRE-15-SEP-2026 GRAMMAR, and deliberately left that way.
+# These are what models actually produced, which is the whole point of keeping
+# them - translating them into the current grammar would turn a record of real
+# behaviour into a set of cards nobody wrote. They will not render against the
+# current /v2/ and are not scored by the suite.
+#
+# What they are still good for: they were rescored during the 15 Sep language
+# change and broke on `e` being made a constant, because two of them used `e`
+# as the name for energy. That took `e` back out before it shipped. A corpus
+# earns its keep by contradicting a decision made from reasoning.
+#
+# TODO: collect a fresh corpus against the current grammar. Until then there
+# is no live measurement of what models do with it.
+#
 #   node test/transport.js test/generated.txt
 #
 # Written by GPT-5.6 Sol on 12 Sep 2026 against the spec as it stands,

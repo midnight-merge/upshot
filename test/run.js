@@ -48,10 +48,10 @@ const CASES = [
   ['steps', `#m=GPT-5&d=2026-09-10&h=Vendoring the library&v=About an hour, no downtime&g=Steps&o=Vendor the library into the repo&o=Swap the script tag for a local path&o=${POINT}`,
    {blocks: 1, values: []}],
 
-  ['checks', `#m=GPT-5&d=2026-09-10&h=What is left to do&v=Two of these block the release&g=Before launch&c=Vendor the library&c=Swap the script tag&c=${POINT}`,
+  ['checks', `#m=GPT-5&d=2026-09-10&h=What is left to do&v=Two of these block the release&g=Before launch&c=:Vendor the library&c=:Swap the script tag&c=:${POINT}`,
    {blocks: 1, values: []}],
 
-  ['checksTicked', `#m=GPT-5&d=2026-09-10&h=Half done&v=Progress&g=List&c=First item&c=Second item&c=Third item&k=101`,
+  ['checksTicked', `#m=GPT-5&d=2026-09-10&h=Half done&v=Progress&g=List&c=:First item&c=:Second item&c=:Third item&k=101`,
    {blocks: 1, values: [], ticked: '101'}],
 
   // one or two rows are figures, three or more a spec sheet - the card picks,
@@ -63,108 +63,129 @@ const CASES = [
 
   // a block holds whatever mix it needs - inputs and their results together,
   // which in v1 would have cost two of the three slots
-  ['calculator', `#m=GPT-5&d=2026-09-10&h=About twenty seven each&v=Service is in the total&g=Split it&i=Bill:80:bill&i=People:3:n&r=Each pays:bill/n`,
+  ['calculator', `#m=GPT-5&d=2026-09-10&h=About twenty seven each&v=Service is in the total&g=Split it&i=bill:80:Bill&i=n:3:People&r=:bill/n:Each pays`,
    {blocks: 1, values: ['26.67']}],
 
-  ['twoStage', `#m=GPT-5&d=2026-09-10&h=Work backward&v=Costs come off first&g=Exit&i=After repair value:450000:arv&i=Selling cost percent:7:sell&r=Selling costs:arv%2A%28sell/100%29:exit&g=Offer&i=Renovation:70000:reno&r=Maximum offer:arv-exit-reno`,
+  ['twoStage', `#m=GPT-5&d=2026-09-10&h=Work backward&v=Costs come off first&g=Exit&i=arv:450000:After repair value&i=sell:7:Selling cost percent&r=exit:arv%2A%28sell/100%29:Selling costs&g=Offer&i=reno:70000:Renovation&r=:arv-exit-reno:Maximum offer`,
    {blocks: 2, values: ['31,500', '348,500']}],
 
   // a step with no label feeds the rows below and is not drawn
-  ['hiddenStep', `#h=One row, one hidden step&v=The step is not drawn&g=Sums&r=:12*3:n&r=Total:n*5`,
+  ['hiddenStep', `#h=One row, one hidden step&v=The step is not drawn&g=Sums&r=n:12*3:&r=:n*5:Total`,
    {blocks: 1, values: ['180']}],
 
-  ['brokenFormulas', `#h=Broken formulas&v=Every one draws a dash&g=Nothing computable&r=Divided by zero:1/0&r=Unknown name:nope*2&r=Not a formula:1+`,
+  ['brokenFormulas', `#h=Broken formulas&v=Every one draws a dash&g=Nothing computable&r=:1/0:Divided by zero&r=:nope*2:Unknown name&r=:1+:Not a formula`,
    {blocks: 1, values: ['—', '—', '—']}],
 
   // a model that writes "2 + 3" instead of 2%2B3 is the common slip
-  ['spacedFormulas', `#h=Formulas with spaces&v=Both halves survive&g=Sums&r=Sum:2 + 3&r=Rate:(1000 + 250) * 4%2E5`,
+  ['spacedFormulas', `#h=Formulas with spaces&v=Both halves survive&g=Sums&r=:2 + 3:Sum&r=:(1000 + 250) * 4%2E5:Rate`,
    {blocks: 1, values: ['5', '5,625']}],
 
   /* The same slip against a bracket, which is the one place stripping the gap
      is wrong: a bracket is not an operator, so "(a)+b" arriving as "(a) b"
      has to come back a sum rather than a call. "round (a)" is the other side
      of it - a name we know, written loosely, and still a call. */
-  ['bracketedPlus', `#h=Plus against a bracket&v=The gap is an operand boundary&g=Sums&i=A:10:a&i=B:4:b&r=Outside:(a)+b&r=Between calls:round(a)+round(b)&r=Both sides:(a+b)+(b+1)&r=Called loosely:round (a)+b`,
+  ['bracketedPlus', `#h=Plus against a bracket&v=The gap is an operand boundary&g=Sums&i=a:10:A&i=b:4:B&r=:(a)+b:Outside&r=:round(a)+round(b):Between calls&r=:(a+b)+(b+1):Both sides&r=:round (a)+b:Called loosely`,
    {blocks: 1, values: ['14', '14', '19', '14']}],
 
   // a condition gets the same repair as a formula
-  ['bracketedPlusDecision', `#h=Plus in a condition&v=Same repair as a result&g=Runway&i=A:10:a&i=B:4:b&t=Over twelve:(a)+b>12:Yes:No`,
+  ['bracketedPlusDecision', `#h=Plus in a condition&v=Same repair as a result&g=Runway&i=a:10:A&i=b:4:B&t=Over twelve:(a)+b>12:Yes&t=Over twelve::No`,
    {blocks: 1, values: ['Yes']}],
 
   // the decision key: same row, wording the card chose
-  ['decisionTrue', `#h=Enough runway&v=Nine months is the number&g=Runway&i=Cash:18000:cash&i=Burn:1000:burn&i=Target:9:target&r=Runway:cash/burn:months&t=Ready to walk:months>=target:Go now:Not yet`,
+  ['decisionTrue', `#h=Enough runway&v=Nine months is the number&g=Runway&i=cash:18000:Cash&i=burn:1000:Burn&i=target:9:Target&r=months:cash/burn:Runway&t=Ready to walk:months>=target:Go now&t=Ready to walk::Not yet`,
    {blocks: 1, values: ['18', 'Go now']}],
-  ['decisionFalse', `#h=Not yet&v=Nine months is the number&g=Runway&i=Cash:18000:cash&i=Burn:2200:burn&i=Target:9:target&r=Runway:cash/burn:months&t=Ready to walk:months>=target:Go now:Not yet`,
+  ['decisionFalse', `#h=Not yet&v=Nine months is the number&g=Runway&i=cash:18000:Cash&i=burn:2200:Burn&i=target:9:Target&r=months:cash/burn:Runway&t=Ready to walk:months>=target:Go now&t=Ready to walk::Not yet`,
    {blocks: 1, values: ['8.18', 'Not yet']}],
 
   /* A model that writes + where & was needed leaves the next key inside the
      label before it, and every formula downstream of the lost key dies. The
      card recovers it, so this has to come out identical to 'calculator'. */
-  ['swallowedKey', `#m=GPT-5&d=2026-09-10&h=About twenty seven each&v=Service is in the total&g=Split it+i=Bill:80:bill&i=People:3:n&r=Each pays:bill/n`,
+  ['swallowedKey', `#m=GPT-5&d=2026-09-10&h=About twenty seven each&v=Service is in the total&g=Split it+i=bill:80:Bill&i=n:3:People&r=:bill/n:Each pays`,
    {blocks: 1, values: ['26.67'], label: 'Split it'}],
 
   /* A condition that cannot be worked out is not a condition that came out
      false. If it drew the false branch, a card whose numbers are all dashes
      would still print a verdict, and that is the one failure this format must
      never have: confident, wrong, and indistinguishable from working. */
-  ['decisionUnanswerable', `#h=Nothing computable&v=The verdict must not fall through&g=Runway&r=Broken:nope*2:regret&t=Verdict:regret<35:Go now:Stay home`,
+  ['decisionUnanswerable', `#h=Nothing computable&v=The verdict must not fall through&g=Runway&r=regret:nope*2:Broken&t=Verdict:regret<35:Go now&t=Verdict::Stay home`,
    {blocks: 1, values: ['\u2014', '\u2014']}],
 
   /* A number smaller than the two places we round to is not zero. Printed as
      one it makes correct working read as nonsense - the LC card computed
      10,000 and showed it as 1/sqrt(0.01*0), which is a proof of the opposite. */
-  ['smallNumbers', `#h=Small numbers stay honest&v=Below a hundredth, six significant figures&g=Resonance&i=Inductance:0.01:l&i=Capacitance:0.000001:c&r=Angular:1/sqrt(l*c):w&r=Tiny:c/1000`,
+  ['smallNumbers', `#h=Small numbers stay honest&v=Below a hundredth, six significant figures&g=Resonance&i=l:0.01:Inductance&i=c:0.000001:Capacitance&r=w:1/sqrt(l*c):Angular&r=:c/1000:Tiny`,
    {blocks: 1, values: ['10,000', '1e-9']}],
 
   /* The printed working has to reproduce the answer. A constant entered to
      five figures and shown to three puts the escape speed of the Earth out by
      four metres a second, and the one thing a card is supposed to let you do
      is check it. */
-  ['workingReproducesTheAnswer', `#h=Escape speed&v=The working has to add up&g=Planet&i=Mass:5.972e24:m&i=Radius:6371000:r&i=G:0.000000000066743:g&r=Escape speed:sqrt(2*g*m/r)`,
+  ['workingReproducesTheAnswer', `#h=Escape speed&v=The working has to add up&g=Planet&i=m:5.972e24:Mass&i=r:6371000:Radius&i=g:0.000000000066743:G&r=:sqrt(2*g*m/r):Escape speed`,
    {blocks: 1, values: ['11,185.98']}],
 
   // a box can carry a name a formula reads as 1 or 0
-  ['namedBoxes', `#h=Named boxes&v=A box can be referred to by name&g=Your ticket&i=Full fare:84:fare&c=You have a railcard:card&c=Travelling off peak:offpeak&r=Discount:card*0.34+offpeak*0.1:cut&r=You pay:fare-fare*cut&k=11`,
+  ['namedBoxes', `#h=Named boxes&v=A box can be referred to by name&g=Your ticket&i=fare:84:Full fare&c=card:You have a railcard&c=offpeak:Travelling off peak&r=cut:card*0.34+offpeak*0.1:Discount&r=:fare-fare*cut:You pay&k=11`,
    {blocks: 1, values: ['0.44', '47.04'], ticked: '11'}],
-  ['namedBoxesOff', `#h=Named boxes&v=A box can be referred to by name&g=Your ticket&i=Full fare:84:fare&c=You have a railcard:card&c=Travelling off peak:offpeak&r=Discount:card*0.34+offpeak*0.1:cut&r=You pay:fare-fare*cut`,
+  ['namedBoxesOff', `#h=Named boxes&v=A box can be referred to by name&g=Your ticket&i=fare:84:Full fare&c=card:You have a railcard&c=offpeak:Travelling off peak&r=cut:card*0.34+offpeak*0.1:Discount&r=:fare-fare*cut:You pay`,
    {blocks: 1, values: ['0', '84']}],
   /* A trailing single word is a name; anything with a space in it is still
      part of the label. "Be there by 9:30" has to stay a time, and
      "Bring ID: passport" has to stay prose. */
-  ['colonInLabel', `#h=Colons in a label&v=Only a bare trailing word is a name&g=List&c=Be there by 9:30&c=Bring ID: passport&c=A named one:flag&r=Named:flag&k=111`,
+  ['colonInLabel', `#h=Colons in a label&v=Only a bare trailing word is a name&g=List&c=:Be there by 9:30&c=:Bring ID: passport&c=flag:A named one&r=:flag:Named&k=111`,
    {blocks: 1, values: ['1'], ticked: '111'}],
 
   // ticks and boxes: the checklist as two numbers a formula can use
-  ['scoredEmpty', `#h=How exposed are you&v=Tick what applies&g=How many apply&c=A mortgage&c=Dependants&c=Higher earner&c=Self employed&r=Score:ticks/boxes*100:pct&t=Verdict:ticks>=2:Get cover:Probably fine`,
+  ['scoredEmpty', `#h=How exposed are you&v=Tick what applies&g=How many apply&c=:A mortgage&c=:Dependants&c=:Higher earner&c=:Self employed&r=pct:ticks/boxes*100:Score&t=Verdict:ticks>=2:Get cover&t=Verdict::Probably fine`,
    {blocks: 1, values: ['0', 'Probably fine']}],
-  ['scoredTicked', `#h=How exposed are you&v=Tick what applies&g=How many apply&c=A mortgage&c=Dependants&c=Higher earner&c=Self employed&r=Score:ticks/boxes*100:pct&t=Verdict:ticks>=2:Get cover:Probably fine&k=1101`,
+  ['scoredTicked', `#h=How exposed are you&v=Tick what applies&g=How many apply&c=:A mortgage&c=:Dependants&c=:Higher earner&c=:Self employed&r=pct:ticks/boxes*100:Score&t=Verdict:ticks>=2:Get cover&t=Verdict::Probably fine&k=1101`,
    {blocks: 1, values: ['75', 'Get cover'], ticked: '1101'}],
-  // an input may not quietly redefine what the spec says the word means
-  ['reservedName', `#h=Reserved&v=The built-in wins&g=x&i=Ticks:99:ticks&c=One&c=Two&r=Count:ticks`,
-   {blocks: 1, values: ['0']}],
+  /* An input may not redefine what the spec says the word means. It used to
+     lose the claim silently and draw a box no formula read; now the whole
+     card refuses, so there is no half-drawn card to misread. */
+  ['reservedName', `#h=Reserved&v=Nothing should draw&g=x&i=ticks:99:Ticks&c=:One&c=:Two&r=:ticks:Count`,
+   {blocks: 1, values: [], refused: true}],
+  ['duplicateName', `#h=Claimed twice&v=Nothing should draw&g=x&i=n:1:One&i=n:2:Two&r=:n:Out`,
+   {blocks: 1, values: [], refused: true}],
 
   // composition and the cap
   ['comparison', `#m=GPT-5&d=2026-09-10&h=Postgres or SQLite&v=Postgres, unless you ship to the edge&g=Postgres&p=Concurrent writes&p=Real types&g=SQLite&p=Zero ops&p=Faster for reads`,
    {blocks: 2, values: []}],
-  ['threeBlocks', `#h=Three blocks stacked&v=The maximum the card allows&g=One&p=a&p=b&g=Two&o=c&o=d&g=Three&c=e&c=f`,
+  ['threeBlocks', `#h=Three blocks stacked&v=Three is the usual shape&g=One&p=a&p=b&g=Two&o=c&o=d&g=Three&c=:e&c=:f`,
    {blocks: 3, values: []}],
-  ['overCap', `#h=Four blocks, one dropped&v=Only the first three render&g=One&p=a&g=Two&o=b&g=Three&f=e:f&g=Four&p=should not appear`,
-   {blocks: 3, values: ['f']}],
-  ['everyKind', `#h=One block holding every kind&v=Only a g= starts a block&g=All of it&p=A bullet&o=A step&c=A tick&f=Key:Value&i=Salary:62000:pay&r=Monthly:pay/12`,
+  /* There was a cap of three, and it truncated: a fourth block vanished with
+     no dash and nothing in /broken/, so a card labelled IMPORTANT disappeared
+     in test. Length is capped where it is real, at 2000 characters of URL. */
+  ['fourBlocks', `#h=Four blocks all render&v=Nothing is dropped&g=One&p=a&g=Two&o=b&g=Three&f=e:f&g=Four&p=this must appear`,
+   {blocks: 4, values: ['f']}],
+  ['everyKind', `#h=One block holding every kind&v=Only a g= starts a block&g=All of it&p=A bullet&o=A step&c=:A tick&f=Key:Value&i=pay:62000:Salary&r=:pay/12:Monthly`,
    // the lone f= here is a row, not a headline figure: it shares the block
    {blocks: 1, values: ['Value', '5,166.67'], stats: 0, facts: 2}],
 
+  /* Units. A number used to arrive bare - "Payment 222" of what - because
+     the unit could only be smuggled into the label. u= attaches it to the
+     name, so every place that name is drawn wears it. */
+  ['unitMoney', `#h=What it costs&v=Money leads the number&g=The cost&i=n:222:Amount&r=pay:n:Payment&u=pay:£`,
+   {blocks: 1, values: ['£222']}],
+  ['unitPercent', `#h=What it saves&v=A percentage trails it&g=The saving&i=n:17:Amount&r=off:n:Off the price&u=off:%`,
+   {blocks: 1, values: ['17%']}],
+  /* 5.64 hours is 5:38, and printing 5.64 was the oldest soft spot in the
+     format - the one ln made worse by making "how long" cards easy to write. */
+  ['unitClock', `#h=How long it took&v=Hours read as hours&g=The run&i=n:5%2E64:Hours&r=t:n:Took&u=t:hr`,
+   {blocks: 1, values: ['5:38']}],
+  ['unitUnknownName', `#h=A unit for nothing&v=Nothing should draw&g=x&i=n:1:One&r=:n:Out&u=nope:£`,
+   {blocks: 1, values: [], refused: true}],
+
   /* pick-one. The option carries the number, so one formula covers every
      option - written per-option instead it is four terms that can disagree. */
-  ['pickOne', `#m=GPT-5&d=2026-09-14&h=What I repay&v=Nine percent over the threshold&g=Your plan&s=Plan 1:26900:thr&s=Plan 2:29385:thr&i=Salary:40000:salary&r=Repayment:max(0,salary-thr)*0%2E09`,
+  ['pickOne', `#m=GPT-5&d=2026-09-14&h=What I repay&v=Nine percent over the threshold&g=Your plan&s=thr:26900:Plan 1&s=thr:29385:Plan 2&i=salary:40000:Salary&r=:max(0,salary-thr)*0%2E09:Repayment`,
    {blocks: 1, values: ['1,179'], picked: '10'}],
-  ['pickOneChosen', `#m=GPT-5&d=2026-09-14&h=What I repay&v=Nine percent over the threshold&g=Your plan&s=Plan 1:26900:thr&s=Plan 2:29385:thr&i=Salary:40000:salary&r=Repayment:max(0,salary-thr)*0%2E09&x=1`,
+  ['pickOneChosen', `#m=GPT-5&d=2026-09-14&h=What I repay&v=Nine percent over the threshold&g=Your plan&s=thr:26900:Plan 1&s=thr:29385:Plan 2&i=salary:40000:Salary&r=:max(0,salary-thr)*0%2E09:Repayment&x=1`,
    {blocks: 1, values: ['955.35'], picked: '01'}],
   // a hand-edited or truncated x= must not leave the group answering nothing
-  ['pickOneBadIndex', `#m=GPT-5&d=2026-09-14&h=What I repay&v=Nine percent over the threshold&g=Your plan&s=Plan 1:26900:thr&s=Plan 2:29385:thr&i=Salary:40000:salary&r=Repayment:max(0,salary-thr)*0%2E09&x=7`,
+  ['pickOneBadIndex', `#m=GPT-5&d=2026-09-14&h=What I repay&v=Nine percent over the threshold&g=Your plan&s=thr:26900:Plan 1&s=thr:29385:Plan 2&i=salary:40000:Salary&r=:max(0,salary-thr)*0%2E09:Repayment&x=7`,
    {blocks: 1, values: ['1,179'], picked: '10'}],
   // a pick-one beside a checklist: two questions, drawn as two controls
-  ['pickAndCheck', `#m=GPT-5&d=2026-09-14&h=Both kinds&v=One of these, any of those&g=Mix&s=Basic:1:tier&s=Plus:2:tier&c=Add support&r=Tier:tier`,
+  ['pickAndCheck', `#m=GPT-5&d=2026-09-14&h=Both kinds&v=One of these, any of those&g=Mix&s=tier:1:Basic&s=tier:2:Plus&c=:Add support&r=:tier:Tier`,
    {blocks: 1, values: ['1'], picked: '10', ticked: '0'}],
 
   // shapes of failure
@@ -409,7 +430,10 @@ addEventListener('load', () => {
           ticked: [...document.querySelectorAll('.checks input')]
                     .map(b => b.checked ? '1' : '0').join(''),
           picked: [...document.querySelectorAll('.picks input')]
-                    .map(b => b.checked ? '1' : '0').join('')
+                    .map(b => b.checked ? '1' : '0').join(''),
+          // a refused card keeps the frame and replaces everything under it
+          refused: /could not be drawn/.test(
+            (document.querySelector('#main h1') || {}).textContent || '')
         };
       } catch(e){
         return {name, error: e && e.message ? e.message : String(e)};
@@ -420,14 +444,14 @@ addEventListener('load', () => {
        it reads part of what it is for. Restoring + from a space produces
        "2+++3" before it is collapsed - correct arithmetic, and a formula that
        looks like a typo. */
-    location.hash = '#h=x&v=y&g=s&r=Sum:2 + 3&r=Nested:(1 + 2) * 3&r=Args:min(3, 9)&r=Minus:10 - 4';
+    location.hash = '#h=x&v=y&g=s&r=:2 + 3:Sum&r=:(1 + 2) * 3:Nested&r=:min(3, 9):Args&r=:10 - 4:Minus';
     draw();
     out.push({name: 'formulaText', shown: text('#main .fx')});
 
     /* Typing has to move three things at once: the results on the card, the
        w= in the link, and - because the link is the state - what a reader sees
        when the card is passed on and opened fresh. */
-    location.hash = '#h=x&v=y&g=n&i=Seats:4:s&i=Price:18:p&r=Monthly:s*p:m&r=Per year:m*12';
+    location.hash = '#h=x&v=y&g=n&i=s:4:Seats&i=p:18:Price&r=m:s*p:Monthly&r=:m*12:Per year';
     draw();
     const shown = () => text('#main .fv').join(' ');
     const sent = shown();
@@ -444,12 +468,41 @@ addEventListener('load', () => {
     out.push({name: 'roundTrip', sent, typed, written, reopened: shown(),
               values: [...document.querySelectorAll('.ins input')].map(el => el.value).join(' ')});
 
+    /* The renderer is the one writer on a card that is not a model, and it was
+       the one writer exempt from the card's own encoding rule. A reader typing
+       4.5 wrote w=4.5, a raw full stop in a link; three inputs wrote
+       w=a~b~c, and a tilde pair is WhatsApp strikethrough.
+
+       So this types the nastiest values a reader can and asserts the whole
+       fragment stays inside the alphabet - which is the rule itself rather
+       than a list of characters, and therefore covers what nobody thought of.
+
+       Everything the reader can touch at once: decimals, negatives, a huge
+       number, a tiny one, ticks and a pick-one. */
+    location.hash = '#h=x&v=y&g=n&i=a:1:A&i=b:1:B&i=c:1:C&i=d:1:D' +
+                    '&r=:a+b+c+d:Sum&c=:One&c=:Two&s=k:1:First&s=k:2:Second';
+    draw();
+    const typeAll = vals => {
+      [...document.querySelectorAll('.ins input')].forEach((el, i) => {
+        el.value = vals[i]; el.dispatchEvent(new Event('input'));
+      });
+    };
+    typeAll(['4.5', '-3.25', '1e-9', '12345678.9']);
+    const ticks2 = [...document.querySelectorAll('.checks input')];
+    if (ticks2[0]) { ticks2[0].checked = true; ticks2[0].dispatchEvent(new Event('change')); }
+    const radios2 = [...document.querySelectorAll('.picks input')];
+    if (radios2[1]) { radios2[1].checked = true; radios2[1].dispatchEvent(new Event('change')); }
+    out.push({name: 'stateAlphabet',
+              frag: location.hash.replace(/^#/, ''),
+              reread: (() => { draw(); return text('#main .fv').join(' '); })()});
+
     /* A decision is recomputed by the same numbers a result is, and both are
        repainted in place rather than redrawn - so the card can tell the reader
        two different stories about one set of inputs if only one is updated. */
-    location.hash = '#h=x&v=y&g=Runway&i=Cash saved:18000:cash&i=Monthly burn:2200:burn' +
-                    '&i=Months you want:9:target&r=Runway:cash/burn:months' +
-                    '&t=Ready to walk:months>=target:Go now:Not yet';
+    location.hash = '#h=x&v=y&g=Runway&i=cash:18000:Cash saved&i=burn:2200:Monthly burn' +
+                    '&i=target:9:Months you want&r=months:cash/burn:Runway' +
+                    '&t=Ready to walk:months>=target:Go now' +
+                    '&t=Ready to walk::Not yet';
     draw();
     const card = () => text('#main .fv').concat(text('#main .fx'));
     const target = () => [...document.querySelectorAll('.ins input')][2];
@@ -465,8 +518,9 @@ addEventListener('load', () => {
 
     // ticking rewrites the fragment the same way typing does - and now moves
     // the same numbers, so it has to repaint the same rows
-    location.hash = '#h=x&v=y&g=l&c=One&c=Two&c=Three&c=Four' +
-                    '&r=Score:ticks/boxes*100:pct&t=Verdict:ticks>=2:Get cover:Probably fine';
+    location.hash = '#h=x&v=y&g=l&c=:One&c=:Two&c=:Three&c=:Four' +
+                    '&r=pct:ticks/boxes*100:Score' +
+                    '&t=Verdict:ticks>=2:Get cover&t=Verdict::Probably fine';
     draw();
     const ticks = [...document.querySelectorAll('.checks input')];
     const tickState = () => text('#main .fv').concat(text('#main .fx'));
@@ -482,8 +536,8 @@ addEventListener('load', () => {
 
     // a named box moves its formula the moment it is ticked, and the name
     // never appears on the card
-    location.hash = '#h=x&v=y&g=t&i=Full fare:84:fare&c=You have a railcard:card' +
-                    '&c=Be there by 9:30&r=You pay:fare-fare*card*0.34';
+    location.hash = '#h=x&v=y&g=t&i=fare:84:Full fare&c=card:You have a railcard' +
+                    '&c=:Be there by 9:30&r=:fare-fare*card*0.34:You pay';
     draw();
     const named = {labels: text('.checks span'), before: text('#main .fv')};
     const box = [...document.querySelectorAll('.checks input')][0];
@@ -496,9 +550,9 @@ addEventListener('load', () => {
        card, the x= in the link, and what a reader sees opening it fresh. The
        radios share a name, so the browser enforces one-of - which is the point
        of using a real control rather than drawing one. */
-    location.hash = '#h=x&v=y&g=Your plan&s=Plan 1:26900:thr&s=Plan 2:29385:thr' +
-                    '&s=Plan 4:33795:thr&i=Salary:40000:salary' +
-                    '&r=Repayment:max(0,salary-thr)*0.09';
+    location.hash = '#h=x&v=y&g=Your plan&s=thr:26900:Plan 1&s=thr:29385:Plan 2' +
+                    '&s=thr:33795:Plan 4&i=salary:40000:Salary' +
+                    '&r=:max(0,salary-thr)*0.09:Repayment';
     draw();
     const pickRows = () => text('#main .fv').concat(text('#main .fx'));
     const radios = () => [...document.querySelectorAll('.picks input')];
@@ -523,7 +577,7 @@ addEventListener('load', () => {
     out.push({name: 'pickLive', ...pick});
 
     // two groups on one card move independently, and one x= carries both
-    location.hash = '#h=x&v=y&g=Two&s=A:1:one&s=B:2:one&s=X:10:two&s=Y:20:two&r=Sum:one+two';
+    location.hash = '#h=x&v=y&g=Two&s=one:1:A&s=one:2:B&s=two:10:X&s=two:20:Y&r=:one+two:Sum';
     draw();
     const two = {before: text('#main .fv')};
     const pair = [...document.querySelectorAll('.picks input')];
@@ -536,7 +590,7 @@ addEventListener('load', () => {
     /* A group split across two blocks is still one group. If the radios were
        grouped by block rather than by name the reader could hold two answers
        to one question at once, which is the failure c= already has. */
-    location.hash = '#h=x&v=y&g=One&s=A:1:n&g=Two&s=B:2:n&g=Sum&r=V:n';
+    location.hash = '#h=x&v=y&g=One&s=n:1:A&g=Two&s=n:2:B&g=Sum&r=:n:V';
     draw();
     const split = {before: text('#main .fv')};
     const across = [...document.querySelectorAll('.picks input')];
@@ -557,7 +611,7 @@ addEventListener('load', () => {
 
     // copy-for-AI is the other way off the card, and it has its own view of
     // every block - a key added to the renderer alone copies out as raw text
-    location.hash = '#h=x&v=y&m=GPT-5&d=2026-09-10&g=All&f=Key:Value&i=Salary:1200:pay&r=Monthly:pay/12:mo&t=Verdict:mo>50:Fine:Tight&c=A tick';
+    location.hash = '#h=x&v=y&m=GPT-5&d=2026-09-10&g=All&f=Key:Value&i=pay:1200:Salary&r=mo:pay/12:Monthly&t=Verdict:mo>50:Fine&t=Verdict::Tight&c=:A tick';
     draw();
     out.push({name: 'copyForAI', text: copyText(parse(location.hash))});
 
@@ -623,13 +677,16 @@ function main(){
     if(!got){ check(false, name, 'no result'); continue; }
     if(got.error){ check(false, name, got.error); continue; }
     const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-    let ok = got.blocks === want.blocks && same(got.values, want.values);
+    let ok = got.blocks === want.blocks && same(got.values, want.values)
+             && got.refused === !!want.refused;
     let detail = `${got.blocks} block(s)` + (got.values.length ? '  ' + got.values.join(' ') : '');
     for(const k of ['facts', 'stats', 'label', 'ticked', 'picked']){
       if(want[k] === undefined) continue;
       if(got[k] !== want[k]){ ok = false; detail += `  ${k}=${got[k]} wanted ${want[k]}`; }
     }
     if(!ok && got.blocks !== want.blocks) detail += `  wanted ${want.blocks} block(s)`;
+    if(!ok && got.refused !== !!want.refused)
+      detail += want.refused ? '  wanted a refusal' : '  refused unexpectedly';
     if(!ok && !same(got.values, want.values)) detail += `  wanted ${want.values.join(' ') || 'no values'}`;
     check(ok, name, detail);
   }
@@ -642,7 +699,7 @@ function main(){
   const rt = byName.roundTrip;
   check(rt.sent === '72 864', 'results follow the numbers they were sent', rt.sent);
   check(rt.typed === '180 2,160', 'and follow what the reader types', rt.typed);
-  check(rt.written === '10~18', 'typing writes every input into the link', rt.written);
+  check(rt.written === '10/18', 'typing writes every input into the link', rt.written);
   check(rt.reopened === rt.typed, 'reopening the link shows what the reader saw', rt.reopened);
   check(rt.values === '10 18', 'and the boxes come back filled in', rt.values);
 
@@ -658,12 +715,28 @@ function main(){
   check(same2(tk.back, ['25', 'Probably fine', '1/4*100', '1>=2']),
         'and unticking takes it back down', tk.back.join('  '));
 
+  /* The condition cites 8.18182, not the 8.18 the row above it shows. The two
+     are different jobs: the row presents a number to read, the working proves
+     it. A runway of 8.999 against a target of 9 printed as 9>=9 reads true
+     beside a verdict saying otherwise - a proof that refutes itself in front
+     of the reader. Found 15 Sep 2026 by looking at a card, where a growth
+     step holding 1.9991314 printed round(14000*2) under an answer of 27,988. */
+  /* The alphabet, asserted on what the RENDERER wrote rather than on what a
+     model wrote. Both of the channel bugs found on 15 Sep were here: a raw
+     full stop from a typed decimal, and a tilde separator WhatsApp eats. */
+  const sa = byName.stateAlphabet;
+  const strayInState = [...new Set((sa.frag || '').replace(/[A-Za-z0-9%+&=:_\/-]/g, ''))];
+  check(strayInState.length === 0,
+    'nothing the reader types can push the link outside its alphabet',
+    strayInState.length ? `link carries ${JSON.stringify(strayInState.join(''))}` : '');
+  check(/w=/.test(sa.frag || ''), 'and the typed values did reach the link', sa.frag);
+
   const live = byName.decisionLive;
-  check(same2(live.before, ['8.18', 'Not yet', '18000/2200', '8.18>=9']),
+  check(same2(live.before, ['8.18', 'Not yet', '18000/2200', '8.18182>=9']),
         'a decision draws with the numbers it was sent', live.before.join('  '));
-  check(same2(live.crossed, ['8.18', 'Go now', '18000/2200', '8.18>=8']),
+  check(same2(live.crossed, ['8.18', 'Go now', '18000/2200', '8.18182>=8']),
         'and flips the moment the reader crosses the threshold', live.crossed.join('  '));
-  check(live.link === '18000~2200~8', 'the link follows it', live.link);
+  check(live.link === '18000/2200/8', 'the link follows it', live.link);
   check(live.copied.includes('Ready to walk: Go now'),
         'copy for AI reads the card as it stands, not as it was drawn',
         (/Ready to walk:[^\n]*/.exec(live.copied) || [''])[0]);
@@ -704,7 +777,7 @@ function main(){
         tg.before.join());
   check(same2(tg.oneMoved, ['21']), 'and one moves without disturbing the other',
         tg.oneMoved.join());
-  check(tg.written === '0~1', 'one x= carries both, in document order', tg.written);
+  check(tg.written === '0/1', 'one x= carries both, in document order', tg.written);
   check(tg.lit === 2, 'with one option lit in each', tg.lit + ' lit');
 
   const ab = byName.pickAcrossBlocks;
