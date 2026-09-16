@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /*
- * upshot regression tests - no dependencies, drives whatever Chrome is here.
+ * Upshot's single test runner: transport, arithmetic and browser behaviour.
+ * No dependencies; Chrome is required. Includes boundary and action checks.
  *
  *   node test/run.js
  *
@@ -17,9 +18,12 @@ const {execFileSync} = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const boundaries = require('./boundaries');
 
 const ROOT = path.join(__dirname, '..');
-const CARD = path.join(ROOT, 'v2', 'index.html');
+/* test/mutate.js points this at a deliberately broken copy of the renderer to
+   check that these tests would notice. Nothing else sets it. */
+const CARD = process.env.UPSHOT_CARD || path.join(ROOT, 'v2', 'index.html');
 const LANDING = path.join(ROOT, 'index.html');
 const BROKEN = path.join(ROOT, 'broken', 'index.html');
 
@@ -73,8 +77,10 @@ const CASES = [
   ['hiddenStep', `#h=One row, one hidden step&v=The step is not drawn&g=Sums&r=n:12*3:&r=:n*5:Total`,
    {blocks: 1, values: ['180']}],
 
-  ['brokenFormulas', `#h=Broken formulas&v=Every one draws a dash&g=Nothing computable&r=:1/0:Divided by zero&r=:nope*2:Unknown name&r=:1+:Not a formula`,
-   {blocks: 1, values: ['—', '—', '—']}],
+  ['unanswerableFormulas', `#h=Unanswerable formulas&v=Both draw a dash&g=Nothing computable&r=:1/0:Divided by zero&r=:nope*2:Unknown name`,
+   {blocks: 1, values: ['—', '—']}],
+  ['invalidFormula', `#h=Invalid formula&v=The card is refused&g=Broken&r=:1+:Not a formula`,
+   {blocks: 1, values: [], refused: true}],
 
   // a model that writes "2 + 3" instead of 2%2B3 is the common slip
   ['spacedFormulas', `#h=Formulas with spaces&v=Both halves survive&g=Sums&r=:2 + 3:Sum&r=:(1000 + 250) * 4%2E5:Rate`,
@@ -154,7 +160,7 @@ const CASES = [
    {blocks: 3, values: []}],
   /* There was a cap of three, and it truncated: a fourth block vanished with
      no dash and nothing in /broken/, so a card labelled IMPORTANT disappeared
-     in test. Length is capped where it is real, at 2000 characters of URL. */
+     in test. The 2000-character value is an authoring and transport budget. */
   ['fourBlocks', `#h=Four blocks all render&v=Nothing is dropped&g=One&p=a&g=Two&o=b&g=Three&f=e:f&g=Four&p=this must appear`,
    {blocks: 4, values: ['f']}],
   ['everyKind', `#h=One block holding every kind&v=Only a g= starts a block&g=All of it&p=A bullet&o=A step&c=:A tick&f=Key:Value&i=pay:62000:Salary&r=:pay/12:Monthly`,
@@ -168,10 +174,10 @@ const CASES = [
    {blocks: 1, values: ['£222']}],
   ['unitPercent', `#h=What it saves&v=A percentage trails it&g=The saving&i=n:17:Amount&r=off:n:Off the price&u=off:%`,
    {blocks: 1, values: ['17%']}],
-  /* 5.64 hours is 5:38, and printing 5.64 was the oldest soft spot in the
-     format - the one ln made worse by making "how long" cards easy to write. */
+  /* Duration output carries both unit scales so hours and minutes cannot
+     produce the same ambiguous clock string. */
   ['unitClock', `#h=How long it took&v=Hours read as hours&g=The run&i=n:5%2E64:Hours&r=t:n:Took&u=t:hr`,
-   {blocks: 1, values: ['5:38']}],
+   {blocks: 1, values: ['5h 38m']}],
   ['unitUnknownName', `#h=A unit for nothing&v=Nothing should draw&g=x&i=n:1:One&r=:n:Out&u=nope:£`,
    {blocks: 1, values: [], refused: true}],
 
@@ -211,6 +217,28 @@ const EXPRS = [
   ['1+', {}, null],
   ['alert(1)', {}, null]
 ];
+
+/* Every comparison at its own boundary, generated rather than listed.
+   A hand-written table picks pairs like 4 and 18, where every operator that
+   could be confused with its neighbour still agrees. Mutating `>` to `>=` in
+   the evaluator changed no answer this file checked. The pair that separates
+   them is the equal one, and only an exhaustive sweep reliably contains it.
+   Expectations come from JavaScript's own operators, never from evaluate(). */
+for(const [op, fn] of [['<', (a, b) => a < b], ['>', (a, b) => a > b],
+                       ['<=', (a, b) => a <= b], ['>=', (a, b) => a >= b],
+                       ['==', (a, b) => a === b], ['!=', (a, b) => a !== b]]){
+  for(const a of [2, 3, 4]) EXPRS.push([`x${op}y`, {x: a, y: 3}, fn(a, 3) ? 1 : 0]);
+}
+
+/* Each function against a case that tells it from the function next to it:
+   floor and ceil differ only off an integer, and round's second argument was
+   free to be ignored. Negatives are here because rounding is not symmetric. */
+for(const [src, want] of [
+  ['floor(2.5)', 2], ['ceil(2.5)', 3], ['floor(-2.5)', -3], ['ceil(-2.5)', -2],
+  ['round(10/3,2)', 3.33], ['round(1.2345,3)', 1.235], ['round(2.5)', 3],
+  ['round(-2.5)', -2], ['abs(-3)', 3], ['abs(3)', 3],
+  ['min(3,9)', 3], ['max(3,9)', 9], ['sqrt(16)', 4], ['pow(2,10)', 1024]
+]) EXPRS.push([src, {}, want]);
 
 const NUMS = [
   [1234.5, '1,234.5'],
@@ -410,7 +438,7 @@ function syntaxCheck(src){
 const PROBE = `
 <script>
 addEventListener('load', () => {
-  document.fonts.ready.then(() => {
+  document.fonts.ready.then(async () => {
    try {
     const text = sel => [...document.querySelectorAll(sel)].map(el => el.textContent);
     const out = __CASES__.map(([name, hash]) => {
@@ -615,6 +643,7 @@ addEventListener('load', () => {
     draw();
     out.push({name: 'copyForAI', text: copyText(parse(location.hash))});
 
+    out.push({name: 'boundaries', results: await (__BOUNDARY_PROBE__)(__BOUNDARY_CASES__)});
     report(out);
    } catch(e){
      report([{name: 'probe', error: String(e && e.stack || e)}]);
@@ -634,9 +663,11 @@ function report(out){
 function renderAll(chrome, src){
   const harness = path.join(os.tmpdir(), `upshot-harness-${process.pid}.html`);
   fs.writeFileSync(harness, src.replace('</body>',
-    PROBE.replace('__CASES__', JSON.stringify(CASES.map(c => [c[0], c[1]])))
-         .replace('__EXPRS__', JSON.stringify(EXPRS))
-         .replace('__NUMS__', JSON.stringify(NUMS)) + '</body>'));
+    PROBE.replace('__CASES__', () => JSON.stringify(CASES.map(c => [c[0], c[1]])).replace(/</g, '\\u003c'))
+         .replace('__EXPRS__', () => JSON.stringify(EXPRS).replace(/</g, '\\u003c'))
+         .replace('__NUMS__', () => JSON.stringify(NUMS))
+         .replace('__BOUNDARY_PROBE__', () => boundaries.browserProbe.toString())
+         .replace('__BOUNDARY_CASES__', () => JSON.stringify(boundaries.cases).replace(/</g, '\\u003c')) + '</body>'));
   let dom;
   try {
     dom = execFileSync(chrome, [
@@ -646,7 +677,7 @@ function renderAll(chrome, src){
       // draw() runs at parse time and would send an unrenderable link to
       // /broken/, navigating the harness away before the probe reports
       '--dump-dom', 'file://' + harness + '#h=harness&v=ready'
-    ], {encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 64 * 1024 * 1024});
+    ], {encoding: 'utf8', timeout: 60000, stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 64 * 1024 * 1024});
   } finally {
     fs.unlinkSync(harness);
   }
@@ -659,18 +690,25 @@ function main(){
   const chrome = findChrome();
   const src = fs.readFileSync(CARD, 'utf8');
 
+  console.log('transport, arithmetic and prompt sync');
+  const transport = require('./transport').runChecks();
+  check(transport.failures === 0, 'transport, arithmetic and prompt sync',
+        `${transport.checks - transport.failures}/${transport.checks} checks passed`);
+
   staticChecks(src);
   siblingChecks();
   syntaxCheck(src);
 
   if(!chrome){
-    console.log('\nno Chrome found - set CHROME=/path/to/chrome for the render tests');
-    process.exit(fail.length ? 1 : 0);
+    console.log('\nINCOMPLETE: no Chrome found. Set CHROME=/path/to/chrome.');
+    process.exit(2);
   }
 
   console.log('\nrender');
   const results = renderAll(chrome, src);
   const byName = Object.fromEntries(results.map(r => [r.name, r]));
+  if(byName.probe) throw new Error(byName.probe.error);
+  if(!byName.boundaries) throw new Error('Boundary tests did not report');
 
   for(const [name, , want] of CASES){
     const got = byName[name];
@@ -803,10 +841,24 @@ function main(){
   }
   check(!/:[a-z]+$/m.test(copy), 'copy for AI leaks no raw field separators');
 
-  console.log(fail.length ? `\n${fail.length} failed` : '\nall passed');
+  console.log('\nboundaries and actions');
+  const boundaryResults = byName.boundaries.results;
+  for(const id of [...new Set(boundaryResults.map(r => r.id))]){
+    const group = boundaryResults.filter(r => r.id === id);
+    const bad = group.filter(r => !r.ok);
+    check(bad.length === 0, id, `${group.length - bad.length}/${group.length} passed`);
+    for(const r of bad.slice(0, 3)) console.log('        ' + r.name + '\n          ' + r.detail);
+    if(bad.length > 3) console.log(`        ... ${bad.length - 3} more failures in this family`);
+  }
+  console.log(fail.length ? `\nFAIL: ${fail.length} failing check(s). See LANGUAGE.md.`
+                         : '\nPASS: all automated checks passed. Manual release checks still apply.');
   process.exit(fail.length ? 1 : 0);
 }
 
 const same2 = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
-main();
+try { main(); }
+catch(e){
+  console.error('\nINCOMPLETE: ' + e.message);
+  process.exitCode = 2;
+}

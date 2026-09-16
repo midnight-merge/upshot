@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /*
- * Transport tests - exhaustive, no Chrome, no model.
+ * Transport/arithmetic checks used by the single test/run.js suite.
+ * Also provides the optional model-link scorer: node test/transport.js links.txt
  *
- *   node test/transport.js
+ *   node test/run.js
  *
- * run.js asks "does the card render what the URL says". This asks the question
+ * The browser checks ask "does the card render what the URL says". This asks the question
  * underneath it: can the URL survive being sent at all, and does what the spec
  * tells a model to write decode back to what it meant.
  *
@@ -21,7 +22,9 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const CARD = path.join(ROOT, 'v2', 'index.html');
+/* Overridden only by test/mutate.js, which needs every check in the suite -
+   these included - to read the deliberately broken copy. */
+const CARD = process.env.UPSHOT_CARD || path.join(ROOT, 'v2', 'index.html');
 
 /* The renderer, lifted out of the page. Everything past the expression
    machinery touches the DOM, so the cut is the first function that does. */
@@ -465,7 +468,7 @@ function sweepPicks() {
   const SPLIT = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=One&s=n:1:A&g=Two&s=n:2:B&g=Sum&r=:n:V';
   const val = hash => {
     const r = parse(hash).blocks.find(b => b.type === 'r');
-    const row = r && r.computed.find(c => c.label === 'V');
+    const row = r && (r.computed || []).find(c => c.label === 'V');
     return row ? row.value : null;
   };
   check(val(SPLIT) === 1, 'one name split across blocks is still one group', 'got ' + val(SPLIT));
@@ -475,14 +478,11 @@ function sweepPicks() {
     .reduce((n, b) => n + b.options.filter(o => o.on).length, 0);
   check(chosen === 1, 'with exactly one option chosen across both blocks', chosen + ' chosen');
 
-  // first claim on a name wins here as everywhere - an input is not rebound
-  const claimed = val('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=n:5:Threshold&s=n:99:Plan&g=S&r=:n:V');
-  check(claimed === 5, 'a pick-one cannot rename the input it was named after',
-    'got ' + claimed + ', wanted 5');
+  const claimed = parse('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=n:5:Threshold&s=n:99:Plan&g=S&r=:n:V');
+  check(claimed.problems.length > 0, 'a pick-one cannot claim an input name');
 
-  // a value that is not a number is zero, exactly as a cleared input is
-  check(val('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&s=n:free:Free&r=:n:V') === 0,
-    'an option whose value is not a number reads as zero');
+  const invalid = parse('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&s=n:free:Free&r=:n:V');
+  check(invalid.problems.length > 0, 'an option whose value is not a number is refused');
 
   // wording is wording: an encoded colon survives in a label the way it does
   // in a bullet, and the field separators are untouched by it
@@ -502,12 +502,10 @@ function sweepPicks() {
   check(box && box.value === 2, 'options do not count as boxes', box && 'boxes came to ' + box.value);
   check(tk && tk.value === 1, 'and choosing one is not a tick', tk && 'ticks came to ' + tk.value);
 
-  // nameless options are still a group: nothing can read them, but the reader
-  // can still be shown a choice rather than a list that lies about being one
+  // A choice needs a group name because that is what enforces exclusivity and
+  // gives formulas access to the selected numeric value.
   const bare = parse(F + '&s=:1:Yes&s=:0:No');
-  check(bare.blocks[0].options.length === 2 &&
-        bare.blocks[0].options.filter(o => o.on).length === 1,
-    'options with no name still form one exclusive group');
+  check(bare.problems.length > 0, 'options with no name are refused');
 
   console.log('  ' + 26 + ' checks');
 }
@@ -524,19 +522,15 @@ function sweepNamespace() {
   console.log('\none name, claimed twice');
   const F = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G';
 
-  // an r= reusing an i='s name must not rewire a later formula
+  // Reusing a name is structurally ambiguous and refuses the whole card.
   const d1 = parse(F + '&i=seats:4:Seats&r=seats:seats*2:Double&r=:seats+1:Check');
-  const check1 = d1.blocks.find(b => b.type === 'r').computed.find(c => c.label === 'Check');
-  check(check1 && check1.value === 5, 'a result cannot rename the input it was named after',
-    check1 ? `Check came to ${check1.value}, wanted 5 (the original seats)` : 'no Check row');
+  check(d1.problems.length > 0, 'a result cannot rename the input it was named after');
 
   // a result named "ticks" must not corrupt a checklist score - k=11 ticks
   // both boxes, so a correct score is 2/2*100
   const d2 = parse('#k=11&a=A&h=H&v=V&m=M&d=2026-01-01&g=List&c=:One&c=:Two' +
     '&r=ticks:5:Ticks&r=score:ticks/boxes*100:Score');
-  const score = d2.blocks.find(b => b.type === 'r').computed.find(c => c.label === 'Score');
-  check(score && score.value === 100, 'a result cannot rename the reserved ticks/boxes',
-    score ? `Score came to ${score.value}, wanted 100 (2 ticked of 2)` : 'no Score row');
+  check(d2.problems.length > 0, 'a result cannot rename the reserved ticks/boxes');
   console.log('  2 checks');
 }
 
@@ -636,6 +630,7 @@ function sweepWorking() {
    sense, and there is no honest way to draw part of it. */
 function sweepRefusals() {
   console.log('\nrefusals');
+  const before = checks;
   const A = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G';
   const bad = (hash, name) => {
     const p = parse(A + hash).problems;
@@ -659,6 +654,15 @@ function sweepRefusals() {
   bad('&i=mass:80kg:Mass', 'a start value with a unit stuck to it');
   bad('&i=n:abc:One', 'an input that does not start at a number');
   bad('&i=n::One', 'an input with no start value');
+  bad('&s=n:£6:One', 'a pick-one value with a currency symbol');
+  bad('&s=n:6kg:One', 'a pick-one value with a numeric prefix');
+  bad('&i=Annual%20salary:1:One', 'an input with an invalid name');
+  bad('&c=a-b:One', 'a box with an invalid name');
+  bad('&r=1n:1:One', 'a result with an invalid name');
+  bad('&r=x:n%3E3%3F100%3A0:Bonus', 'a ternary outside the formula grammar');
+  bad('&i=n:1:N&t=:n%3E0:Yes', 'a decision with no label');
+  bad('&i=n:1:N&t=V::No&t=V:n%3E0:Yes', 'a decision fallback that is not last');
+  bad('&g=Other&r=x:ticks/boxes:Score', 'checklist counters outside a checklist block');
   bad('&u=n:£', 'a unit for a name nothing declares');
   bad('&i=n:1:One&u=n:£&u=n:$', 'a unit declared twice');
 
@@ -670,7 +674,7 @@ function sweepRefusals() {
   fine('&c=:One&c=:Two', 'boxes with no names');
   fine('&i=n:1:One&u=n:£', 'a unit for a name that exists');
 
-  console.log('  19 checks');
+  console.log(`  ${checks - before} checks`);
 }
 
 /* ---- units ----
@@ -697,12 +701,12 @@ function sweepUnits() {
     'no unit declared, no unit drawn');
 
   // the 5.64 soft spot
-  is(drawn('&i=n:5%2E64:N&r=t:n:Took&u=t:hr', 'Took'), '5:38',
-    '5.64 hours reads 5:38');
-  is(drawn('&i=n:5:N&r=t:n:Took&u=t:hr', 'Took'), '5:00', 'a whole number of hours');
-  is(drawn('&i=n:0%2E5:N&r=t:n:Took&u=t:min', 'Took'), '0:30', 'half a minute');
+  is(drawn('&i=n:5%2E64:N&r=t:n:Took&u=t:hr', 'Took'), '5h 38m',
+    '5.64 hours reads 5h 38m');
+  is(drawn('&i=n:5:N&r=t:n:Took&u=t:hr', 'Took'), '5h 0m', 'a whole number of hours');
+  is(drawn('&i=n:0%2E5:N&r=t:n:Took&u=t:min', 'Took'), '0m 30s', 'half a minute');
   // 59.6 minutes must not read 0:60
-  is(drawn('&i=n:0%2E993:N&r=t:n:Took&u=t:hr', 'Took'), '1:00',
+  is(drawn('&i=n:0%2E993:N&r=t:n:Took&u=t:hr', 'Took'), '1h 0m',
     'a fraction that rounds up carries into the whole');
 
   // a dash has no unit to wear
@@ -725,11 +729,8 @@ function sweepUnits() {
   is(drawn('&i=n:9%2E999:N&r=each:n:Each&u=each:£', 'Each'), '£10',
     'a fraction that rounds away leaves a whole number whole');
 
-  /* A unit either reformats the number or sits beside it. A reformatter that
-     cannot answer - a negative duration is not a clock reading - falls back
-     to sitting beside it rather than inventing something. */
-  is(drawn('&i=n:-2:N&r=t:n:Owed&u=t:hr', 'Owed'), '-2hr',
-    'a negative duration decorates rather than pretending to be a clock');
+  is(drawn('&i=n:-2:N&r=t:n:Owed&u=t:hr', 'Owed'), '-2h 0m',
+    'a negative duration keeps its sign and explicit units');
 
   console.log('  16 checks');
 }
@@ -740,6 +741,7 @@ function sweepUnits() {
    honest but not enough - a model writes 18<=age<65. */
 function sweepFunctions() {
   console.log('\nfunctions and chained comparison');
+  const before = checks;
   const ev = mod.exports.evaluate;
   const is = (expr, env, want, name) => {
     const got = ev(expr, env || {});
@@ -750,6 +752,7 @@ function sweepFunctions() {
   is('exp(1)', {}, Math.E, 'exp');
   is('pi', {}, Math.PI, 'pi is a constant, not a call');
   is('round(exp(ln(2)))', {}, 2, 'exp undoes ln');
+  is('6.674e-11', {}, 6.674e-11, 'scientific notation in a formula literal');
   // the thing that was unreachable: what a rate compounds to
   is('round(1000*exp(5*ln(1+0%2E07)))'.replace(/%2E/g, '.'), {}, 1403,
     'compound growth is expressible at last');
@@ -765,11 +768,15 @@ function sweepFunctions() {
 
   // a card cannot claim a constant out from under a formula
   const d = parse('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=pi:9:Pi&r=:pi:Out');
-  const out = d.blocks.flatMap(b => b.computed || []).find(c => c.label === 'Out');
-  check(out && out.value === Math.PI, 'an input cannot shadow pi',
-    out ? `Out came to ${out.value}` : 'no Out row');
+  check(d.problems.length > 0, 'an input cannot shadow pi');
 
-  console.log('  12 checks');
+  const namedMin = parse('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=min:5:Minimum&i=b:9:B&r=x:min(b%2C20):Out');
+  const minRow = namedMin.blocks.flatMap(b => b.computed || []).find(c => c.label === 'Out');
+  check(minRow && minRow.value === 9 && minRow.expr === 'min(9,20)',
+    'a variable named min does not replace the min function in working',
+    minRow ? `${minRow.value} = ${minRow.expr}` : 'no Out row');
+
+  console.log(`  ${checks - before} checks`);
 }
 
 /* ---- ticks and boxes belong to a block, not to the card ----
@@ -778,6 +785,7 @@ function sweepFunctions() {
    correctly and the number was wrong. */
 function sweepScopes() {
   console.log('\nticks and boxes are scoped');
+  const before = checks;
   const A = '#a=A&h=H&v=V&m=M&d=2026-01-01';
   const val = (hash, label) => {
     const all = parse(A + hash).blocks.flatMap(b => b.computed || []);
@@ -802,9 +810,11 @@ function sweepScopes() {
   check(val(T, 'Second') === 2, 'and the second block reads its own ticks',
     `Second came to ${val(T, 'Second')}`);
 
-  // a block with no list at all must not answer 0 of 0
-  check(val('&g=List&c=:a&c=:b&g=Sum&r=:ticks/boxes:Score&k=11', 'Score') === null,
-    'a block with no checklist draws a dash rather than 0/0');
+  // A scoped counter outside a checklist block is malformed, not an unknown
+  // ordinary name, and is rejected before it can draw a plausible dash.
+  const misplaced = parse(A + '&g=List&c=:a&c=:b&g=Sum&r=:ticks/boxes:Score&k=11');
+  check(misplaced.problems.length > 0,
+    'a block with no checklist refuses ticks and boxes');
 
   // and a single list still works, which is every shipped card
   check(val('&g=List&c=:a&c=:b&r=:ticks/boxes*100:Pct&k=10', 'Pct') === 50,
@@ -814,7 +824,7 @@ function sweepScopes() {
   check(val('&g=One&c=p:a&g=Two&c=q:b&g=Sum&r=:p+q:Both&k=11', 'Both') === 2,
     'named boxes stay card-wide, so a card can still total two lists');
 
-  console.log('  8 checks');
+  console.log(`  ${checks - before} checks`);
 }
 
 /* ---- results resolve by need, not by document order ----
@@ -877,12 +887,17 @@ function sweepOrder() {
    unknown as false and prints a later outcome with full authority. */
 function sweepDecisions() {
   console.log('\nthe decision cascade');
+  const before = checks;
   // n is a parameter, not a constant - the first claim on a name wins, so a
   // second i= appended to the same card cannot override the first
   const card = (n, hash) => '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=n:' + n + ':N' + hash;
   const dec = (n, hash, at) => parse(card(n, hash)).blocks.find(b => b.type === 't').decided[at || 0];
   const is = (got, want, name) => check(got === want, name,
     got === want ? '' : `got ${JSON.stringify(got)}, wanted ${JSON.stringify(want)}`);
+  const bad = (hash, name) => {
+    const problems = parse(card(1, hash)).problems;
+    check(problems.length > 0, name, problems.length ? '' : 'drew the card anyway');
+  };
 
   // the wall this key was rebuilt for: three outcomes, which four positional
   // fields could not say, so a live generation invented syntax instead
@@ -897,15 +912,12 @@ function sweepDecisions() {
   is(dec(1, '&t=Real:n%3E0:Yes&t=Real::No').text, 'Yes', 'binary is two rows');
   is(dec(-1, '&t=Real:n%3E0:Yes&t=Real::No').text, 'No', 'and the other way');
 
-  // the wording is last now, so nothing can shift into the comparator slot -
-  // but the rule is kept for whatever else lands there
-  is(dec(1, '&t=Weird:5:Yes').text, '', 'a bare number never stands in for a comparison');
+  bad('&t=Weird:5:Yes', 'a bare number is refused as a decision condition');
   is(dec(1, '&t=Gone:missing%3E0:Yes').text, '', 'an unworkable condition dashes');
   is(dec(1, '&t=Gone:missing%3E0:Yes&t=Gone::No').text, '',
      'an unworkable condition dashes rather than falling through to the fallback');
 
-  // a fallback that is not last makes every row after it unreachable
-  is(dec(1, '&t=Bad::Fallback&t=Bad:n%3E0:Yes').text, '', 'a fallback out of place dashes');
+  bad('&t=Bad::Fallback&t=Bad:n%3E0:Yes', 'a fallback out of place is refused');
 
   // rows sharing a label are ONE decision, so the card draws one row
   const all = parse(card(1, THREE)).blocks.find(b => b.type === 't').decided;
@@ -918,7 +930,7 @@ function sweepDecisions() {
     'two labels are two decisions, in order',
     `drew ${JSON.stringify(two.map(d => d.label))}`);
 
-  console.log('  12 checks');
+  console.log(`  ${checks - before} checks`);
 }
 
 /* ---- scoring a batch of real generations ----
@@ -1082,9 +1094,9 @@ function scoreBatch(file) {
   process.exit(bad.length ? 1 : 0);
 }
 
-if (process.argv[2]) {
-  scoreBatch(process.argv[2]);
-} else {
+function runChecks() {
+  failures = 0;
+  checks = 0;
   sweepCharacters();
   sweepColons();
   sweepPicks();
@@ -1102,7 +1114,14 @@ if (process.argv[2]) {
   sweepBatchScoring();
   sweepFormulas();
 
-  console.log(`\n${checks} checks`);
-  console.log(failures ? `\n${failures} failed` : '\nall passed');
-  process.exit(failures ? 1 : 0);
+  return {checks, failures};
+}
+
+module.exports = {runChecks};
+if (require.main === module) {
+  if (process.argv[2]) scoreBatch(process.argv[2]);
+  else {
+    console.error('Run the full suite with: node test/run.js');
+    process.exitCode = 2;
+  }
 }
