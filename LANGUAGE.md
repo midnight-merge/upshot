@@ -65,17 +65,24 @@ where the grammar permits it.
 
 ## Primitive semantics
 
-| Key | Behaviour |
-|---|---|
-| `p` | Displays an unordered point |
-| `o` | Displays an ordered step |
-| `f` | Displays fixed text as a label/value row |
-| `c` | Displays a checkbox; a named checkbox evaluates to 1 or 0 |
-| `i` | Displays an editable numeric input |
-| `s` | Displays one exclusive option; the shared name holds the selected numeric value |
-| `r` | Evaluates and displays a numeric formula; an empty label creates a hidden intermediate result |
-| `t` | Displays the wording from the first true condition; an empty final condition is the fallback |
-| `u` | Formats display output without changing the value used by formulas |
+The middle column is what the reader sees, taken from a card carrying one of
+each. Wording is the author's; every other character is drawn by the renderer.
+
+| Key | Draws as | Behaviour |
+|---|---|---|
+| `p` | `• Wording` | Displays an unordered point |
+| `o` | `1 Wording` | Displays an ordered step |
+| `f` | `180ms`<br>`Cold start` | Displays fixed text as a value above its label |
+| `c` | `[ ] Wording` | Displays a checkbox; a named checkbox evaluates to 1 or 0 |
+| `i` | `[ 40000 ] Annual salary £` | Displays an editable numeric input; any unit rides on the label |
+| `s` | `(•) Plan 2`<br>`( ) Plan 1` | Displays one exclusive option; the shared name holds the selected numeric value |
+| `r` | `Monthly  £3,333.33  40000/12` | Evaluates and displays a numeric formula beside its working; an empty label creates a hidden intermediate result |
+| `t` | `Budget  Over budget  3333.33>1000` | Displays the wording from the first true condition beside the comparison that chose it; an empty final condition is the fallback |
+| `u` | `3333.33` → `£3,333.33`<br>`1.5` → `1h 30m` | Formats display output without changing the value used by formulas |
+
+One or two `f` rows draw large, as shown. Three or more become a spec sheet.
+The card decides that, not the author. `r` rows do not change shape with
+count.
 
 Decision rows sharing a label are one cascade. Rows remain together. The first
 true condition wins. A fallback is optional and must be last. Decisions return
