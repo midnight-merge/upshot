@@ -187,6 +187,11 @@ function sweepCharacters() {
 /* ---- sweep 2: everything we ship, through the channel ---- */
 function sweepExamples() {
   console.log('\nshipped examples through the channel');
+  const {promptHTML} = require('../scripts/sync-prompt');
+  const prompt = fs.readFileSync(path.join(ROOT, 'llms.txt'), 'utf8');
+  const landing = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  check(landing.includes('<pre id="prompt">' + promptHTML(prompt) + '</pre>'),
+    'the entire homepage prompt matches llms.txt', 'run node scripts/sync-prompt.js if it differs');
   /* EVERY url the project ships, from one place.
 
      This read llms.txt and made/index.html and nothing else, which is how two
@@ -207,6 +212,7 @@ function sweepExamples() {
 
     // and every row on the card it draws has to come to something
     const d = parse(url.slice(url.indexOf('#')));
+    check(d.problems.length === 0, `card is not refused: ${name}`, d.problems.join(', '));
     const dashes = [];
     d.blocks.forEach(b => {
       (b.computed || []).forEach(c => { if (c.label && c.value === null) dashes.push(c.label); });
@@ -231,7 +237,77 @@ function sweepExamples() {
   console.log(`  ${urls.length} live URLs checked`);
 }
 
-/* ---- sweep 3: the evaluator against plain arithmetic ---- */
+/* ---- the prompt's examples as working tools ---- */
+function sweepPromptBehavior() {
+  console.log('\nprompt examples after reader changes');
+  const spec = fs.readFileSync(path.join(ROOT, 'llms.txt'), 'utf8');
+  const cards = (spec.match(/https:\/\/upshot\.fyi\/v2\/#\S+/g) || []).map(url => {
+    const hash = url.slice(url.indexOf('#'));
+    return {hash, scope: parse(hash).a};
+  });
+  // Read the actual examples, not duplicate URLs that could drift away from
+  // what models see. These expected amounts exercise units and live controls.
+  const scenarios = [
+    ['Splitting dinner three ways', '', ['£26.67'], []],
+    ['Splitting dinner three ways', '&w=80/4', ['£20'], []],
+    ['How long the card takes to clear', '', ['61months'], []],
+    ['The most I can offer on the renovation', '&w=500000/8/80000/70000', ['£40,000', '£310,000'], []],
+    ['Whether my savings meet my runway target', '', ['8.18months'], ['Below target']],
+    ['Whether my savings meet my runway target', '&w=18000/2200/6', ['8.18months'], ['Target met']],
+    ['Preparing the three items required for our handover', '', ['0%'], ['Tasks remaining']],
+    ['Preparing the three items required for our handover', '&k=111', ['100%'], ['All three complete']],
+    ['What the quoted hosting plans cost for our team', '', ['£24'], []],
+    ['What the quoted hosting plans cost for our team', '&x=1&w=6', ['£72'], []],
+    ['What the workshop costs with optional extras', '', ['£40', '£40'], []],
+    ['What the workshop costs with optional extras', '&k=11&w=2', ['£60', '£120'], []],
+    ['A tool to compare driving and taking the train', '', ['£50', '£60', '£10'], ['Drive']],
+    ['A tool to compare driving and taking the train', '&w=40/10/30/1', ['£50', '£30', '£20'], ['Train']],
+    ['A tool to compare driving and taking the train', '&w=40/10/25/2', ['£50', '£50', '£0'], ['Same cost']]
+  ];
+  for (const [scope, state, values, decisions] of scenarios) {
+    const card = cards.find(c => c.scope === scope);
+    if (!card) { check(false, `missing prompt example: ${scope}`); continue; }
+    const d = parse(card.hash + state);
+    const actualValues = d.blocks.flatMap(b => b.computed || [])
+      .filter(r => r.label).map(r => withUnit(r.value, r.unit));
+    const actualDecisions = d.blocks.flatMap(b => b.decided || []).map(r => r.text);
+    const ok = !d.problems.length && JSON.stringify(actualValues) === JSON.stringify(values) &&
+      JSON.stringify(actualDecisions) === JSON.stringify(decisions);
+    check(ok, `${scope}${state || ' (initial)'}`,
+      ok ? '' : `got ${JSON.stringify([actualValues, actualDecisions])}, wanted ${JSON.stringify([values, decisions])}`);
+  }
+  console.log(`  ${scenarios.length} initial and changed states checked`);
+}
+
+function sweepBatchScoring() {
+  console.log('\nthe model-link scorer');
+  const {spawnSync} = require('child_process');
+  const dir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'upshot-score-'));
+  const file = path.join(dir, 'links.txt');
+  const valid = 'https://upshot.fyi/v2/#a=A&h=H&v=V&m=Test&d=2026-09-16&g=Split&i=n:2:People&r=each:20/n:Each';
+  const cases = [
+    ['valid card', valid, 0, '1/1 valid first render'],
+    ['equality decision', valid + '&t=Equal:n==2:Yes&t=Equal::No', 0, '1/1 valid first render'],
+    ['duplicate name', valid + '&i=n:3:More', 1, 'renderer refuses:'],
+    ['invalid start', valid.replace('n:2:People', 'n:abc:People'), 1, 'renderer refuses:'],
+    ['old result syntax', valid.replace('r=each:20/n:Each', 'r=Each:20/n'), 1, 'syntax outside the prompt grammar'],
+    ['space in returned URL', valid + '&p=hello world', 1, 'unsendable:']
+  ];
+  try {
+    for (const [label, url, status, message] of cases) {
+      fs.writeFileSync(file, url + '\n');
+      const result = spawnSync(process.execPath, [__filename, file], {encoding: 'utf8'});
+      check(result.status === status && (result.stdout || '').includes(message),
+        `scorer: ${label}`, result.status === status ? '' : result.stdout + result.stderr);
+    }
+  } finally {
+    if (fs.existsSync(file)) fs.unlinkSync(file);
+    fs.rmdirSync(dir);
+  }
+  console.log(`  ${cases.length} scoring cases checked`);
+}
+
+/* ---- the evaluator against plain arithmetic ---- */
 function sweepFormulas() {
   console.log('\nformulas against a reference');
   // deterministic, so a failure is reproducible rather than a rumour
@@ -906,7 +982,7 @@ function inventedSyntax(url) {
     const strays = expr.replace(/\u0001/g, '').match(/[^A-Za-z0-9_.,()+\-*/<>=!]/g);
     if (strays) [...new Set(strays)].forEach(ch =>
       found.push(`${JSON.stringify(ch)} in a formula, which is not an operator here`));
-    if (/&&|\|\||(?<![<>!])=(?!=)/.test(expr))
+    if (/&&|\|\||(?<![<>!=])=(?!=)/.test(expr))
       found.push('a logical operator the grammar does not have');
 
     // a word followed by ( is a call, and we hold the list of real ones
@@ -921,7 +997,10 @@ function inventedSyntax(url) {
 
 function scoreBatch(file) {
   const raw = fs.readFileSync(file, 'utf8');
-  const urls = raw.split(/\s+/).filter(t => /^https?:\/\/[^\s]*#/.test(t));
+  // Preserve the entire returned line, including an illegal space inside a
+  // URL. Splitting on whitespace would score only the unbroken prefix.
+  const urls = raw.split(/\r?\n/).map(line => line.trim())
+    .filter(line => /^https?:\/\/[^\s]*#/.test(line));
   if (!urls.length) {
     console.log(`no links found in ${file} - one URL per line, nothing else`);
     process.exit(1);
@@ -939,7 +1018,8 @@ function scoreBatch(file) {
     let d = null;
     try { d = parse(url.slice(url.indexOf('#'))); } catch (e) { why.push('does not parse'); }
     if (d) {
-      ['h', 'v', 'm', 'd'].forEach(k => { if (!d[k]) why.push(`no ${k}=`); });
+      ['a', 'h', 'v', 'm', 'd'].forEach(k => { if (!d[k]) why.push(`no ${k}=`); });
+      d.problems.forEach(problem => why.push(`renderer refuses: ${problem}`));
       if (!d.blocks.length) why.push('no blocks');
       d.blocks.forEach(b => {
         (b.computed || []).forEach(c => { if (c.label && c.value === null) why.push(`"${c.label}" draws a dash`); });
@@ -959,6 +1039,7 @@ function scoreBatch(file) {
       });
     }
     const made = inventedSyntax(url);
+    if (made.length) why.push('syntax outside the prompt grammar');
     verdicts.push({url, why, made});
     const head = (/[#&]h=([^&]*)/.exec(url) || [, '?'])[1].replace(/\+/g, ' ').slice(0, 44);
     console.log(`${why.length ? 'BAD ' : 'ok  '} ${String(i + 1).padStart(3)}  ${head}`);
@@ -1017,6 +1098,8 @@ if (process.argv[2]) {
   sweepOrder();
   sweepDecisions();
   sweepExamples();
+  sweepPromptBehavior();
+  sweepBatchScoring();
   sweepFormulas();
 
   console.log(`\n${checks} checks`);

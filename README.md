@@ -35,9 +35,9 @@ and nothing else anywhere:
 
 These ones are live. Open them, type in the boxes, watch the numbers move:
 
-- **[Splitting dinner three ways][dinner]** — the whole card is 180 characters
-  of URL.
-- **[Do I have enough runway to quit?][runway]** — change a number and the
+- **[Splitting dinner three ways][dinner]** — change the bill or the number
+  of people; each share updates in pounds.
+- **[Do my savings meet my runway target?][runway]** — change a number and the
   verdict at the bottom changes its mind.
 - **[UK take-home pay, with student loan plans][payslip]** — pick your plan,
   and the choice is written back into your copy of the link.
@@ -103,9 +103,8 @@ whatever mix of lines it needs:
 | `t` | one outcome of a decision, `Label:Condition:Wording` |
 | `u` | the unit a name prints in, `name:unit` |
 
-Every key that takes fields puts its machine parts first and its wording last,
-so a colon inside a label or a sentence can never be mistaken for a separator.
-`f=` is the exception, because both of its fields are wording.
+Machine fields come first and wording comes last. `f=` has two text fields,
+and `t=` groups by a leading label; encode colons inside those leading labels.
 
 Where the options rule each other out — a tax band, a tier, a plan — `s=` is
 the one that says so. Each option carries its own number and the group's name
@@ -143,22 +142,17 @@ That is the entire cost of the promise: an old static file nobody touches again.
 
 Because the card *is* the link, anything that damages the link destroys the
 card — and the damage is usually invisible, since a truncated URL still renders
-a perfectly convincing card with half the content missing. All of these were
-found by sending real links and looking at what came out the other side:
+a perfectly convincing card with half the content missing.
 
-- **A raw comma or full stop inside a value** stops WhatsApp turning the text
-  into a link, and the rest arrives as plain text. It doesn't cut at the
-  punctuation — it cuts earlier, so it looks random until you bisect it.
-- **A closing bracket that ends a nested pair** does the same. Invisible until
-  formulas went into URLs, because prose almost never nests brackets.
-- **A pair of `*` or `_`** is eaten as bold or italic before the link is ever
-  clicked, so `j*45` silently arrives as `j45` — a different formula.
+Use a conservative alphabet across chat clients: in wording keep ASCII letters,
+digits and a hyphen; in formulas also `+ / = _`; percent-encode everything else.
+Spaces in wording become `+`. The rule avoids depending on each client's
+link detection and formatting behavior.
 
-The fix is one rule rather than a list of characters to remember: in wording keep
-letters, digits and a hyphen, in a formula also `+ - / = _`, and percent-encode
-everything else. A character nobody has thought of yet is encoded by default.
-That matters more than it sounds — the earlier version was a list, and the list
-was the bug.
+The 15 Sep phone checks found that mid-URL full stops and tildes survived
+WhatsApp intact, correcting earlier claims that they always broke links.
+The encoding rule stays; the simulated channel is a consistency check, not
+proof of how every real client behaves. See `LANGUAGE.md` for the measurements.
 
 `test/transport.js` models this channel: it round-trips every character through
 every field, simulates a markdown-rendering chat client, and checks the shipped
@@ -196,6 +190,19 @@ which reports valid-first-render plus a tally of what went wrong. Links are
 scored as text, exactly as they left the model — opening one in a browser proves
 nothing, because the address bar never truncates and never renders markdown.
 
+For prompt changes, keep pasting the whole `llms.txt` into fresh chats and
+collecting the returned links. [The prompt test guide](test/PROMPT_TESTS.md)
+has a short set of asks with expected answers and input changes to try.
+The original fifteen asks remain in `test/asks.txt` for comparison across runs.
+
+After editing the prompt, sync its static homepage copy:
+
+```
+node scripts/sync-prompt.js
+```
+
+The transport suite checks the full prompt matches, including inline examples.
+
 ## Writing another renderer
 
 The format is documented for reimplementation, not just for use. `/llms.txt` is
@@ -225,6 +232,6 @@ never touches this repository. Anyone can put any text in a link, so text on the
 domain is not published or endorsed by us, and never reaches us to moderate or
 remove.
 
-[dinner]: https://upshot.fyi/v2/#a=Splitting+dinner+three+ways&h=About+twenty+seven+each&v=Service+is+already+in+the+total%2C+so+there+is+nothing+more+to+add%2E&m=GPT-5&d=2026-09-10&g=Split+it&i=bill:80:Bill&i=n:3:People&r=:bill/n:Each+pays
-[runway]: https://upshot.fyi/v2/#a=Whether+I+have+enough+runway+to+quit&h=Nine+months+is+the+number+to+beat&v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&m=GPT-5&d=2026-09-10&g=Runway&i=cash:18000:Cash+saved&i=burn:2200:Monthly+burn&i=target:9:Months+you+want&r=months:cash/burn:Runway&t=Ready+to+walk:months%3E=target:Go+now&t=Ready+to+walk::Not+yet
+[dinner]: https://upshot.fyi/v2/#a=Splitting+dinner+three+ways&h=Split+the+bill&v=Divides+the+total+equally+between+the+people+sharing+it%2E&m=GPT-6&d=2026-09-16&g=Split+it&i=bill:80:Bill&i=n:3:People&r=each:bill/n:Each+pays&u=bill:%C2%A3&u=each:%C2%A3
+[runway]: https://upshot.fyi/v2/#a=Whether+my+savings+meet+my+runway+target&h=Compare+your+runway+with+your+target&v=This+checks+your+savings+against+the+number+of+months+you+want+covered%2E&m=GPT-6&d=2026-09-16&g=Runway&i=cash:18000:Cash+saved&i=burn:2200:Monthly+spending&i=target:9:Months+you+want&r=months:cash/burn:Runway&t=Target:months%3E=target:Target+met&t=Target::Below+target&u=cash:%C2%A3&u=burn:%C2%A3&u=target:months&u=months:months
 [payslip]: https://upshot.fyi/v2/#a=UK+take-home+pay+calculator+with+student+loan&h=Calculate+your+2026%2F27+take-home+pay&v=Enter+your+salary%2C+pick+your+student+loan+plan%2C+and+tick+Postgraduate+if+you+have+one%2E&m=Claude+Opus+5&d=2026-09-14&g=Pay&i=salary:40000:Annual+salary&r=allowance:max%280%2C12570-max%280%2Csalary-100000%29/2%29:Personal+allowance&r=taxable:max%280%2Csalary-allowance%29:Taxable+income&r=tax:min%28taxable%2C37700%29%2A0%2E2+max%280%2Cmin%28taxable-37700%2C87440%29%29%2A0%2E4+max%280%2Ctaxable-125140%29%2A0%2E45:Income+tax&r=ni:min%28max%280%2Csalary-12570%29%2C37700%29%2A0%2E08+max%280%2Csalary-50270%29%2A0%2E02:National+Insurance&g=Student+loan&s=thr:29385:Plan+2&s=thr:26900:Plan+1&s=thr:33795:Plan+4&s=thr:25000:Plan+5&c=pg:I+also+have+a+Postgraduate+Loan&r=loan:max%280%2Csalary-thr%29%2A0%2E09+pg%2Amax%280%2Csalary-21000%29%2A0%2E06:Student+loan&g=Take+home&r=net:salary-tax-ni-loan:Annual+take-home&r=:net/12:Monthly+take-home

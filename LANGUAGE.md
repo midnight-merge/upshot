@@ -1,5 +1,83 @@
 # Designing the language
 
+## Current reference - 16 Sep 2026
+
+`llms.txt` is the current authoring contract. The renderer is `v2/index.html`.
+The homepage carries the same prompt as static text; after editing `llms.txt`,
+run `node scripts/sync-prompt.js`. The transport suite checks they agree.
+
+The current field order is:
+
+```text
+a=Question                  the scope of the card
+h=Headline                  fixed text
+v=Summary                   fixed text or an assumption
+m=Model                     authoring model
+d=YYYY-MM-DD                 generation date
+g=Label                     starts a block
+p=Wording                   a bullet
+o=Wording                   an ordered step
+f=Label:Value               a fixed fact; both fields are text
+c=name:Wording              a checkbox; name may be empty
+i=name:start:Label          an editable number
+s=name:value:Label          a numeric option, grouped by name
+r=name:formula:Label        a computed number; name or label may be empty
+t=Label:condition:Wording   a decision, grouped by label
+u=name:unit                 a display unit, never a label declaration
+```
+
+- Names resolve across the card, including forward references. Only `ticks`
+  and `boxes` are scoped to their `g` block. Those names and `pi` are reserved.
+- Keep a decision's rows together. First true condition wins; an empty
+  condition is the fallback and must be last. Decisions produce wording,
+  not names that another formula can read.
+- Name a result if it is reused **or needs a unit**. Units do not propagate
+  or scale numbers. `%` prints 17 as 17%; `hr` displays hours as hours:minutes
+  and `min` displays minutes as minutes:seconds. Other duration labels such
+  as `days` just decorate the number.
+- A hidden intermediate result has an empty final label, not an omitted field.
+- Headlines are always static. On interactive cards, `h` names the task and
+  `v` explains the method independently of the current inputs. Neither
+  repeats starting amounts, counts or selections, including spelled-out
+  numbers such as "four people". The specific question stays in `a`,
+  supplied numbers seed the inputs, and the initial result answers that
+  question. Changing amounts belong in `r`, decisions in `t`. A static
+  answer may lead with its verdict.
+- Use supplied numbers, or sensible replaceable starting values when the user
+  asks for a calculator without numbers. They do not need a disclaimer.
+  Missing decision criteria are not licence to invent a cutoff. Checklists
+  can also track ordinary tasks.
+- Grammar, encoding and the URL length are hard constraints. Word counts and
+  block counts are guidance. Shortening a card must preserve dependencies.
+- The final check crosses targets and limits. A decision row does not make an
+  unusable numeric row honest: quantities such as money still needed must be
+  constrained when crossing zero would make the result meaningless.
+
+This prompt pass changes no primitives or renderer behavior. It corrects old
+syntax examples and updates the demonstrations. Its effect on fresh model
+generations is still to be measured: keep pasting the full `llms.txt`, then
+use the prompts and interaction checks in [test/PROMPT_TESTS.md](test/PROMPT_TESTS.md).
+The original fifteen asks remain unchanged; generated corpora stay local.
+
+The first prompt-test pass treated unlabelled starting values as a failure and
+briefly required `v` to call them examples. The product owner rejected that
+requirement on 16 Sep: editable inputs already communicate their purpose, and
+repeating "example values" on every new calculator is noise.
+
+Two later generations established the boundary rule: holiday savings printed
+negative money still needed, then a CPU model printed a negative clock while
+its decision correctly said no operating point existed. The CPU card also
+turned an oversimplified dynamic-power equation and an unrealistic capacitance
+into an authoritative 829.51 GHz estimate. That premise is the authoring
+model's domain error, not something this format should try to fact-check. The
+language owns the impossible negative output; it does not own CPU physics.
+
+## Design history - 15 Sep 2026
+
+Everything below is the dated design record, including superseded proposals
+and deployment notes. Use the current reference above and `llms.txt` when
+implementing or writing cards.
+
 The format as it stands, what is wrong with it, and the language that replaces
 it. Written 15 Sep 2026, after a real generation hit a wall and printed spec
 syntax at a reader.
