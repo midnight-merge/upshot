@@ -188,14 +188,10 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
   text-transform:uppercase;color:var(--faint);content:"you";
 }
 .demo .ask .say{display:block;margin-top:8px;color:var(--accent)}
-/* The reply IS the link. This started as a tinted bubble with a trailing
-   arrow, on the theory that the rule and the arrow would say so without
-   turning it into a button. A reader watched using the page said "I did not
-   know those were links" - the arrow was a glyph at the end of a wrapped line,
-   on a page that otherwise reads as a chat transcript, where a bubble is
-   something someone said rather than something you press. So the affordance
-   gets its own row and says the word, in the same mono label register the card
-   uses for its own footer. */
+/* The reply IS the link. On a page that reads as a chat transcript a bubble
+   is something someone said rather than something you press, so the
+   affordance gets its own row and says the word, in the same mono label
+   register the card uses for its own footer. */
 .demo a.reply{
   align-self:flex-start;max-width:92%;
   margin-top:4px;
@@ -216,11 +212,9 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
   font-family:var(--mono);font-size:9px;letter-spacing:.1em;
   text-transform:uppercase;color:var(--faint);
 }
-/* A reader watching the page said "I did not know those were links" - on a
-   page that reads as a chat, a bubble is something someone said, not
-   something you press. The arrow glyph failed because it rode the end of a
-   wrapped line. So the affordance gets a fixed corner of its own and says the
-   word, lit the way every other live thing on the page is lit. */
+/* The affordance gets a fixed corner of its own and says the word, lit the
+   way every other live thing on the page is lit. An arrow glyph riding the
+   end of a wrapped line does not read as one. */
 .demo a.reply .go{color:var(--accent)}
 .demo a.reply:hover .go{color:inherit}
 /* what the assistant actually sends back. Prose in this bubble was the
@@ -594,10 +588,11 @@ c=:Just+a+box, r=:mo%2A12:Per+year.
      s=thr:29385:Plan+2. Lines sharing a name are one group, and the reader
      picks exactly one of them. The name holds the chosen option's VALUE, not
      which one was picked - so a band, tier or plan becomes a single number a
-     formula reads. Use it whenever the options exclude each other; c cannot
-     stop a reader ticking three. The first option is chosen until the reader
-     says otherwise, so put the user's choice first if known; otherwise make
-     the example choice clear. Do not send x=.
+     formula reads. Value is a bare number with no currency symbol or unit.
+     Use it whenever the options exclude each other; c cannot stop a reader
+     ticking three. The first option is chosen until the reader says otherwise,
+     so put the user's choice first if known; otherwise make the example choice
+     clear. Do not send x=.
 - f  fixed fact, written Label:Value, e.g. f=Cold+start:180ms or
      f=Licence:MIT. Both fields are text. Alone in a block, one or two rows
      are drawn large, three or more become a spec sheet. The card decides.
@@ -616,7 +611,7 @@ c=:Just+a+box, r=:mo%2A12:Per+year.
 - t  decision, written Label:Condition:Wording. Rows sharing a label are one
      decision, and the FIRST true condition wins. A row with an empty
      condition is the fallback, and it must be last. Keep the rows of a
-     decision together.
+     decision together. Label must not be empty.
 
        &amp;t=Budget:cost%3Ebudget:Over+budget
        &amp;t=Budget:cost==budget:Exactly+on+budget
@@ -629,7 +624,7 @@ c=:Just+a+box, r=:mo%2A12:Per+year.
      u=off:% or u=size:kb. Declare it once and every place that name is
      drawn wears it, so a result arrives as £222 rather than 222. Use this
      instead of writing the unit into the label. hr and min also change
-     how the number reads, so 5.64 with u=t:hr prints as 5:38.
+     how the number reads, so 5.64 with u=t:hr prints as 5h 38m.
      Units do not propagate through calculations or change the values that
      formulas read. Give each displayed result its own unit. To print 17%,
      the result must be 17 and its unit %.
@@ -641,7 +636,7 @@ A comparison is two labelled blocks, and so is pros and cons:
 
 FORMULAS
 
-A formula may use digits, + - * / ( ), any name on the card,
+A formula may use decimal or scientific-notation numbers, + - * / ( ), any name on the card,
 &lt; &gt; &lt;= &gt;= == !=, pi, and
 min max round abs sqrt pow floor ceil ln exp. Nothing else.
 
@@ -675,7 +670,8 @@ covers every option: s=price:6:Basic and s=price:12:Plus together let
 r=total:seats%2Aprice:Monthly+cost use the selected price. Do not write
 a separate calculation for each option.
 
-Use short names such as mo, apr and n. A result may feed another:
+Use short names such as mo, apr and n. A name starts with an ASCII letter
+or _, then uses only ASCII letters, digits and _. A result may feed another:
 r=mo:seats%2Aprice:Monthly then r=yr:mo%2A12:Per+year. To print both in
 pounds, add u=mo:%C2%A3 and u=yr:%C2%A3.
 
@@ -714,9 +710,10 @@ ENCODING
 BEFORE YOU REPLY
 
 Check: no spaces, no bare , . ( ) * ? inside any wording, every
-name claimed once, every i name used by a formula, every i start a bare
-number, every s in a group sharing one name, every t three fields with any
-fallback last, under 2000 characters.
+name valid and claimed once, every i name used by a formula, every i start
+a bare number, every s value a bare number and every group sharing one name,
+every t three fields with a non-empty label and any fallback last, under 2000
+characters.
 
 Mentally change an input or choice: do the results follow it, do the units
 still make sense, and do the headline and summary remain true?
