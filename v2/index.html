@@ -518,6 +518,42 @@ function decodeOnce(v){
    appear in the URL, so the grammar needs no numbering and no nesting. */
 var BLOCK_KEYS = ['p', 'o', 'c', 'f', 'r', 't', 'i', 's'];
 
+/* Everything else the fragment may carry: the five frame fields, and the
+   three state keys the renderer writes back when a reader edits, ticks or
+   chooses. `g` and `u` are handled before this and are not in the list.
+
+   A key outside both lists is not a card this renderer can draw. It used to
+   fall through to a property nobody reads, which is silent: a pros-and-cons
+   card written with b= for its bullets drew its headline and dropped every
+   line under it. Refusing says so. */
+var FRAME_KEYS = ['a', 'h', 'v', 'm', 'd', 'k', 'w', 'x', 'z'];
+
+/* The keys the renderer writes back, never the author. */
+var STATE_KEYS = ['w', 'k', 'x', 'z'];
+
+/* State belongs to the card it was typed into, and `z` is how the card says
+   so: a print of every authoring field, written beside the state whenever the
+   renderer writes state.
+
+   Reader state and authored content are indistinguishable once they are both
+   in the fragment - `w=340/45/25` is what a reader typed, and it is also what
+   a model writes when it mistakes the state keys for authoring ones. The
+   second kind silently overrides the numbers the card was built with: a card
+   reading 62mph answers as though it read 45. Nothing in the fragment tells
+   the two apart, so the card is asked instead. State whose print does not
+   match the card it arrived on was not typed into this card, and the start
+   values stand. A reader's own link is unaffected - editing a card writes
+   both halves at once, so they always agree. */
+function cardPrint(pairs){
+  var h = 5381;
+  var s = pairs.filter(function(p){
+    var i = p.indexOf('=');
+    return i > 0 && STATE_KEYS.indexOf(p.slice(0, i)) < 0;
+  }).join('&');
+  for(var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+}
+
 /* Keys whose value is several fields with a colon between them. They are the
    only ones that travel with a written colon still disguised - see MARK. */
 var FIELDED = ['f', 'i', 'r', 't', 'c', 's', 'u'];
@@ -772,10 +808,18 @@ function parse(hash){
       current.items.push(v);
       return;
     }
+    if(FRAME_KEYS.indexOf(k) < 0){
+      out.problems.push('"' + k + '" is not a key this card has');
+      return;
+    }
     out[k] = v;
   });
 
   out.blocks = out.blocks.filter(function(b){ return b.items.length; });
+
+  // state that did not come from this card is not this reader's state
+  if(out.z !== cardPrint(pairs)) out.w = out.k = out.x = undefined;
+
   audit(out);
   /* The 2000-character limit is an authoring and transport budget. The
      renderer does not truncate a fragment or impose a runtime block cap. */
@@ -1123,16 +1167,22 @@ function showNumber(v){
 }
 
 /* A number as the printed WORKING cites it, which is a different job from
-   showNumber. showNumber presents, at two places. plainNumber proves, at six
-   significant figures: working that does not reproduce the answer refutes
-   itself in front of the reader, so a step holding 1.9991314 must not print
-   as round(14000*2) beside an answer of 27,988. A condition gets it too - a
-   runway of 8.999 against a target of 9 printed as 9>=9 reads true beside a
-   verdict saying otherwise. */
+   showNumber. showNumber presents, at two places. plainNumber proves: working
+   that does not reproduce the answer refutes itself in front of the reader, so
+   a step holding 1.9991314 must not print as round(14000*2) beside an answer
+   of 27,988. A condition gets it too - a runway of 8.999 against a target of 9
+   printed as 9>=9 reads true beside a verdict saying otherwise.
+
+   Six significant figures is enough to prove a small number and not enough to
+   prove a large one: a turnover of 1,234,567.89 cited as 1234570 is neither
+   the figure the reader typed nor a factor of the tax beside it. So the
+   precision follows the magnitude - always at least the two places the row
+   itself is printed to, and never fewer than six figures. */
 var plainNumber = function(v){
   if(v === null) return '\u2014';
   if(v === 0) return '0';
-  return String(Number(v.toPrecision(6)));
+  var digits = Math.floor(Math.log10(Math.abs(v))) + 1;
+  return String(Number(v.toPrecision(Math.max(6, Math.min(21, digits + 2)))));
 };
 
 /* Inputs are read before anything is worked out, so a formula can name one
@@ -1927,12 +1977,18 @@ function stateNumber(v){
   });
 }
 
-function writeFragment(key, value){
-  var frag = location.hash.replace(/^#/, '');
+function setField(frag, key, value){
   var re = new RegExp('(^|&)' + key + '=[^&]*');
+  return re.test(frag) ? frag.replace(re, '$1' + key + '=' + value)
+                       : frag + '&' + key + '=' + value;
+}
+
+/* State and its print are written together, so a link the reader passes on
+   always carries a print of the card the state was typed into. */
+function writeFragment(key, value){
+  var frag = setField(location.hash.replace(/^#/, ''), key, value);
   history.replaceState(null, '',
-    '#' + (re.test(frag) ? frag.replace(re, '$1' + key + '=' + value)
-                         : frag + '&' + key + '=' + value));
+    '#' + setField(frag, 'z', cardPrint(frag.split('&'))));
 }
 
 /* Choosing rewrites the fragment the way a tick does. The browser already

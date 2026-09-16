@@ -57,6 +57,7 @@ u=name:unit                 display unit for a name
 k=state                     checkbox state written by the renderer
 w=state                     input state written by the renderer
 x=state                     choice state written by the renderer
+z=print                     print of the card the state was typed into
 ```
 
 `g=` is the only block boundary. A block may contain multiple primitive types.
@@ -177,7 +178,13 @@ The renderer refuses structurally invalid cards, including:
 - invalid identifier names;
 - missing decision labels;
 - a decision fallback before another outcome;
-- formula syntax outside the supported grammar.
+- formula syntax outside the supported grammar;
+- a key the language does not have.
+
+Reader state is honoured only when `z` matches a print of the card's authoring
+fields. State with no print, or one taken from a different card, is ignored and
+the authored start values stand. The renderer writes state and print together,
+so a link a reader passes on always carries both.
 
 The renderer displays a dash for a structurally valid value that cannot be
 calculated, including undefined references, cycles, non-finite arithmetic, an
@@ -297,7 +304,10 @@ The suite includes regression cases for:
 - variables that share names with formula functions;
 - checklist counters used outside their checklist block;
 - scientific notation in input, choice, and formula values;
-- explicit duration units.
+- explicit duration units;
+- a key outside the language, which used to be ignored silently;
+- reader state arriving without this card's print;
+- printed working that reproduces the result above a million.
 
 ## Current known limits and pending decisions
 

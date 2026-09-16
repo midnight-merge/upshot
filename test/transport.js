@@ -36,9 +36,14 @@ const mod = {exports: {}};
 new Function('module', 'exports', js.slice(0, cut) +
   '\nmodule.exports={parse:parse,evaluate:evaluate,restorePlus:restorePlus,' +
   'fields:fields,text:text,checkField:checkField,withUnit:withUnit,' +
-  'showNumber:showNumber};'
+  'showNumber:showNumber,cardPrint:cardPrint};'
 )(mod, mod.exports);
-const {parse, fields, checkField, withUnit, showNumber} = mod.exports;
+const {parse, fields, checkField, withUnit, showNumber, cardPrint} = mod.exports;
+
+/* Reader state only counts on the card it was typed into, so a fixture that
+   seeds w=, k= or x= by hand has to carry that card's print the way the
+   renderer would have written it. */
+const stamp = hash => hash + '&z=' + cardPrint(hash.replace(/^#/, '').split('&'));
 if (typeof parse !== 'function') throw new Error('engine did not load');
 
 let failures = 0, checks = 0;
@@ -270,7 +275,7 @@ function sweepPromptBehavior() {
   for (const [scope, state, values, decisions] of scenarios) {
     const card = cards.find(c => c.scope === scope);
     if (!card) { check(false, `missing prompt example: ${scope}`); continue; }
-    const d = parse(card.hash + state);
+    const d = parse(state ? stamp(card.hash + state) : card.hash);
     const actualValues = d.blocks.flatMap(b => b.computed || [])
       .filter(r => r.label).map(r => withUnit(r.value, r.unit));
     const actualDecisions = d.blocks.flatMap(b => b.decided || []).map(r => r.text);
@@ -405,7 +410,7 @@ function sweepPicks() {
   const PLANS = '&s=thr:26900:Plan+1&s=thr:29385:Plan+2&s=thr:33795:Plan+4';
   const SUM = '&i=salary:40000:Salary&r=:max(0,salary-thr)*0.09:Repay';
   const repay = hash => {
-    const d = parse(hash);
+    const d = parse(stamp(hash));
     const r = d.blocks.find(b => b.type === 'r');
     const row = r && r.computed.find(c => c.label === 'Repay');
     return row ? row.value : null;
@@ -454,7 +459,7 @@ function sweepPicks() {
      way a repeated key beats a separator everywhere else in the grammar. */
   const TWO = F + '&s=one:1:A&s=one:2:B&s=two:10:X&s=two:20:Y&r=:one+two:Sum';
   const sum = hash => {
-    const r = parse(hash).blocks.find(b => b.type === 'r');
+    const r = parse(stamp(hash)).blocks.find(b => b.type === 'r');
     const row = r && r.computed.find(c => c.label === 'Sum');
     return row ? row.value : null;
   };
@@ -467,7 +472,7 @@ function sweepPicks() {
      contradicting one in another. */
   const SPLIT = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=One&s=n:1:A&g=Two&s=n:2:B&g=Sum&r=:n:V';
   const val = hash => {
-    const r = parse(hash).blocks.find(b => b.type === 'r');
+    const r = parse(stamp(hash)).blocks.find(b => b.type === 'r');
     const row = r && (r.computed || []).find(c => c.label === 'V');
     return row ? row.value : null;
   };
@@ -495,8 +500,8 @@ function sweepPicks() {
 
   /* ticks and boxes count a checklist. A pick-one is not one, so a card
      carrying both must not have its score quietly inflated by the options. */
-  const mixed = parse('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&c=:One&c=:Two&s=n:1:A&s=n:2:B' +
-    '&r=b:boxes:Boxes&r=t:ticks:Ticks&k=10');
+  const mixed = parse(stamp('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&c=:One&c=:Two&s=n:1:A&s=n:2:B' +
+    '&r=b:boxes:Boxes&r=t:ticks:Ticks&k=10'));
   const rows = mixed.blocks.find(b => b.type === 'r').computed;
   const box = rows.find(c => c.label === 'Boxes'), tk = rows.find(c => c.label === 'Ticks');
   check(box && box.value === 2, 'options do not count as boxes', box && 'boxes came to ' + box.value);
@@ -788,7 +793,7 @@ function sweepScopes() {
   const before = checks;
   const A = '#a=A&h=H&v=V&m=M&d=2026-01-01';
   const val = (hash, label) => {
-    const all = parse(A + hash).blocks.flatMap(b => b.computed || []);
+    const all = parse(stamp(A + hash)).blocks.flatMap(b => b.computed || []);
     const row = all.find(c => c.label === label);
     return row ? row.value : 'no such row';
   };
@@ -836,7 +841,7 @@ function sweepOrder() {
   console.log('\nresults in any order');
   const F = '#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=n:10:N';
   const val = (hash, label) => {
-    const d = parse(F + hash);
+    const d = parse(stamp(F + hash));
     const all = d.blocks.flatMap(b => b.computed || []);
     const row = all.find(c => c.label === label);
     return row ? row.value : 'no such row';

@@ -583,7 +583,7 @@ c=:Just+a+box, r=:mo%2A12:Per+year.
 - c  checklist item, written name:Wording, e.g. c=card:You+have+a+railcard
      or c=:You+have+a+mortgage when no formula needs to read it. The reader
      ticks these off and the ticks are kept in the link they hold. A formula
-     can read them - see ticks below. Do not send k=.
+     can read them - see ticks below.
 - s  one option of a pick-one, written name:Value:Label, e.g.
      s=thr:29385:Plan+2. Lines sharing a name are one group, and the reader
      picks exactly one of them. The name holds the chosen option's VALUE, not
@@ -592,7 +592,7 @@ c=:Just+a+box, r=:mo%2A12:Per+year.
      Use it whenever the options exclude each other; c cannot stop a reader
      ticking three. The first option is chosen until the reader says otherwise,
      so put the user's choice first if known; otherwise make the example choice
-     clear. Do not send x=.
+     clear.
 - f  fixed fact, written Label:Value, e.g. f=Cold+start:180ms or
      f=Licence:MIT. Both fields are text. Alone in a block, one or two rows
      are drawn large, three or more become a spec sheet. The card decides.
@@ -600,7 +600,6 @@ c=:Just+a+box, r=:mo%2A12:Per+year.
      reader types in, so the card is a tool rather than an answer. Start is a
      bare number and nothing else - i=mass:80:Mass, never 80kg. Use
      u=mass:kg for the unit. Their numbers are kept in the link they hold.
-     Do not send w=.
 - r  result, written name:Formula:Label, e.g. r=total:seats%2Aprice:Total.
      Name it when another formula uses it or it needs a unit. Otherwise the
      name may be empty: r=:seats%2Aprice:Total. The card works it out and
@@ -616,6 +615,10 @@ c=:Just+a+box, r=:mo%2A12:Per+year.
        &amp;t=Budget:cost%3Ebudget:Over+budget
        &amp;t=Budget:cost==budget:Exactly+on+budget
        &amp;t=Budget::Under+budget
+
+     A condition must compare: &lt; &gt; &lt;= &gt;= == !=. A value on its own
+     is not a condition, even one that is already 1 or 0, so write
+     ticks==boxes for all of them and card==1 for one box.
 
      Two rows is a yes-or-no. Three is under, about right, over. There is no
      limit. Write one row per outcome rather than forcing two outcomes into
@@ -722,17 +725,7 @@ Try zero and cross any target or limit. If a result becomes unusable, such as
 money still needed falling below zero, constrain the formula rather than
 relying on nearby wording to explain it.
 
-Reply with the URL and nothing else.
-
-VERSION
-
-v2, and the path says so: exports live at https://upshot.fyi/v2/. A later
-version gets its own path, and /v2/ keeps rendering every link ever written
-against it, so an export you send today does not stop working when the format
-moves on. /v1/ is frozen and still renders links written before v2.
-
-/llms.txt always describes the current version. A link written without the
-path - upshot.fyi/#a=... - is forwarded to /v2/, so it still renders.</pre>
+Reply with the URL and nothing else.</pre>
 
     <h2>Privacy</h2>
     <p class="fine">Everything after the <span class="cmd">#</span> stays in

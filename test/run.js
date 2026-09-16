@@ -195,8 +195,11 @@ const CASES = [
    {blocks: 1, values: ['1'], picked: '10', ticked: '0'}],
 
   // shapes of failure
-  ['unknownKey', `#z=explainer&h=An unknown key&v=z= is not in the grammar&g=Why&p=Anything not in the grammar is ignored`,
-   {blocks: 1, values: []}],
+  /* Ignoring a key outside the grammar is silent, and silence here draws a
+     card with the author's content missing: a pros-and-cons card written with
+     b= for its bullets kept its headline and lost every line under it. */
+  ['unknownKey', `#q=explainer&h=An unknown key&v=q= is not in the grammar&g=Why&p=A key the language does not have is refused`,
+   {blocks: 1, values: [], refused: true}],
   ['longtoken', `#h=${'A'.repeat(120)}&v=ok&g=x&p=fine`, {blocks: 1, values: []}],
   ['absurd', `#h=Tall&v=v&g=Many${`&p=${WORDY}`.repeat(9)}`, {blocks: 1, values: []}]
 ];
@@ -441,9 +444,21 @@ addEventListener('load', () => {
   document.fonts.ready.then(async () => {
    try {
     const text = sel => [...document.querySelectorAll(sel)].map(el => el.textContent);
+    /* A fixture that seeds reader state by hand has to carry the print the
+       renderer would have written beside it, or the card treats the state as
+       belonging to some other card and ignores it. */
+    const seed = () => {
+      const frag = location.hash.replace(/^#/, '');
+      if(/(^|&)(w|k|x)=/.test(frag))
+        location.hash = location.hash + '&z=' + cardPrint(frag.split('&'));
+    };
+
     const out = __CASES__.map(([name, hash]) => {
       try {
         location.hash = hash;
+        // after assignment: the browser re-encodes the fragment, and the print
+        // has to be of the card as the parser will read it
+        seed();
         draw();
         return {
           name,

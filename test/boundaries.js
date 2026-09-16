@@ -4,6 +4,9 @@ const cases = [];
 const frame = '#a=Contract+test&h=Contract+test&v=Test&m=Test&d=2026-09-16&g=G';
 const enc = value => encodeURIComponent(String(value));
 function add(id, name, tail, want) { cases.push({id, name, hash: frame + tail, want}); }
+/* `raw` opens the fixture exactly as written, print and all, so a case can
+   carry state with no print or a print belonging to another card. */
+function addRaw(id, name, tail, want) { cases.push({id, name, hash: frame + tail, want, raw: true}); }
 
 // Start with a valid control and mutate just its numeric field. Prefixes that
 // parseFloat accepts are included: a plausible partial number is also wrong.
@@ -68,6 +71,37 @@ add('numbers', 'scientific notation works in a formula literal', '&r=x:6.674e-11
 add('numbers', 'scientific notation is distinct from a variable named e',
   '&i=e:2:Energy&r=x:6.674e-11*e:Result',
   {numeric: [1.3348e-10], values: ['1.3348e-10'], working: ['6.674e-11*2']});
+/* Six significant figures is fewer digits than the row above a million, so
+   the working stopped citing the number the reader typed and stopped adding
+   up to the answer beside it. */
+add('B09', 'working cites a large input as it was typed',
+  '&i=turnover:1234567%2E89:Turnover&r=tax:turnover*0%2E2:Tax',
+  {values: ['246,913.58'], working: ['1234567.89*0.2']});
+add('B09', 'a condition above a million does not refute its own verdict',
+  '&i=spend:1234567%2E89:Spend&r=v:spend*1:Total&t=Verdict:v%3E1234569:Over&t=Verdict::Within',
+  {values: ['1,234,567.89', 'Within'], working: ['1234567.89*1', '1234567.89>1234569']});
+
+/* A key the language does not have is a card the renderer cannot draw. It
+   used to fall through to a property nobody reads, so a pros-and-cons card
+   written with b= for its bullets drew a headline and two empty blocks. */
+add('B10', 'an invented key is refused', '&b=Better+balance&b=Higher+focus', {refused: true});
+add('B10', 'and refusing it does not refuse the keys beside it',
+  '&p=A+real+bullet', {refused: false, values: []});
+add('B10', 'state keys the renderer writes are still accepted',
+  '&i=n:2:N&c=:Box&s=g:1:One&s=g:2:Two&r=x:n*g:Result&w=3&k=1&x=1',
+  {numeric: [6], values: ['6']});
+
+/* Reader state and authored content look the same once both are in the
+   fragment, so a model that writes w= silently replaces the numbers the card
+   was built with. The print says which card the state was typed into. */
+const STATED = '&i=n:2:N&r=x:n*10:Result';
+addRaw('B11', 'state with no print is not this card\'s state',
+  STATED + '&w=9', {numeric: [20], values: ['20']});
+addRaw('B11', 'nor is state carrying another card\'s print',
+  STATED + '&w=9&z=notaprint', {numeric: [20], values: ['20']});
+add('B11', 'state printed against this card is the reader\'s own',
+  STATED + '&w=9', {numeric: [90], values: ['90']});
+
 add('B08', 'checklist counters require a checklist in the same block',
   '&c=:One&c=:Two&g=Other&r=x:ticks/boxes*100:Result', {refused: true});
 
@@ -86,11 +120,18 @@ async function browserProbe(fixtures) {
   const equal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const record = (id, name, ok, detail = '') => results.push({id, name: 'browser: ' + name, ok, detail});
   const texts = selector => [...document.querySelectorAll(selector)].map(el => el.textContent);
-  const open = hash => { history.replaceState(null, '', hash); draw(); };
+  /* Seeded reader state needs the print the renderer would have written with
+     it, or the card reads it as state from some other card and ignores it. */
+  const open = (hash, raw) => {
+    const frag = hash.replace(/^#/, '');
+    history.replaceState(null, '',
+      !raw && /(^|&)(w|k|x)=/.test(frag) ? hash + '&z=' + cardPrint(frag.split('&')) : hash);
+    draw();
+  };
   const refused = () => /could not be drawn/.test(document.querySelector('#main h1')?.textContent || '');
   for (const c of fixtures) {
     try {
-      open(c.hash);
+      open(c.hash, c.raw);
       const values = texts('#main .fv').concat(texts('#main .sv'));
       const working = texts('#main .fx');
       const numbers = parse(location.hash).blocks.flatMap(b => b.computed || []).map(row => row.value);
