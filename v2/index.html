@@ -912,6 +912,8 @@ var CREDIT = '<footer><div class="how">Paste it into any AI to dig in. Or make '
 /* Which units REFORMAT the number rather than sitting beside it. One table,
    so money and duration are the same kind of thing. A reformatter builds the
    number it wants rather than patching what showNumber returned. */
+var MONEY = '\u00a3$\u20ac\u00a5';
+
 var REFORMAT = {
   hr:  function(v){ return clock(v, 'h', 'm'); },
   min: function(v){ return clock(v, 'm', 's'); },
@@ -952,6 +954,13 @@ function withUnit(value, unit){
     var out = REFORMAT[unit](value, unit);
     if(out !== null) return out;
   }
+  /* A rate is money with something after it - £/hr, $/unit, £ per hour - and
+     it is what anyone writes for one. Matching the money units exactly left a
+     rate to the decorating path, which puts the unit last and so printed the
+     symbol on the wrong end: 39.51£/hr. The symbol leads, and whatever follows
+     it rides behind the amount. */
+  if(MONEY.indexOf(unit.charAt(0)) >= 0 && isFinite(value))
+    return money(value, unit.charAt(0)) + unit.slice(1);
   return showNumber(value) + unit;
 }
 

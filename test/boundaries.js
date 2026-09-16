@@ -102,6 +102,15 @@ addRaw('B11', 'nor is state carrying another card\'s print',
 add('B11', 'state printed against this card is the reader\'s own',
   STATED + '&w=9', {numeric: [90], values: ['90']});
 
+/* A rate is money with something after it, and £/hr is what anybody writes
+   for one. Matching the money units exactly sent a rate down the decorating
+   path, so the symbol landed on the wrong end: 39.51£/hr. */
+for (const [unit, want] of [['%C2%A3/hr', '£39.51/hr'], ['%C2%A3+per+hour', '£39.51 per hour'],
+                            ['%24/unit', '$39.51/unit'], ['%C2%A3', '£39.51'], ['kg', '39.51kg']]) {
+  add('B12', `money unit ${decodeURIComponent(unit.replace(/\+/g, ' '))} keeps its symbol in front`,
+    `&r=rate:39%2E51:Rate&u=rate:${unit}`, {values: [want]});
+}
+
 add('B08', 'checklist counters require a checklist in the same block',
   '&c=:One&c=:Two&g=Other&r=x:ticks/boxes*100:Result', {refused: true});
 
@@ -115,7 +124,13 @@ add('limits', 'no matching outcome and no fallback gives dash', '&t=V:1>2:Yes', 
 
 // Real DOM and real event handlers. Only OS clipboard/share calls are stubbed,
 // so tests can click without opening a share sheet or changing the clipboard.
-async function browserProbe(fixtures) {
+/* `part` splits the run across two Chrome processes. Loading a fixture and
+   writing reader state are both navigations, and Chrome allows a limited
+   number per document. One process doing both put the tests at the end of the
+   run over that limit, so they failed for want of a navigation rather than
+   for anything the card did - and adding a case anywhere moved which ones.
+   Each half gets a document of its own. */
+async function browserProbe(fixtures, part) {
   const results = [];
   const equal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const record = (id, name, ok, detail = '') => results.push({id, name: 'browser: ' + name, ok, detail});
@@ -129,7 +144,7 @@ async function browserProbe(fixtures) {
     draw();
   };
   const refused = () => /could not be drawn/.test(document.querySelector('#main h1')?.textContent || '');
-  for (const c of fixtures) {
+  if (part !== 'interactive') for (const c of fixtures) {
     try {
       open(c.hash, c.raw);
       const values = texts('#main .fv').concat(texts('#main .sv'));
@@ -142,6 +157,8 @@ async function browserProbe(fixtures) {
         JSON.stringify({refused: refused(), values, numbers, working}));
     } catch (e) { record(c.id, c.name, false, e.message); }
   }
+
+  if (part === 'fixtures') return results;
 
   record('duration', 'duration units are explicit',
     equal([withUnit(1.5, 'hr'), withUnit(1.5, 'min'), withUnit(90, 'min'), withUnit(-2, 'hr')],

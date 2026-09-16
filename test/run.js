@@ -658,7 +658,8 @@ addEventListener('load', () => {
     draw();
     out.push({name: 'copyForAI', text: copyText(parse(location.hash))});
 
-    out.push({name: 'boundaries', results: await (__BOUNDARY_PROBE__)(__BOUNDARY_CASES__)});
+    out.push({name: 'boundaries',
+              results: await (__BOUNDARY_PROBE__)(__BOUNDARY_CASES__, '__BOUNDARY_PART__')});
     report(out);
    } catch(e){
      report([{name: 'probe', error: String(e && e.stack || e)}]);
@@ -675,19 +676,32 @@ function report(out){
 </script>
 `;
 
+/* Two passes, because loading a fixture and writing reader state are both
+   navigations and Chrome allows a limited number per document. The pass that
+   drives controls runs in its own. */
 function renderAll(chrome, src){
-  const harness = path.join(os.tmpdir(), `upshot-harness-${process.pid}.html`);
+  const first = renderPass(chrome, src, 'interactive');
+  const fixtures = renderPass(chrome, src, 'fixtures')
+    .find(r => r.name === 'boundaries');
+  const boundaries = first.find(r => r.name === 'boundaries');
+  if(boundaries && fixtures) boundaries.results = fixtures.results.concat(boundaries.results);
+  return first;
+}
+
+function renderPass(chrome, src, part){
+  const harness = path.join(os.tmpdir(), `upshot-harness-${process.pid}-${part}.html`);
   fs.writeFileSync(harness, src.replace('</body>',
     PROBE.replace('__CASES__', () => JSON.stringify(CASES.map(c => [c[0], c[1]])).replace(/</g, '\\u003c'))
          .replace('__EXPRS__', () => JSON.stringify(EXPRS).replace(/</g, '\\u003c'))
          .replace('__NUMS__', () => JSON.stringify(NUMS))
          .replace('__BOUNDARY_PROBE__', () => boundaries.browserProbe.toString())
-         .replace('__BOUNDARY_CASES__', () => JSON.stringify(boundaries.cases).replace(/</g, '\\u003c')) + '</body>'));
+         .replace('__BOUNDARY_CASES__', () => JSON.stringify(boundaries.cases).replace(/</g, '\\u003c'))
+         .replace('__BOUNDARY_PART__', () => part) + '</body>'));
   let dom;
   try {
     dom = execFileSync(chrome, [
       '--headless', '--disable-gpu', '--hide-scrollbars', '--no-sandbox',
-      '--virtual-time-budget=20000',
+      '--virtual-time-budget=60000',
       '--window-size=500,900',
       // draw() runs at parse time and would send an unrenderable link to
       // /broken/, navigating the harness away before the probe reports

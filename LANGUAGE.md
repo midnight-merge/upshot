@@ -130,6 +130,8 @@ Units affect display only. They do not propagate through formulas and do not
 scale values.
 
 - `£`, `$`, `€`, and `¥` use money formatting.
+- A unit beginning with one of those symbols is a rate: the symbol leads the
+  amount and the remainder follows it, so `£/hr` prints `£39.51/hr`.
 - `%` appends a percent sign to the numeric value.
 - `hr` formats decimal hours with explicit hour and minute suffixes.
 - `min` formats decimal minutes with explicit minute and second suffixes.
@@ -305,6 +307,7 @@ The suite includes regression cases for:
 - checklist counters used outside their checklist block;
 - scientific notation in input, choice, and formula values;
 - explicit duration units;
+- money symbols leading the amount in a rate unit;
 - a key outside the language, which used to be ignored silently;
 - reader state arriving without this card's print;
 - printed working that reproduces the result above a million.
