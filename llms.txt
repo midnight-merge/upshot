@@ -1,35 +1,16 @@
 # upshot
 
 Turn the user's question or conversation into a small, useful card that lives
-in a shareable link. It can explain, calculate, compare or keep a checklist.
+in a shareable link. A card can explain, calculate, compare or keep a checklist.
+The user triggers it by saying "export this".
 
-When the user says "export this", reply with a URL and nothing else. No
-preamble, no code fence, no explanation.
-
-Export what they pointed at, not the whole conversation. If they named a focus
-("export this, mainly the part about x"), that is the scope. If not, use
-whatever they were last discussing.
-
-Preserve the conversation's facts and criteria. For a new tool, use the
-user's numbers as starting values. If numbers are missing, use sensible
-starting values the reader can replace. Ask only when missing context changes
-the calculation or decision rule itself. If facts could have changed recently
-and you can search, search first.
-
-Use criteria already in the conversation for decisions. If none supports a
-verdict, explain what is known instead of inventing a score or cutoff.
-
-The headline and summary are static. On interactive cards, `h` names the
-task and `v` explains the method independently of the current input values.
-Neither repeats starting amounts, counts or selected options, even spelled
-out as words: "four people" binds the summary just as much as "4 people".
-For a bill splitter, use `h=Split+the+bill` and
-`v=Divides+the+total+equally+between+the+people+sharing+it%2E`.
-
-Keep the specific original question in `a`, including its numbers. Use those
-numbers as the starting inputs so the first result answers exactly what the
-user asked. Put changing amounts in `r` and changing conclusions in `t`.
-A static card can lead with its answer.
+Preserve the conversation's facts and criteria. For a new tool, use the user's
+numbers as starting values; if numbers are missing, use sensible starting values
+the reader can replace. Ask only when missing context changes the calculation
+or the decision rule itself. If facts could have changed recently and you can
+search, search first. Decide only with criteria already in the conversation;
+if none supports a verdict, say what is known instead of inventing a score or
+cutoff.
 
 ## Copy these
 
@@ -67,7 +48,7 @@ https://upshot.fyi/v2/#a=Whether+my+savings+meet+my+runway+target&h=Compare+your
 
 A checklist against an explicit requirement that all three tasks are done:
 
-https://upshot.fyi/v2/#a=Preparing+the+three+items+required+for+our+handover&h=Track+the+handover+requirements&v=Our+handover+requires+the+notes%2C+access+check+and+walkthrough+to+be+complete%2E&m=GPT-6&d=2026-09-16&g=Required&c=:Write+the+handover+notes&c=:Confirm+access+to+the+files&c=:Complete+the+walkthrough&r=pct:ticks/boxes%2A100:Completed&t=Handover:ticks==boxes:All+three+complete&t=Handover::Tasks+remaining&u=pct:%25
+https://upshot.fyi/v2/#a=Preparing+the+three+items+required+for+our+handover&h=Track+the+handover+requirements&v=Our+handover+requires+the+notes%2C+access+check+and+walkthrough+to+be+complete%2E&m=GPT-6&d=2026-09-16&g=Required&c=notes:Write+the+handover+notes&c=access:Confirm+access+to+the+files&c=walk:Complete+the+walkthrough&r=done:notes+access+walk:&r=pct:done/3%2A100:Completed&t=Handover:done==3:All+three+complete&t=Handover::Tasks+remaining&u=pct:%25
 
 A choice between the prices quoted in the conversation:
 
@@ -83,20 +64,27 @@ https://upshot.fyi/v2/#a=A+tool+to+compare+driving+and+taking+the+train&h=Compar
 
 ## The frame
 
-Always all five, always first.
+Always all five, always first, in this order.
 
-- a  the specific original ask, including its amounts and counts
-- h  static headline; on interactive cards, a short title for the task
-- v  one sentence; on interactive cards, the method without starting values
-- m  your model name, e.g. GPT-5
-- d  today's date, YYYY-MM-DD. If you are not certain what today is, ask.
+- a  what the user asked, as one plain sentence under 20 words. Keep every
+     amount and count they gave. It is their question, not the topic:
+     `a=Splitting+dinner+three+ways`, not `a=Bill+splitting+calculator`.
+- h  headline, under 12 words. On an interactive card it names the task,
+     `h=Split+the+bill`, and stays true whatever the reader types.
+- v  one sentence, under 25 words. On an interactive card it states the method
+     or assumption without any current value:
+     `v=Divides+the+total+equally+between+the+people+sharing+it%2E`
+- m  your model name, e.g. `m=GPT-5`
+- d  today's date, `d=2026-09-16`
 
-Aim for under 20 words in `a`, 12 in `h` and 25 in `v`.
+`h` and `v` never change with the reader's numbers. Changing amounts go in `r`
+and changing conclusions go in `t`.
 
 ## The blocks
 
-A `g=` starts a block and nothing else does, so one block holds whatever mix
-of lines it needs. Two or three short blocks is usual.
+`g=` labels a block and starts it, and nothing else does, so one block holds
+whatever mix of lines it needs. Two or three short blocks is usual, and every
+bullet adds something the headline and summary did not say.
 
 Choose a key by where the information came from, never by how you want it
 drawn. The card decides how it is drawn. Ask in this order:
@@ -111,160 +99,131 @@ drawn. The card decides how it is drawn. Ask in this order:
     Steps, where the order is the point          o
     Anything else you are simply saying          p
 
-Keep calculated amounts as formulas in `r`, so their working stays visible
-and follows the reader's numbers. Use named results for intermediate steps.
-
-Put machine fields first and wording last. `f` has two text fields and keeps
-its label first; `t` also groups by a leading label. Encode colons inside
-those labels. Where a field is optional it is still there and left empty:
-`c=:Just+a+box`, `r=:mo%2A12:Per+year`.
-
-- g  block label, usually one or two words
-- p  bullet
-- o  step. A how-to, where order is the point.
-- c  checklist item, written `name:Wording`, e.g. `c=card:You+have+a+railcard`
-     or `c=:You+have+a+mortgage` when no formula needs to read it. The reader
-     ticks these off and the ticks are kept in the link they hold. A formula
-     can read them - see `ticks` below.
-- s  one option of a pick-one, written `name:Value:Label`, e.g.
-     `s=thr:29385:Plan+2`. Lines sharing a name are one group, and the reader
-     picks exactly one of them. The name holds the chosen option's VALUE, not
-     which one was picked - so a band, tier or plan becomes a single number a
-     formula reads. Value is a bare number with no currency symbol or unit.
-     Use it whenever the options exclude each other; `c` cannot stop a reader
-     ticking three. The first option is chosen until the reader says otherwise,
-     so put the user's choice first if known; otherwise make the example choice
-     clear.
-- f  fixed fact, written `Label:Value`, e.g. `f=Cold+start:180ms` or
-     `f=Licence:MIT`. Both fields are text. Alone in a block, one or two rows
-     are drawn large, three or more become a spec sheet. The card decides.
-- i  input, written `name:Start:Label`, e.g. `i=seats:4:Seats`. A box the
-     reader types in, so the card is a tool rather than an answer. Start is a
-     bare number and nothing else - `i=mass:80:Mass`, never `80kg`. Use
-     `u=mass:kg` for the unit. Their numbers are kept in the link they hold.
-- r  result, written `name:Formula:Label`, e.g. `r=total:seats%2Aprice:Total`.
-     Name it when another formula uses it or it needs a unit. Otherwise the
-     name may be empty: `r=:seats%2Aprice:Total`. The card works it out and
-     prints the formula beside it with every name replaced by what it
-     held. Put the numbers into the formula rather than working them out
-     yourself. Order does not matter: a formula may cite a name defined
-     further down the card.
-- t  decision, written `Label:Condition:Wording`. Rows sharing a label are one
-     decision, and the FIRST true condition wins. A row with an empty
-     condition is the fallback, and it must be last. Keep the rows of a
-     decision together. Label must not be empty.
-
-       &t=Budget:cost%3Ebudget:Over+budget
-       &t=Budget:cost==budget:Exactly+on+budget
-       &t=Budget::Under+budget
-
-     A condition must compare: `<` `>` `<=` `>=` `==` `!=`. A value on its own
-     is not a condition, even one that is already 1 or 0, so write
-     `ticks==boxes` for all of them and `card==1` for one box.
-
-     Two rows is a yes-or-no. Three is under, about right, over. There is no
-     limit. Write one row per outcome rather than forcing two outcomes into
-     one row.
-- u  the unit a name is printed in, written `name:unit`, e.g. `u=pay:£`,
-     `u=off:%`, `u=size:kb` or `u=rate:%C2%A3/hr`. Declare it once and every place that name is
-     drawn wears it, so a result arrives as `£222` rather than `222`. Use this
-     instead of writing the unit into the label. `hr` and `min` also change
-     how the number reads, so 5.64 with `u=t:hr` prints as `5h 38m`.
-     Units do not propagate through calculations or change the values that
-     formulas read. Give each displayed result its own unit. To print 17%,
-     the result must be 17 and its unit `%`.
+Machine fields come first and wording last.
 
 A comparison is two labelled blocks, and so is pros and cons:
 
     &g=Postgres&p=Concurrent+writes&p=Real+types
     &g=SQLite&p=Zero+ops&p=Faster+for+reads
 
+- g  block label, one or two words: `g=Why`
+- p  bullet: `p=The+ops+saving+is+real+but+small%2E`
+- o  step, for a how-to where order is the point: `o=Share+the+files%2E`
+- f  fixed fact, `Label:Value`, both text: `f=Cold+start:180ms`,
+     `f=Licence:MIT`. Alone in a block, one or two rows draw large and three
+     or more become a spec sheet.
+- i  input, `name:Start:Label`: `i=seats:4:Seats`. A box the reader types in,
+     so the card is a tool rather than an answer. Start is a bare number:
+     `i=mass:80:Mass` with `u=mass:kg`, never `i=mass:80kg:Mass`. Every input
+     is read by a formula; an input nothing reads is a fact, `f`.
+- s  one option of a pick-one, `name:Value:Label`: `s=price:6:Basic` then
+     `s=price:12:Plus`. Rows sharing a name are one group and the reader picks
+     exactly one. The name holds the chosen option's value, so one formula
+     covers every option: `r=total:seats%2Aprice:Monthly+cost`. Value is a
+     bare number. Use `s` whenever options exclude each other; put the user's
+     choice first, because the first option is chosen until the reader says
+     otherwise.
+- c  checklist item, `name:Wording`. The reader ticks it and the tick is kept
+     in the link they hold. Leave the name empty when no formula reads it:
+     `c=:You+have+a+mortgage`. Name it when a formula does, and it reads as 1
+     ticked and 0 not: `c=kit:Include+a+kit` then `r=each:40+kit%2A12:Each`.
+     To count how many are ticked, add the names: `r=done:notes+access+walk:`
+     follows every tick, and `t=Handover:done==3:All+three+complete` fires
+     when every box is.
+- r  result, `name:Formula:Label`: `r=total:seats%2Aprice:Total`. The card
+     works it out and prints the formula beside it with every name replaced by
+     what it held, so put the numbers into the formula rather than working
+     them out yourself. Keep every calculated amount as a formula, and give
+     intermediate steps their own result: `r=mo:seats%2Aprice:Monthly` then
+     `r=yr:mo%2A12:Per+year`. An intermediate that only feeds another row
+     leaves its label empty and computes without drawing: `r=rate:apr/100/12:`.
+- t  decision, `Label:Condition:Wording`. Rows sharing a label are one
+     decision, kept together; the first true condition wins; the last row has
+     an empty condition and is the fallback, so every decision has one; the
+     label is never empty. A guard's fallback says what is fine:
+     `t=Power:power%3C=0:Enter+a+power+above+zero&t=Power::Power+set`.
+
+       &t=Budget:cost%3Ebudget:Over+budget
+       &t=Budget:cost==budget:Exactly+on+budget
+       &t=Budget::Under+budget
+
+     A condition is a comparison. A value on its own is not one, even a value
+     that is already 1 or 0: write `done==3` for all three boxes and `card==1`
+     for one box. Two rows is a
+     yes-or-no, three is under, about right, over, and there is no limit.
+     Write one row per outcome.
+- u  the unit a name is printed in, `name:unit`: `u=pay:%C2%A3`, `u=off:%25`,
+     `u=size:kb`, `u=rate:%C2%A3/hr`. Declare it once and every place that
+     name is drawn wears it, so a result arrives as `£222` rather than `222`.
+     Put the unit here, not in the label. `hr` and `min` also change how the
+     number reads: 5.64 with `u=t:hr` prints as `5h 38m`. Units are display
+     only; they do not scale a value or pass through a formula, so give each
+     displayed result its own unit, and to print 17% the result must be 17
+     with `u=pct:%25`.
+
+## Names
+
+A name starts with an ASCII letter and then uses only ASCII letters and
+digits. Keep them short: `mo`, `apr`, `n`, `fastd`. A name is claimed once on
+the whole card; the only rows that share one are the options of a pick-one. A
+result needs a name when another formula uses it or it has a unit; otherwise
+leave it empty: `r=:seats%2Aprice:Total`. A formula may cite a name declared
+further down the card. `pi` is the card's own; naming anything else `pi`, or
+claiming a name twice, makes the whole card refuse to draw.
+
 ## Formulas
 
-A formula may use decimal or scientific-notation numbers, `+ - * / ( )`, any name on the card,
-`< > <= >= == !=`, `pi`, and
-`min max round abs sqrt pow floor ceil ln exp`. Nothing else.
+A formula is the middle field of an `r` or `t`. Written as it goes in the link,
+it may contain: numbers, `4%2E5` or `1e-3`; `+ - / %2A %28 %29`; any name on
+the card; the comparisons `%3C %3E %3C= %3E= == !=`; `pi`; and `min max round
+abs sqrt pow floor ceil ln exp mod` with arguments in `%28 %29` separated by
+`%2C`. Nothing else. `mod` wraps: a clock hour is `mod%28depart+hours%2C24%29`.
 
-A comparison may be chained and means both halves: `18<=age<65` is true only
-inside the range.
+A chained comparison means both halves: `18%3C=age%3C65` is true only inside
+the range.
 
-Write arithmetic plainly. Inside a formula - the middle field of an `r`
-or `t` - a `+` is a plus and needs no encoding. You may space it out or not:
-`a+b`, `a + b` and `(a)+b` all read the same.
-This is the one place `+` does not mean a space. Everywhere else on the card it
-still does.
+`ln` is the natural log and `exp` is its inverse. Growth by rate `r` for `n`
+periods is `exp%28n%2Aln%281+r%29%29`. Ordinary travel time is distance
+divided by speed.
 
-`ln` is the natural log and `exp` is its inverse. Use them for compound
-growth or decay: growth by rate `r` for `n` periods is `exp(n*ln(1+r))`.
-Ordinary travel time is just distance divided by speed.
-
-Two names are there in any block with a checklist in it: `ticks` is how many
-of that block's boxes are ticked, `boxes` how many there are. So a list the
-reader works through can drive a score or a verdict -
-`r=:ticks/boxes%2A100:Score` - and it follows every tick. They belong to the
-block, so keep the formula in the same block as the list it counts. To total
-two lists, name the boxes and add the names instead. Do not name anything
-`ticks`, `boxes` or `pi`.
-
-A box can take a name too - `c=kit:Include+a+kit` - and a formula reads
-it as 1 when ticked and 0 when not. Name them when the options differ from
-each other; use `ticks` when only how many matters.
-
-A pick-one group's name holds whichever option is chosen, so one formula
-covers every option: `s=price:6:Basic` and `s=price:12:Plus` together let
-`r=total:seats%2Aprice:Monthly+cost` use the selected price. Do not write
-a separate calculation for each option.
-
-Use short names such as `mo`, `apr` and `n`. A name starts with an ASCII letter
-or `_`, then uses only ASCII letters, digits and `_`. A result may feed another:
-`r=mo:seats%2Aprice:Monthly` then `r=yr:mo%2A12:Per+year`. To print both in
-pounds, add `u=mo:%C2%A3` and `u=yr:%C2%A3`.
-
-A name is claimed once. Two lines claiming one name, or anything claiming
-`ticks`, `boxes` or `pi`, makes the whole card refuse to draw rather than
-drawing a control that does nothing. A pick-one is the one exception, because
-its rows share a name on purpose.
-
-An intermediate result that only feeds another row can leave its label
-empty: `r=rate:apr/100/12:`. It computes without drawing a row.
+Write the formula so it stays usable at zero and past any target or limit.
+Money still needed is `max%280%2Ccost-saved%29`, not `cost-saved` with a
+bullet explaining the negative.
 
 ## Encoding
 
-- Every space becomes `+`. The URL contains no spaces.
-- In wording, keep ASCII letters, digits and `-` as they are. Encode everything
-  else as UTF-8 bytes written %XX in upper case: `£` %C2%A3, `,` %2C,
-  `.` %2E, `'` %27, `(` %28, `)` %29, `*` %2A,
-  `:` %3A, `?` %3F, `&` %26, `#` %23, `+` %2B, `%` %25, `_` %5F, and the same
-  for anything else that is not a letter or a digit.
-- Use this alphabet consistently so the link travels across chat clients.
-- In a formula, keep letters, digits and `+ - / = _`. Encode the rest the same
-  way: `*` %2A, `.` %2E, `(` %28, `)` %29, `,` %2C, `<` %3C, `>` %3E. `+` is a
-  plus there rather than a space, which is the one difference from wording.
-- The colons that separate the fields of an `f`, `i`, `r`, `c`, `s`, `t` or
-  `u` stay as they are. It is only a colon inside the wording that is encoded,
-  and once it is, it can go anywhere: `t=Verdict:n%3E0:Ship%3A+today` reads
-  back as "Ship: today".
-- A full stop inside a number is still a full stop: `4%2E5`, never `4.5`.
-- No markdown and no line breaks inside a value.
-- Under 2000 characters. Shorten wording and remove repetition first. Then
-  remove the least useful material. Keep every input and intermediate result
-  needed by a remaining formula. Never drop the frame or cut a sentence off.
-- Aim for three to five lines per block. Do not restate the headline or
-  summary in a bullet.
+Every space becomes `+`, so the link has no spaces, no line breaks and no
+markdown. One alphabet, used everywhere, is what lets the link survive every
+chat client.
+
+In wording, keep ASCII letters, digits and `-` as they are and encode
+everything else as UTF-8 bytes written `%XX` in upper case: `£` %C2%A3, `,`
+%2C, `.` %2E, `'` %27, `(` %28, `)` %29, `*` %2A, `:` %3A, `?` %3F, `&` %26,
+`#` %23, `+` %2B, `%` %25, `_` %5F, `<` %3C, `>` %3E, and the same for
+anything else that is not a letter or a digit.
+
+In a formula, also keep `+ - / =` as they are, because there they are
+arithmetic: `fuel+park` adds them, and this is the one place on the card `+`
+is not a space. Encode the rest the same way. A full stop inside a number is
+still a full stop: `4%2E5`.
+
+The colons that separate the fields of an `f`, `i`, `r`, `c`, `s`, `t` or `u`
+stay as they are. A colon inside wording or a label is `%3A`, and once it is,
+it can go anywhere: `t=Verdict:n%3E0:Ship%3A+today` reads back as "Ship: today".
+
+The link stays under 2000 characters. To get there, shorten wording and remove
+repetition first, then remove the least useful material. Keep every input and
+intermediate result a remaining formula needs, keep the whole frame, and
+never cut a sentence off.
 
 ## Before you reply
 
-Check: no spaces, no bare `,` `.` `(` `)` `*` `?` inside any wording, every
-name valid and claimed once, every `i` name used by a formula, every `i` start
-a bare number, every `s` value a bare number and every group sharing one name,
-every `t` three fields with a non-empty label and any fallback last, under 2000
-characters.
+Change an input or choice in your head: the results follow it, the units
+still make sense, and `h` and `v` are still true. Set an input to zero and
+push a value across any target: every result is still usable.
 
-Mentally change an input or choice: do the results follow it, do the units
-still make sense, and do the headline and summary remain true?
+Read the finished link once: it contains no bare `*`, `(`, `)`, `<` or `>`
+anywhere, because each of those is always written encoded.
 
-Try zero and cross any target or limit. If a result becomes unusable, such as
-money still needed falling below zero, constrain the formula rather than
-relying on nearby wording to explain it.
-
-Reply with the URL and nothing else.
+Reply with the URL and nothing else. No preamble, no code fence, no
+explanation.

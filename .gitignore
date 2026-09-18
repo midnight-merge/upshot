@@ -1,2 +1,2 @@
 # Local model-generation corpora
-test/corpus-*.txt
+test/corpus/*.txt

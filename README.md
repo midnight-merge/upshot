@@ -95,7 +95,7 @@ Check that the suite would notice if the renderer were wrong:
 node test/mutate.js
 ```
 
-This breaks `v2/index.html` 33 ways, one at a time, and runs the suite against
+This breaks `v2/index.html` 34 ways, one at a time, and runs the suite against
 each. A surviving mutation is a blind spot in the tests, not a bug in the
 renderer. It takes about half a minute, so it is a release-time check rather
 than one to run on every edit.

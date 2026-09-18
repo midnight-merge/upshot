@@ -140,15 +140,15 @@ const CASES = [
   ['colonInLabel', `#h=Colons in a label&v=Only a bare trailing word is a name&g=List&c=:Be there by 9:30&c=:Bring ID: passport&c=flag:A named one&r=:flag:Named&k=111`,
    {blocks: 1, values: ['1'], ticked: '111'}],
 
-  // ticks and boxes: the checklist as two numbers a formula can use
-  ['scoredEmpty', `#h=How exposed are you&v=Tick what applies&g=How many apply&c=:A mortgage&c=:Dependants&c=:Higher earner&c=:Self employed&r=pct:ticks/boxes*100:Score&t=Verdict:ticks>=2:Get cover&t=Verdict::Probably fine`,
+  // a scored checklist: named boxes added up drive a score and a verdict
+  ['scoredEmpty', `#h=How exposed are you&v=Tick what applies&g=How many apply&c=mort:A mortgage&c=dep:Dependants&c=high:Higher earner&c=self:Self employed&r=n:mort+dep+high+self:&r=pct:n/4*100:Score&t=Verdict:n>=2:Get cover&t=Verdict::Probably fine`,
    {blocks: 1, values: ['0', 'Probably fine']}],
-  ['scoredTicked', `#h=How exposed are you&v=Tick what applies&g=How many apply&c=:A mortgage&c=:Dependants&c=:Higher earner&c=:Self employed&r=pct:ticks/boxes*100:Score&t=Verdict:ticks>=2:Get cover&t=Verdict::Probably fine&k=1101`,
+  ['scoredTicked', `#h=How exposed are you&v=Tick what applies&g=How many apply&c=mort:A mortgage&c=dep:Dependants&c=high:Higher earner&c=self:Self employed&r=n:mort+dep+high+self:&r=pct:n/4*100:Score&t=Verdict:n>=2:Get cover&t=Verdict::Probably fine&k=1101`,
    {blocks: 1, values: ['75', 'Get cover'], ticked: '1101'}],
   /* An input may not redefine what the spec says the word means. It used to
      lose the claim silently and draw a box no formula read; now the whole
      card refuses, so there is no half-drawn card to misread. */
-  ['reservedName', `#h=Reserved&v=Nothing should draw&g=x&i=ticks:99:Ticks&c=:One&c=:Two&r=:ticks:Count`,
+  ['reservedName', `#h=Reserved&v=Nothing should draw&g=x&i=pi:99:Pi&r=:pi:Count`,
    {blocks: 1, values: [], refused: true}],
   ['duplicateName', `#h=Claimed twice&v=Nothing should draw&g=x&i=n:1:One&i=n:2:Two&r=:n:Out`,
    {blocks: 1, values: [], refused: true}],
@@ -561,9 +561,9 @@ addEventListener('load', () => {
 
     // ticking rewrites the fragment the same way typing does - and now moves
     // the same numbers, so it has to repaint the same rows
-    location.hash = '#h=x&v=y&g=l&c=:One&c=:Two&c=:Three&c=:Four' +
-                    '&r=pct:ticks/boxes*100:Score' +
-                    '&t=Verdict:ticks>=2:Get cover&t=Verdict::Probably fine';
+    location.hash = '#h=x&v=y&g=l&c=a:One&c=b:Two&c=c:Three&c=d:Four' +
+                    '&r=n:a+b+c+d:&r=pct:n/4*100:Score' +
+                    '&t=Verdict:n>=2:Get cover&t=Verdict::Probably fine';
     draw();
     const ticks = [...document.querySelectorAll('.checks input')];
     const tickState = () => text('#main .fv').concat(text('#main .fx'));
