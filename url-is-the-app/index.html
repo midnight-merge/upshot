@@ -483,20 +483,6 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5}
       the model should have said it. Treating those as one problem wasted a
       week.</p>
 
-    <h2>Testing a renderer nobody can see fail</h2>
-
-    <p>Passing tests prove the tests pass. They do not prove the tests would
-      fail if the renderer broke. So a second script breaks it on purpose, 34
-      ways, one at a time: an operator swapped for the one next to it, a check
-      turned off, a pattern loosened. Every one has to turn the suite red.</p>
-
-    <p>The first run had five survivors, all comparison operators. A hand
-      written table of test cases happened to check them away from their edges,
-      and <code>4 &gt; 18</code> and <code>4 &gt;= 18</code> agree. Generating
-      the table instead of typing it closed all five at once. It has been the
-      same answer every time since: a survivor points at a list somebody wrote
-      by hand.</p>
-
     <h2>What it costs</h2>
 
     <ul>
