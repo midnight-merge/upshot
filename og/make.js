@@ -96,6 +96,11 @@ const PLATES = [
     out: path.join(ROOT, 'made', 'og.png'),
     html: PLATE('Made with upshot',
                 'Cards people made by telling their AI to read upshot.fyi and export this.')
+  },
+  {
+    out: path.join(ROOT, 'url-is-the-app', 'og.png'),
+    html: PLATE('The application is the URL',
+                'A card, its formulas and the reader\'s state all live in the fragment.')
   }
 ];
 

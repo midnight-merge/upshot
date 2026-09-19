@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- How the link looks when it is pasted somewhere. -->
+<meta name="description" content="Upshot puts a whole working tool inside a URL. No server, no database, no build. Here is how it works and what it costs.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="upshot">
+<meta property="og:url" content="https://upshot.fyi/url-is-the-app/">
+<meta property="og:title" content="The application is the URL">
+<meta property="og:description" content="No server, no database, no build step. The tool is the string you paste.">
+<meta property="og:image" content="https://upshot.fyi/url-is-the-app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="upshot.fyi - the application is the URL">
+<meta name="twitter:card" content="summary_large_image">
+<title>The application is the URL</title>
+<style>
+/* the same palette as the card, because this is the same object explained */
+:root{
+  --card:#12131A;
+  --ink:#F7F7F4;
+  --dim:#B4B6C2;
+  --faint:#8E91A6;
+  --accent:#C8FF3D;
+  --hair:rgba(247,247,244,.12);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--card);
+  color:var(--ink);
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+  /* a card URL printed in full is one unbroken token the width of a paragraph */
+  overflow-wrap:anywhere;
+  /* Chrome on iOS parks the last of the page under its bottom toolbar */
+  padding-bottom:160px;
+}
+
+.wrap{display:flex;flex-direction:column;align-items:center;width:100%}
+
+/* 430px is the card's measure, because a card is an object you hold. This is
+   a document you read, so it takes a prose measure instead. */
+.sheet{
+  width:100%;
+  max-width:640px;
+  background:var(--card);
+  padding:40px 26px 30px;
+}
+
+.head{padding-bottom:22px}
+
+/* ONE header line, shared with every other page here */
+.brand{
+  font-family:var(--mono);
+  font-size:12.5px;
+  line-height:1.5;
+  letter-spacing:.01em;
+  color:var(--faint);
+}
+.brand::after{content:"";display:block;clear:both}
+a.brand{display:block;border-bottom:0;color:var(--faint)}
+a.brand:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+a.brand:hover{color:var(--accent)}
+a.brand:hover .logo{fill:var(--accent)}
+
+/* the mark: lines of text distilling down to a single point - the upshot */
+.logo{float:left;width:12px;height:10px;margin:4px 8px 0 0;fill:var(--accent)}
+
+h1{
+  font-weight:700;
+  font-size:38px;
+  line-height:1.06;
+  letter-spacing:-.032em;
+  text-wrap:balance;
+  margin:0 0 22px;
+}
+
+.verdict{
+  font-size:19.5px;
+  line-height:1.42;
+  letter-spacing:-.008em;
+  color:var(--dim);
+  margin:0 0 34px;
+  padding-left:15px;
+  border-left:2px solid var(--accent);
+}
+
+h2{
+  font-weight:600;
+  font-size:19px;
+  letter-spacing:-.012em;
+  color:var(--ink);
+  margin:40px 0 14px;
+  padding-top:24px;
+  border-top:1px solid var(--hair);
+  text-wrap:balance;
+}
+
+p{margin:0 0 16px;font-size:16px;line-height:1.62;color:var(--dim);text-wrap:pretty}
+main > p:last-child{margin-bottom:0}
+
+ul{margin:0 0 16px;padding-left:18px}
+li{font-size:16px;line-height:1.62;color:var(--dim);margin-bottom:9px;text-wrap:pretty}
+li:last-child{margin-bottom:0}
+
+strong{color:var(--ink);font-weight:600}
+code{font-family:var(--mono);font-size:13.5px;color:var(--ink)}
+
+/* a whole card URL, printed so it can be read rather than clicked past */
+pre{
+  font-family:var(--mono);
+  font-size:11.5px;line-height:1.7;color:var(--faint);
+  background:transparent;margin:0 0 16px;padding:13px 0;
+  border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);
+  white-space:pre-wrap;word-break:break-all;
+}
+pre a{border-bottom:0;color:var(--faint)}
+pre a:hover{color:var(--accent);border-bottom:0}
+
+a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--hair)}
+a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* Diagrams sit at their drawn size and scale down on a phone, rather than
+   stretching to the prose measure - the type inside them is drawn, so
+   blowing them up to 640 would set it larger than the headings. */
+figure{margin:24px 0}
+figure svg{width:100%;max-width:460px;height:auto;display:block;margin:0 auto}
+figcaption{
+  margin-top:12px;font-size:13px;line-height:1.5;color:var(--faint);
+  text-align:center;text-wrap:pretty;
+}
+.d-box{fill:none;stroke:var(--hair);stroke-width:1}
+.d-live{fill:none;stroke:var(--accent);stroke-width:1}
+.d-lab{font-family:var(--sans);font-size:11px;fill:var(--ink)}
+.d-sub{font-family:var(--sans);font-size:10px;fill:var(--faint)}
+.d-mono{font-family:var(--mono);font-size:11px;fill:var(--dim)}
+.d-accent{font-family:var(--mono);font-size:11px;fill:var(--accent)}
+.d-tag{font-family:var(--mono);font-size:8.5px;fill:var(--faint);letter-spacing:.09em}
+.d-line{stroke:var(--hair);stroke-width:1;fill:none}
+.d-arrow{stroke:var(--faint);stroke-width:1;fill:none}
+
+/* ---- the exchange ----
+   The homepage hero's bubbles, reused rule for rule: same shapes, same
+   corner squared off on whichever side said it, same sender labels. The
+   article and the page it describes should read as one thing. */
+.stage{margin:22px 0 26px}
+.stage .ask{
+  max-width:80%;margin:0 0 10px auto;width:fit-content;
+  padding:10px 13px;border-radius:15px 15px 5px 15px;
+  background:rgba(247,247,244,.055);
+  font-size:13.5px;line-height:1.5;color:var(--dim);
+}
+.stage .ask::before{
+  display:block;margin:0 0 5px;text-align:right;
+  font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--faint);content:"you";
+}
+.stage .ask .say{display:block;margin-top:8px;color:var(--accent)}
+/* what the AI sent back: a URL, shown as one. Truncated rather than wrapped,
+   because its length is the point and its content is not. */
+.stage .got{
+  display:block;max-width:92%;
+  padding:10px 13px;
+  border:1px solid rgba(200,255,61,.42);
+  border-radius:15px 15px 15px 5px;
+  background:rgba(200,255,61,.075);
+  color:var(--ink);
+  font-family:var(--mono);font-size:11.5px;line-height:1.4;
+}
+.stage .got .got-label{
+  display:block;margin:0 0 5px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--faint);
+}
+.stage .got .got-text{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stage .got:hover{color:var(--accent);background:rgba(200,255,61,.15);border-color:var(--accent)}
+.stage .flow{
+  margin:14px 0 0;
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--faint);
+}
+
+.foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--hair)}
+footer{
+  font-family:var(--mono);
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+}
+footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5}
+</style>
+</head>
+<body>
+<!-- Static copy, start to finish. -->
+<div class="wrap"><div class="sheet">
+
+  <div class="head">
+    <a class="brand" href="/">
+      <svg class="logo" viewBox="0 0 12 10" aria-hidden="true">
+        <rect x="0" y="0" width="12" height="2" rx="1"/>
+        <rect x="0" y="4" width="7" height="2" rx="1"/>
+        <circle cx="1.5" cy="8.5" r="1.5"/>
+      </svg>
+      <span>upshot.fyi</span>
+    </a>
+  </div>
+
+  <main>
+    <h1>The application is the URL</h1>
+
+    <p>Here is a tool for working out whether you can afford to quit your
+      job:</p>
+
+    <pre><a href="/v2/#a=Whether+I+have+enough+runway+to+quit&amp;h=Nine+months+is+the+number+to+beat&amp;v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Runway&amp;i=cash:18000:Cash+saved&amp;i=burn:2200:Monthly+burn&amp;i=target:9:Months+you+want&amp;r=months:cash/burn:Runway&amp;t=Ready+to+walk:months%3E=target:Go+now&amp;t=Ready+to+walk::Not+yet&amp;u=cash:%C2%A3&amp;u=burn:%C2%A3&amp;u=target:months&amp;u=months:months">https://upshot.fyi/v2/#a=Whether+I+have+enough+runway+to+quit&amp;h=Nine+months+is+the+number+to+beat&amp;v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Runway&amp;i=cash:18000:Cash+saved&amp;i=burn:2200:Monthly+burn&amp;i=target:9:Months+you+want&amp;r=months:cash/burn:Runway&amp;t=Ready+to+walk:months%3E=target:Go+now&amp;t=Ready+to+walk::Not+yet&amp;u=cash:%C2%A3&amp;u=burn:%C2%A3&amp;u=target:months&amp;u=months:months</a></pre>
+
+    <p>Click it and you get a working calculator. Change the numbers and the
+      answer moves. Push your runway past the target and the verdict at the
+      bottom changes its mind. The URL moves with all of it, so you can send it
+      on and the next person gets your version, your numbers included.</p>
+
+    <p>There is nothing behind it. No server, no database, no account, no build
+      step, no dependencies. The tool <em>is</em> the string.</p>
+
+    <h2>Making one is a sentence</h2>
+
+    <p>You are already in ChatGPT or Claude, working something out. You type:</p>
+
+    <div class="stage">
+      <p class="ask">dinner was 80 between the three of us. make me something I
+        can put my own numbers into.
+        <span class="say">read https://upshot.fyi and export this</span></p>
+      <a class="got" href="/v2/#a=Splitting+dinner+three+ways&amp;h=Split+the+bill&amp;v=Divides+the+total+equally+between+the+people+sharing+it%2E&amp;m=GPT-6&amp;d=2026-09-16&amp;g=Split+it&amp;i=bill:80:Bill&amp;i=n:3:People&amp;r=each:bill/n:Each+pays&amp;u=bill:%C2%A3&amp;u=each:%C2%A3"><span class="got-label">ChatGPT</span><span class="got-text">upshot.fyi/v2/#a=Splitting+dinner+three+ways&amp;h=Split+the+bill&amp;v=Divides...</span></a>
+      <p class="flow">Nothing installed at any step</p>
+    </div>
+
+    <p>The model fetches the page, writes a URL and hands it back. You click it.
+      That is the product. The rest of this is how it stays that simple.</p>
+
+    <p>There is nothing to install. No extension, no plugin, no agent skill, no
+      MCP server, no API key, no account, no signup. It works in chat apps I
+      have never tested and in models that did not exist when I wrote it,
+      because the only thing being integrated is a page.</p>
+
+    <p>The contract lives at <a href="/llms.txt">llms.txt</a>, and the homepage
+      carries the same text in full, as static copy rather than something drawn
+      by script. That duplication earns its keep. A model that lands on the
+      homepage instead of the spec gets the whole contract.</p>
+
+    <p>Upshot never calls a model. You do, in a window you already had open.</p>
+
+    <h2>Nothing you type leaves the browser</h2>
+
+    <p>Everything after the <code>#</code> stays on your machine. That is not a
+      trick. It is just how URLs work. The browser asks the host for
+      <code>/v2/index.html</code> and stops there. The rest of the link never
+      goes near the wire.</p>
+
+    <figure>
+      <svg viewBox="0 0 460 236" role="img" aria-label="The path part of the link is sent to the host. The fragment after the hash stays in the browser.">
+        <text class="d-tag" x="20" y="16">THE LINK YOU PASTE</text>
+        <text class="d-mono" x="20" y="42">upshot.fyi/v2/<tspan class="d-accent">#i=bill:80:Bill&amp;r=each:bill/n</tspan></text>
+
+        <path class="d-line" d="M20 54 V62 H119 V54"/>
+        <path class="d-live" d="M119 54 V62 H336 V54"/>
+
+        <text class="d-sub" x="20" y="78">sent</text>
+        <text class="d-sub" x="128" y="78" fill="#C8FF3D">never sent</text>
+
+        <path class="d-arrow" d="M70 88 V116"/>
+        <path class="d-arrow" d="M66 110 l4 6 l4 -6"/>
+        <path class="d-arrow" d="M340 88 V116"/>
+        <path class="d-arrow" d="M336 110 l4 6 l4 -6"/>
+
+        <rect class="d-box" x="20" y="120" width="190" height="86" rx="3"/>
+        <text class="d-lab" x="36" y="144">Static host</text>
+        <text class="d-sub" x="36" y="164">Hands back one file, 22 KB.</text>
+        <text class="d-sub" x="36" y="180">Same file for everybody.</text>
+        <text class="d-sub" x="36" y="196">Never sees a card.</text>
+
+        <rect class="d-box" x="250" y="120" width="190" height="86" rx="3"/>
+        <text class="d-lab" x="266" y="144">Your browser</text>
+        <text class="d-sub" x="266" y="164">Reads the card out of the link.</text>
+        <text class="d-sub" x="266" y="180">Does the arithmetic.</text>
+        <text class="d-sub" x="266" y="196">Draws it.</text>
+      </svg>
+      <figcaption>The host serves one static file and has no idea what anyone
+        is looking at.</figcaption>
+    </figure>
+
+    <p>Two things fall out of that.</p>
+
+    <p><strong>It costs nothing to run.</strong> One static file on a CDN. A
+      million people open a million different tools and it is still one file.
+      Nothing to store, nothing to scale, no bill that climbs when something
+      takes off. I have never paid a penny to run it. There is also nothing to
+      leak, because nothing is kept.</p>
+
+    <p><strong>I cannot touch a card once it is sent.</strong> No takedown, no
+      stats, no hotfix. If someone pasted a card into a group chat in March,
+      that chat is the only copy and I will never know it exists.</p>
+
+    <h2>It stopped being a format and became a language</h2>
+
+    <p>The first version drew a fixed layout. Then it needed a checkbox. Then a
+      number that feeds another number. Then a line that changes what it says
+      when you cross a limit. Somewhere in there it turned into a small UI
+      language.</p>
+
+    <figure>
+      <svg viewBox="0 0 460 226" role="img" aria-label="Each line of the URL draws one row of the card. An input line draws a number box, a result line draws a computed figure, a decision line draws wording that changes.">
+        <text class="d-tag" x="20" y="16">IN THE LINK</text>
+        <text class="d-tag" x="266" y="16">ON THE CARD</text>
+
+        <path class="d-line" d="M20 26 H210"/>
+        <path class="d-line" d="M266 26 H440"/>
+
+        <text class="d-mono" x="20" y="54">i=bill:80:Bill</text>
+        <path class="d-arrow" d="M222 50 H248"/><path class="d-arrow" d="M243 46 l6 4 l-6 4"/>
+        <rect class="d-live" x="266" y="40" width="44" height="18" rx="2"/>
+        <text class="d-mono" x="276" y="53" fill="#F7F7F4">80</text>
+        <text class="d-lab" x="318" y="53">Bill</text>
+
+        <text class="d-mono" x="20" y="110">r=each:bill/n:Each pays</text>
+        <path class="d-arrow" d="M222 106 H248"/><path class="d-arrow" d="M243 102 l6 4 l-6 4"/>
+        <text class="d-lab" x="266" y="102">Each pays</text>
+        <text class="d-accent" x="266" y="120" font-size="14">£26.67</text>
+        <text class="d-sub" x="330" y="120">bill/n</text>
+
+        <text class="d-mono" x="20" y="166">t=Split:each&gt;25:Steep</text>
+        <path class="d-arrow" d="M222 162 H248"/><path class="d-arrow" d="M243 158 l6 4 l-6 4"/>
+        <text class="d-lab" x="266" y="158">Split</text>
+        <text class="d-accent" x="266" y="176" font-size="14">Steep</text>
+        <text class="d-sub" x="330" y="176">26.67&gt;25</text>
+
+        <text class="d-sub" x="20" y="206">Change the 80 and every row below it follows.</text>
+      </svg>
+      <figcaption>Nine keys, one row each. Formulas can use any name on the
+        card, so a card is a tiny spreadsheet that knows how to lay itself
+        out.</figcaption>
+    </figure>
+
+    <p>The whole vocabulary is nine keys: a bullet, a numbered step, a fixed
+      fact, a checkbox, a number box, a pick-one choice, a calculated result, a
+      line whose wording changes, and a unit. That is it. There is no key for a
+      colour, a size or a layout. The card decides how it looks. The language
+      only says what is on it.</p>
+
+    <p>Formulas get names, arithmetic, comparisons and a dozen functions. A
+      result can use another result. A checkbox counts as 1 or 0. A choice group
+      carries whichever number you picked. That covers tax bands, loan
+      repayments, unit conversion and most of what people ask for.</p>
+
+    <h2>The version is in the path</h2>
+
+    <p><code>/v2/</code> is the current renderer. <code>/v1/</code> is frozen
+      and still serves the cards written against it. Any change that would make
+      an existing card parse, calculate or draw differently does not get made.
+      It gets a <code>/v3/</code> and a new file.</p>
+
+    <p>So every new key has to be worth freezing forever, in public, with no way
+      to take it back. Almost nothing is. That rule has killed more features
+      than good taste ever would.</p>
+
+    <h2>The renderer</h2>
+
+    <p>One HTML file. 67 KB, 22 KB over the wire. No dependencies, no build
+      step, no framework.</p>
+
+    <p>It does four things in order. Read the card out of the link. Check it
+      makes sense. Work out the formulas. Draw it. Then it sits there, and every
+      time you change a box it redoes the last two and rewrites the URL.</p>
+
+    <p>Formulas go through a small parser written by hand. There is no
+      <code>eval</code> anywhere near it, because the input is a string off the
+      internet.</p>
+
+    <p>A formula can use a result defined further down the card, so the order
+      you wrote them in does not matter. The renderer works out what depends on
+      what and fills each one in as it becomes answerable. If two formulas need
+      each other, neither ever becomes answerable, and both show a dash.</p>
+
+    <p>A name that is defined nowhere counts as missing rather than waiting.
+      That sounds like a detail. It is the whole difference between a typo and a
+      real loop, which otherwise look identical from the inside.</p>
+
+    <p>There are two ways to fail, and keeping them apart matters:</p>
+
+    <ul>
+      <li><strong>The card does not make sense</strong>, so nothing is drawn.
+        Two things claiming the same name, a unit for a name that does not
+        exist, a key the language does not have. There is no honest way to draw
+        half a card that argues with itself.</li>
+      <li><strong>One value cannot be worked out</strong>, so that value shows a
+        dash. The rest of the card is fine and still draws.</li>
+    </ul>
+
+    <p>What it never does is check whether a number is <em>right</em>. It is a
+      rendering layer. If the model used last year's tax bands you get last
+      year's tax bands, laid out beautifully and completely wrong. Getting the
+      facts right belongs to whatever wrote the card, and writing that line into
+      the contract stopped a lot of scope creep.</p>
+
+    <h2>The links have to survive chat</h2>
+
+    <p>Every card gets sent to somebody, so the real spec is not what is legal
+      in a URL. It is what survives WhatsApp.</p>
+
+    <ul>
+      <li>A matching pair of <code>_</code> anywhere in the link is eaten as
+        italic before anyone clicks it. So is <code>*</code>, so is
+        <code>~</code>. The formula <code>j*45</code> arrives as <code>j45</code>
+        and quietly means something else.</li>
+      <li>Autolinkers cut the link at the first character that is not legal in a
+        URL, and <code>&lt;</code> and <code>&gt;</code> do it. You get half a
+        card. The half that survives still draws, which is why nobody
+        notices.</li>
+      <li>A full stop at the end reads as punctuation and gets trimmed off.</li>
+    </ul>
+
+    <p>So everything is percent encoded except letters, digits and a hyphen.
+      Formulas also keep <code>+ - / =</code>, because there they are
+      arithmetic.</p>
+
+    <p>The one that stung: the renderer writes your edits into the URL too, and
+      it was using <code>~</code> to separate them. It was generating links that
+      chat apps broke. You only find that by sending yourself a few hundred
+      messages.</p>
+
+    <h2>The prompt is the product surface</h2>
+
+    <p>All of that ease rests on one file of English. The contract does the job
+      an API would normally do, with no runtime anywhere to catch a mistake.</p>
+
+    <p>I expected this to be the easy half. It was not.</p>
+
+    <figure>
+      <svg viewBox="0 0 460 212" role="img" aria-label="A loop: write the contract, generate a few hundred cards, read every one, then go again.">
+        <rect class="d-box" x="96" y="14" width="348" height="50" rx="3"/>
+        <text class="d-lab" x="114" y="36">Write the contract</text>
+        <text class="d-sub" x="114" y="53">llms.txt, in plain English</text>
+
+        <rect class="d-box" x="96" y="82" width="348" height="50" rx="3"/>
+        <text class="d-lab" x="114" y="104">Generate a few hundred real cards</text>
+        <text class="d-sub" x="114" y="121">with the models people actually use</text>
+
+        <rect class="d-box" x="96" y="150" width="348" height="50" rx="3"/>
+        <text class="d-lab" x="114" y="172">Open every one and read it</text>
+        <text class="d-sub" x="114" y="189">the pass rate cannot see a wrong number</text>
+
+        <path class="d-arrow" d="M270 64 V78"/><path class="d-arrow" d="M266 72 l4 6 l4 -6"/>
+        <path class="d-arrow" d="M270 132 V146"/><path class="d-arrow" d="M266 140 l4 6 l4 -6"/>
+
+        <path class="d-arrow" d="M96 175 H40 V39 H90"/>
+        <path class="d-arrow" d="M84 35 l6 4 l-6 4"/>
+      </svg>
+      <figcaption>Round and round. The renderer never moves in this loop, only
+        the English does.</figcaption>
+    </figure>
+
+    <p>Three things I would not have guessed:</p>
+
+    <p><strong>Examples teach louder than rules.</strong> A model copies the
+      worked example and skims the paragraph above it. For a day the spec said
+      one thing about encoding and an example did another, and every generation
+      followed the example. The tests now check each shipped example against the
+      rule it is meant to show. A stale example is worse than no example.</p>
+
+    <p><strong>You cannot reason about what a model will write.</strong> Every
+      confident guess I made about phrasing was wrong, and generating a hundred
+      cards and reading them settled it every time. Which wording a model takes
+      literally, what it invents when the language has no word for what it
+      wants, whether a rule is teachable at all: all cheap to measure, all
+      pointless to argue about.</p>
+
+    <p><strong>A passing test suite cannot see a wrong number.</strong> A card
+      can parse cleanly, draw beautifully and be completely wrong. The tests
+      prove the renderer drew what the URL said. They say nothing about whether
+      the model should have said it. Treating those as one problem wasted a
+      week.</p>
+
+    <h2>Testing a renderer nobody can see fail</h2>
+
+    <p>Passing tests prove the tests pass. They do not prove the tests would
+      fail if the renderer broke. So a second script breaks it on purpose, 34
+      ways, one at a time: an operator swapped for the one next to it, a check
+      turned off, a pattern loosened. Every one has to turn the suite red.</p>
+
+    <p>The first run had five survivors, all comparison operators. A hand
+      written table of test cases happened to check them away from their edges,
+      and <code>4 &gt; 18</code> and <code>4 &gt;= 18</code> agree. Generating
+      the table instead of typing it closed all five at once. It has been the
+      same answer every time since: a survivor points at a list somebody wrote
+      by hand.</p>
+
+    <h2>What it costs</h2>
+
+    <ul>
+      <li><strong>About 2000 characters.</strong> Real cards land between 600
+        and 1000. There is no compression and there will not be. The model has
+        to type the URL and you have to be able to read it. Zipping it would fit
+        more in and kill both.</li>
+      <li><strong>No privacy beyond "it is a URL".</strong> Anyone holding the
+        link can read the card, and it sits in browser history, chat logs and
+        whatever it passed through on the way.</li>
+      <li><strong>No free text, no charts, no images, no network.</strong> The
+        list of keys is closed. Adding one per request is how this turns into a
+        bad framework.</li>
+      <li><strong>No way to fix a card after you send it.</strong></li>
+    </ul>
+
+    <h2>Why it holds up</h2>
+
+    <p>The appeal is not that it is small. Plenty of things are small and
+      annoying. It is that the whole thing is one string you can read, paste,
+      diff, keep and send, and nothing is needed to run it but a browser
+      somebody already has.</p>
+
+    <p>For small tools that is enough far more often than I expected going in.
+      When it stops being enough, what runs out is the character count, not the
+      idea.</p>
+
+    <p>The renderer, the language and the tests are on
+      <a href="https://github.com/midnight-merge/upshot">GitHub</a>. The
+      contract is at <a href="/llms.txt">llms.txt</a>, and
+      <a href="/made/">/made/</a> is what people have pointed their models at so
+      far.</p>
+  </main>
+
+  <div class="foot">
+    <footer><div class="how">Made by <a href="https://github.com/midnight-merge">Midnight
+      Merge</a></div></footer>
+  </div>
+
+</div></div>
+
+</body>
+</html>

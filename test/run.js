@@ -375,6 +375,8 @@ function siblingChecks(){
   const PAGES = [
     ['index.html', landing], ['v2/index.html', fs.readFileSync(CARD, 'utf8')],
     ['made/index.html', fs.readFileSync(path.join(ROOT, 'made', 'index.html'), 'utf8')],
+    ['url-is-the-app/index.html',
+     fs.readFileSync(path.join(ROOT, 'url-is-the-app', 'index.html'), 'utf8')],
     ['broken/index.html', brokenPage]
   ];
   const claimed = new Map();
