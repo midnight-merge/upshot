@@ -38,7 +38,7 @@ new Function('module', 'exports', js.slice(0, cut) +
   'fields:fields,text:text,checkField:checkField,withUnit:withUnit,' +
   'showNumber:showNumber,cardPrint:cardPrint};'
 )(mod, mod.exports);
-const {parse, fields, checkField, withUnit, showNumber, cardPrint} = mod.exports;
+const {parse, fields, checkField, withUnit, showNumber, cardPrint, restorePlus} = mod.exports;
 
 /* Reader state only counts on the card it was typed into, so a fixture that
    seeds w=, k= or x= by hand has to carry that card's print the way the
@@ -258,10 +258,10 @@ function sweepPromptBehavior() {
   const scenarios = [
     ['Splitting dinner three ways', '', ['£26.67'], []],
     ['Splitting dinner three ways', '&w=80/4', ['£20'], []],
-    ['How long the card takes to clear', '', ['61months'], []],
+    ['How long the card takes to clear', '', ['61 months'], []],
     ['The most I can offer on the renovation', '&w=500000/8/80000/70000', ['£40,000', '£310,000'], []],
-    ['Whether my savings meet my runway target', '', ['8.18months'], ['Below target']],
-    ['Whether my savings meet my runway target', '&w=18000/2200/6', ['8.18months'], ['Target met']],
+    ['Whether my savings meet my runway target', '', ['8.18 months'], ['Below target']],
+    ['Whether my savings meet my runway target', '&w=18000/2200/6', ['8.18 months'], ['Target met']],
     ['Preparing the three items required for our handover', '', ['0%'], ['Tasks remaining']],
     ['Preparing the three items required for our handover', '&k=111', ['100%'], ['All three complete']],
     ['What the quoted hosting plans cost for our team', '', ['£24'], []],
@@ -498,14 +498,14 @@ function sweepPicks() {
   check(colon.blocks[0].options[0].value === 1 && colon.blocks[0].options[0].name === 'n',
     'and the fields around it still come apart correctly');
 
-  /* ticks and boxes count a checklist. A pick-one is not one, so a card
-     carrying both must not have its score quietly inflated by the options. */
-  const mixed = parse(stamp('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&c=:One&c=:Two&s=n:1:A&s=n:2:B' +
-    '&r=b:boxes:Boxes&r=t:ticks:Ticks&k=10'));
+  /* A box and a pick-one on one card read from different state strings, so
+     ticking the box must not disturb the choice or the other way round. */
+  const mixed = parse(stamp('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&c=one:One&c=two:Two&s=n:1:A&s=n:2:B' +
+    '&r=b:one+two:Boxes&r=t:n:Pick&k=10&x=1'));
   const rows = mixed.blocks.find(b => b.type === 'r').computed;
-  const box = rows.find(c => c.label === 'Boxes'), tk = rows.find(c => c.label === 'Ticks');
-  check(box && box.value === 2, 'options do not count as boxes', box && 'boxes came to ' + box.value);
-  check(tk && tk.value === 1, 'and choosing one is not a tick', tk && 'ticks came to ' + tk.value);
+  const box = rows.find(c => c.label === 'Boxes'), tk = rows.find(c => c.label === 'Pick');
+  check(box && box.value === 1, 'a named box reads its own tick', box && 'boxes came to ' + box.value);
+  check(tk && tk.value === 2, 'and the pick-one reads its own choice', tk && 'pick came to ' + tk.value);
 
   // A choice needs a group name because that is what enforces exclusivity and
   // gives formulas access to the selected numeric value.
@@ -516,7 +516,7 @@ function sweepPicks() {
 }
 
 /* ---- one shared name, claimed twice ----
-   `ticks`, `boxes`, and every i= and named r= all live in one namespace.
+   Every i=, named c= and named r= lives in one namespace.
    Nothing in the spec stops a model reusing a name - it only asks it not
    to - so the card has to survive the reuse itself. Found 13 Sep 2026: an
    i= reused as an r='s own name silently rewired every formula after it,
@@ -531,11 +531,10 @@ function sweepNamespace() {
   const d1 = parse(F + '&i=seats:4:Seats&r=seats:seats*2:Double&r=:seats+1:Check');
   check(d1.problems.length > 0, 'a result cannot rename the input it was named after');
 
-  // a result named "ticks" must not corrupt a checklist score - k=11 ticks
-  // both boxes, so a correct score is 2/2*100
-  const d2 = parse('#k=11&a=A&h=H&v=V&m=M&d=2026-01-01&g=List&c=:One&c=:Two' +
-    '&r=ticks:5:Ticks&r=score:ticks/boxes*100:Score');
-  check(d2.problems.length > 0, 'a result cannot rename the reserved ticks/boxes');
+  // a result named "pi" must not redefine the constant every formula can read
+  const d2 = parse('#a=A&h=H&v=V&m=M&d=2026-01-01&g=G&i=r:2:Radius' +
+    '&r=pi:3:Pi&r=area:pi*r*r:Area');
+  check(d2.problems.length > 0, 'a result cannot rename the reserved pi');
   console.log('  2 checks');
 }
 
@@ -609,15 +608,18 @@ function sweepWorking() {
     ['a third, which never ends', '&i=n:100:N&r=third:n/3:Third&r=:third*3:Back'],
     ['a long division', '&i=n:18000:N&i=b:2200:B&r=m:n/b:Runway&r=:m*12:Over+a+year'],
     ['a tiny rate', '&i=apr:7:Apr&r=d:apr/100/365:Daily&r=:d*1000000:On+a+million'],
-    ['a square root', '&i=n:2:N&r=root:sqrt(n):Root&r=:root*root:Squared']
+    ['a square root', '&i=n:2:N&r=root:sqrt(n):Root&r=:root*root:Squared'],
+    ['a clock that wraps', '&i=h:26:H&r=w:mod(h,24):Wrapped&r=:w+24:Same+time+tomorrow']
   ];
 
   cards.forEach(function(pair){
     const name = pair[0], tail = pair[1];
     parse(A + tail).blocks.forEach(b => (b.computed || []).forEach(c => {
       if (!c.label || !c.expr || c.value === null) return;
-      // the working as a reader would retype it, commas and all
-      const again = ev(c.expr.replace(/,/g, ''), {});
+      // the working as a reader would retype it. A comma between a digit and
+      // exactly three more is a thousands separator and goes; any other comma
+      // is separating a function's arguments and stays.
+      const again = ev(c.expr.replace(/(\d),(?=\d{3}(?!\d))/g, '$1'), {});
       const want = showNumber(c.value);
       const got = again === null ? 'could not be recomputed' : showNumber(again);
       n++;
@@ -649,9 +651,9 @@ function sweepRefusals() {
   bad('&i=n:1:One&i=n:2:Two', 'a name claimed by two inputs');
   bad('&i=n:1:One&r=n:1:Two', 'a name claimed by an input and a result');
   bad('&c=n:One&i=n:1:Two', 'a name claimed by a box and an input');
-  bad('&i=ticks:1:One', 'an input called ticks');
-  bad('&i=boxes:1:One', 'an input called boxes');
   bad('&i=pi:1:One', 'an input called pi');
+  // boxes is NOT reserved: a moving-boxes card wants to call its result boxes
+  fine('&i=rooms:3:Rooms&r=boxes:rooms*8:Boxes', 'a result called boxes, which a moving card needs');
   // e is NOT reserved: two real generations used it for energy, which is what
   // e is for in any physics card, and exp(1) costs nothing to write instead
   fine('&i=e:1:Energy&r=:e*2:Out', 'an input called e, which physics cards need');
@@ -666,8 +668,9 @@ function sweepRefusals() {
   bad('&r=1n:1:One', 'a result with an invalid name');
   bad('&r=x:n%3E3%3F100%3A0:Bonus', 'a ternary outside the formula grammar');
   bad('&i=n:1:N&t=:n%3E0:Yes', 'a decision with no label');
+  bad('&h=Again', 'a headline written twice');
+  bad('&d=2026-01-02', 'a date written twice');
   bad('&i=n:1:N&t=V::No&t=V:n%3E0:Yes', 'a decision fallback that is not last');
-  bad('&g=Other&r=x:ticks/boxes:Score', 'checklist counters outside a checklist block');
   bad('&u=n:£', 'a unit for a name nothing declares');
   bad('&i=n:1:One&u=n:£&u=n:$', 'a unit declared twice');
 
@@ -780,54 +783,6 @@ function sweepFunctions() {
   check(minRow && minRow.value === 9 && minRow.expr === 'min(9,20)',
     'a variable named min does not replace the min function in working',
     minRow ? `${minRow.value} = ${minRow.expr}` : 'no Out row');
-
-  console.log(`  ${checks - before} checks`);
-}
-
-/* ---- ticks and boxes belong to a block, not to the card ----
-   Two checklists on one card used to share a single count, so a score
-   written for the first list counted the second as well. The formula read
-   correctly and the number was wrong. */
-function sweepScopes() {
-  console.log('\nticks and boxes are scoped');
-  const before = checks;
-  const A = '#a=A&h=H&v=V&m=M&d=2026-01-01';
-  const val = (hash, label) => {
-    const all = parse(stamp(A + hash)).blocks.flatMap(b => b.computed || []);
-    const row = all.find(c => c.label === label);
-    return row ? row.value : 'no such row';
-  };
-
-  // two lists, two counts. All four boxes ticked, so the first list is 2 of 2
-  // and the second is 3 of 3 - one shared count would make both 5.
-  const TWO = '&g=One&c=:a&c=:b&r=:boxes:First' +
-              '&g=Two&c=:c&c=:d&c=:e&r=:boxes:Second&k=11111';
-  check(val(TWO, 'First') === 2, 'the first list counts only itself',
-    `First came to ${val(TWO, 'First')}`);
-  check(val(TWO, 'Second') === 3, 'the second list counts only itself',
-    `Second came to ${val(TWO, 'Second')}`);
-
-  // the ticks follow the same split, and k= still runs across the whole card
-  const T = '&g=One&c=:a&c=:b&r=:ticks:First' +
-            '&g=Two&c=:c&c=:d&c=:e&r=:ticks:Second&k=10110';
-  check(val(T, 'First') === 1, 'ticks split by block as well',
-    `First came to ${val(T, 'First')}`);
-  check(val(T, 'Second') === 2, 'and the second block reads its own ticks',
-    `Second came to ${val(T, 'Second')}`);
-
-  // A scoped counter outside a checklist block is malformed, not an unknown
-  // ordinary name, and is rejected before it can draw a plausible dash.
-  const misplaced = parse(A + '&g=List&c=:a&c=:b&g=Sum&r=:ticks/boxes:Score&k=11');
-  check(misplaced.problems.length > 0,
-    'a block with no checklist refuses ticks and boxes');
-
-  // and a single list still works, which is every shipped card
-  check(val('&g=List&c=:a&c=:b&r=:ticks/boxes*100:Pct&k=10', 'Pct') === 50,
-    'one list on the card behaves exactly as before');
-
-  // naming the boxes is how a card scores across two lists now
-  check(val('&g=One&c=p:a&g=Two&c=q:b&g=Sum&r=:p+q:Both&k=11', 'Both') === 2,
-    'named boxes stay card-wide, so a card can still total two lists');
 
   console.log(`  ${checks - before} checks`);
 }
@@ -960,7 +915,7 @@ function sweepDecisions() {
    turning up again and again is a feature request. Lots of different ones
    mean the vocabulary is too weak. */
 const KEYS = 'a h v m d g p o c s f i r t u k w x'.split(' ');
-const FUNCTIONS = 'min max round abs sqrt pow floor ceil ln exp'.split(' ');
+const FUNCTIONS = 'min max round abs sqrt pow floor ceil ln exp mod'.split(' ');
 const CONSTANTS = ['pi'];
 const FIELD_COUNT = {f: 2, c: 2, i: 3, s: 3, r: 3, t: 3, u: 2};
 
@@ -991,7 +946,9 @@ function inventedSyntax(url) {
     if (k === 'r') expr = v.split(':')[1];
     if (k === 't') expr = v.split(':')[1];
     if (expr == null) return;
-    expr = decodeURIComponent(expr.replace(/\+/g, ' ')).replace(/\s+/g, '');
+    // restorePlus is what the renderer does with the spaces a formula's +
+    // became, so a plus before a call stays a plus: vy+sqrt(x), not vysqrt(x)
+    expr = restorePlus(decodeURIComponent(expr.replace(/\+/g, ' ')));
 
     if (expr.indexOf('?') >= 0) found.push('a ternary a?b:c, which the grammar has no conditional for');
     // the stand-in for an encoded colon is not something a model wrote, and a
@@ -1111,8 +1068,7 @@ function runChecks() {
   sweepRefusals();
   sweepUnits();
   sweepFunctions();
-  sweepScopes();
-  sweepOrder();
+    sweepOrder();
   sweepDecisions();
   sweepExamples();
   sweepPromptBehavior();

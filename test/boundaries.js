@@ -111,8 +111,14 @@ for (const [unit, want] of [['%C2%A3/hr', '£39.51/hr'], ['%C2%A3+per+hour', '£
     `&r=rate:39%2E51:Rate&u=rate:${unit}`, {values: [want]});
 }
 
-add('B08', 'checklist counters require a checklist in the same block',
-  '&c=:One&c=:Two&g=Other&r=x:ticks/boxes*100:Result', {refused: true});
+add('B13', 'mod wraps a clock in both directions',
+  '&r=a:mod(26,24):Ahead&r=b:mod(0-3,24):Behind', {values: ['2', '21']});
+for (const [unit, want] of [['boxes', '21 boxes'], ['months', '21 months'], ['kWh', '21 kWh'],
+                            ['kg', '21kg'], ['m2', '21m2'], ['%25', '21%'], ['%C2%B0C', '21°C']]) {
+  add('B14', `unit ${decodeURIComponent(unit)} sits a space away only when it is a word`,
+    `&r=n:21:N&u=n:${unit}`, {values: [want]});
+}
+add('B13', 'mod by zero gives dash', '&r=x:mod(5,0):Result', {numeric: [null], values: ['—']});
 
 // Current bounded behaviour, recorded as limits rather than demands for new
 // capabilities. These may change only with a deliberate contract decision.

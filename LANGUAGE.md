@@ -95,15 +95,17 @@ not require an example-value disclaimer.
 
 ## Names and dependencies
 
-- Names use formula identifier syntax: `[A-Za-z_][A-Za-z0-9_]*`.
-- Names are card-wide except `ticks` and `boxes`, which are scoped to their
-  checklist block.
-- `ticks`, `boxes`, and `pi` are reserved.
+- Names use formula identifier syntax: `[A-Za-z_][A-Za-z0-9_]*`. `llms.txt`
+  offers only letters and digits, because a matched pair of `_` in a link is
+  eaten as italic by chat clients (L07).
+- Names are card-wide.
+- `pi` is reserved.
 - A name is claimed once. A choice group is the exception because each option
   intentionally shares the group name.
 - Formula references may point to declarations later in the fragment.
 - A result requires a name when another formula uses it or when it has a unit.
-- An unnamed checkbox contributes only to `ticks` and `boxes` in its block.
+- An unnamed checkbox is only a box; nothing on the card can read it. A
+  count of ticked boxes is the sum of their names.
 
 ## Formulas
 
@@ -115,7 +117,7 @@ Supported formula elements:
 - comparisons `< > <= >= == !=`;
 - chained comparisons;
 - constant `pi`;
-- functions `min max round abs sqrt pow floor ceil ln exp`.
+- functions `min max round abs sqrt pow floor ceil ln exp mod`, where `mod` is floored so `mod(-3,24)` is 21.
 
 Formula results must be finite numbers. Decimal and scientific-notation
 literals are supported. Undefined names, dependency cycles, division by zero,
@@ -135,7 +137,7 @@ scale values.
 - `%` appends a percent sign to the numeric value.
 - `hr` formats decimal hours with explicit hour and minute suffixes.
 - `min` formats decimal minutes with explicit minute and second suffixes.
-- Other units are appended to the formatted number.
+- Other units follow the formatted number. A unit that starts with a letter and is three or more characters long is a word and takes a space: `21 boxes`, `36 kWh`; `50kg` and `8m2` stay joined.
 
 Every displayed result that needs a unit declares its own unit.
 
@@ -235,7 +237,7 @@ node test/transport.js links.txt
 ```
 
 This scorer reads one URL per line. Local model-generation corpora match
-`test/corpus-*.txt` and are ignored by Git.
+`test/corpus/*.txt` and are ignored by Git.
 
 ## Manual checks
 
@@ -304,7 +306,6 @@ The suite includes regression cases for:
 - required decision labels;
 - fallback ordering;
 - variables that share names with formula functions;
-- checklist counters used outside their checklist block;
 - scientific notation in input, choice, and formula values;
 - explicit duration units;
 - money symbols leading the amount in a rate unit;
@@ -319,4 +320,5 @@ The suite includes regression cases for:
 | L01 | Unknown references, cycles, and division by zero display a dash. An unknown decision condition does not select its fallback. |
 | L05 | The 2000-character budget is not enforced by the renderer. |
 | L06 | Final wording can contain raw colons. Old four-field decision syntax cannot be distinguished reliably from legitimate wording. |
+| L07 | A matched pair of `_` anywhere in a link is eaten as italic by chat clients. The renderer accepts `_` in a name; the prompt does not offer it. |
 | D01 | `/v2/` compatibility starts when the version is declared released. A breaking post-release change requires `/v3/`. The release status must be explicit before changing field order or semantics. |

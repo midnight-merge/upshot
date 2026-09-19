@@ -1,0 +1,69 @@
+# One ask per line, read by scripts/gen-corpus.js and sent to the model as
+# "export this\n\n<line>". Blank lines and # lines are ignored. The label in
+# the run output and the corpus comments is the text before the dash.
+#
+# Each is a calculation whose arithmetic is easy once you know the model, and
+# whose model is the domain knowledge. The factors after the dash are what the
+# card has to carry as inputs.
+
+# Around the house
+Solar panel yield — panel size, orientation, latitude, season, weather loss, inverter efficiency.
+Heating/cooling requirement — room volume, insulation, temperature delta, windows, occupancy.
+Mortgage overpayment impact — rate, term, remaining balance, timing of overpayments.
+EV charging time — battery %, pack size, charger power, charging curve, losses.
+Paint needed for a room — geometry, doors/windows, coats, paint coverage, waste.
+Concrete/material quantities — shape dimensions, density, wastage, mix ratios.
+Rainwater collection — roof area, rainfall, runoff coefficient, tank size.
+Watering requirement for plants — pot size, plant type, temperature, humidity, soil.
+
+# Science
+Radioactive decay / remaining isotope — half-life plus elapsed time.
+Drug concentration over time — dose, half-life, dosing interval, accumulation.
+Projectile trajectory — velocity, angle, height, gravity, drag approximation.
+Sound level at distance — source dB, distance, multiple sources, environment.
+Telescope resolving power — aperture, wavelength, atmosphere.
+Camera depth of field — focal length, aperture, distance, sensor format.
+Exposure equivalence — shutter, aperture, ISO, ND filter.
+Dew point / condensation risk — temperature and relative humidity.
+
+# Human body
+Blood alcohol estimate over time — drinks, strength, timing, body characteristics.
+Calories burned hiking — weight, terrain, elevation, speed, load carried.
+Hydration requirement — body mass, activity, heat, duration, sweat rate.
+Sleep debt/recovery estimate — usual need, recent sleep, naps.
+1RM estimate — weight/reps using different models.
+
+# Money and business
+Freelance day rate needed — desired salary, holidays, utilisation, expenses, tax overhead.
+SaaS unit economics — CAC, churn, margin, ARPU, expansion.
+Inventory reorder point — sales velocity, lead time, variability, safety stock.
+Employee true cost — salary, pension, NI, equipment, office, benefits.
+Rent vs buy — appreciation, mortgage, rent growth, maintenance, opportunity cost.
+Subscription true annual cost — tiers, usage limits, overages, discounts.
+Currency conversion after real costs — FX rate, spread, fees, card charges.
+
+# Travel and logistics
+Road-trip arrival time — route, speed profiles, stops, charging/refuelling.
+Flight jet-lag direction/severity — time zones crossed, direction, departure/arrival.
+Luggage weight distribution — item weights, bag limits, combinations.
+Walking time through terrain — distance, elevation gain, surface.
+
+# Music, audio and art
+Delay/reverb timing from BPM — dotted/triplet subdivisions.
+Pitch transposition — semitones, cents, frequency.
+String tension — scale length, tuning, string gauge.
+Print size from an image — pixels, DPI, crop ratio.
+Colour mixing proportions — target colour and available pigments, approximately.
+
+# Everyday weird but useful
+How much food for a party — guests, adults/kids, meal type, duration, leftovers.
+Coffee brew recipe scaler — beans, ratio, extraction style, target output.
+Freezer cooling time — mass, starting temp, material, freezer power approximation.
+How long until a room reaches temperature — heater power plus thermal losses.
+Moving-box estimator — rooms, household size, item categories.
+Wi-Fi/link budget — transmit power, antenna gain, frequency, distance, obstacles.
+Password brute-force time — character set, length, guesses/sec.
+Queue/wait-time estimate — arrival rate, service rate, number of servers.
+
+# Random
+Speeding car and time saved — speed, speed limit, distance.
