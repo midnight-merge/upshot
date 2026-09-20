@@ -1,2 +1,5 @@
 # Local model-generation corpora
 test/corpus/*.txt
+
+# macOS
+.DS_Store

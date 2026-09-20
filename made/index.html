@@ -70,11 +70,7 @@ body{
 .head:empty{padding-bottom:0}
 /* foot - the hairline and spacing live HERE, not on .meta, so the homepage
    (credit only) and a card (signature + credit) open the same way */
-.foot{
-  margin-top:34px;
-  padding-top:18px;
-  border-top:1px solid var(--hair);
-}
+.foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--hair)}
 .foot > :first-child{margin-top:0}
 
 /* the page scrolls, not this - ordinary flow */
@@ -147,6 +143,7 @@ footer .frow{display:none}
 a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--hair)}
 a:hover{color:var(--accent);border-bottom-color:var(--accent)}
 a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+footer .how + .how{margin-top:9px}
 footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;text-wrap:pretty}
 .cmd{color:var(--accent)}
 /* A library row, not a link in prose. One shape repeated: the question, and
@@ -244,8 +241,13 @@ pre{
   </main>
 
   <div class="foot">
-    <footer><div class="how">Made by <a href="https://github.com/midnight-merge">Midnight
-      Merge</a></div></footer>
+    <footer>
+      <div class="how"><a href="/made/">Made with it</a> &middot;
+        <a href="/url-is-the-app/">How it works</a> &middot;
+        <a href="/roadmap/">Roadmap</a></div>
+      <div class="how">Made by <a href="https://github.com/midnight-merge">Midnight
+        Merge</a></div>
+    </footer>
   </div>
 
 </div>

@@ -143,8 +143,6 @@ h1{
   letter-spacing:-.008em;
   color:var(--dim);
   margin:0 0 34px;
-  padding-left:15px;
-  border-left:2px solid var(--accent);
 }
 
 p{margin:0 0 15px;font-size:15px;color:var(--dim)}
@@ -616,73 +614,119 @@ function expressionInfo(src){
   return {source: source, refs: refs, refNodes: refNodes, comparison: comparison};
 }
 
+/* The refusal page is the only way back to whatever wrote the card, and
+   most of the time that is a model rather than a person. So a problem says
+   what the author should have written, not what the parser concluded. A
+   model told "the name ... is not a valid identifier" shortens the name; a
+   model told a box needs a colon puts the colon in. */
+var SHAPE = {
+  i: 'i=name:start:Label',
+  s: 's=name:value:Label',
+  c: 'c=name:Wording, or c=:Wording when nothing reads it',
+  r: 'r=name:formula:Label',
+  t: 't=Label:condition:Wording',
+  f: 'f=Label:Value',
+  u: 'u=name:unit'
+};
+
+/* A field with no colon in it at all is a missing separator, near enough
+   always, and saying so is worth more than anything said about what the
+   text then got mistaken for. */
+function separatorMissing(item){
+  return String(item == null ? '' : item).indexOf(':') < 0 &&
+         String(item == null ? '' : item).indexOf(MARK) < 0;
+}
+
 function audit(out){
   var claimed = Object.create(null);
   var pickGroups = Object.create(null);
 
-  function claim(name, what, required){
+  function claim(name, what, key, required){
     if(!name){
-      if(required) out.problems.push(what + ' has no name');
+      if(required)
+        out.problems.push(what + ' has no name. Write ' + SHAPE[key]);
       return;
     }
     if(!NAME.test(name)){
-      out.problems.push('the name "' + name + '" is not a valid identifier');
+      out.problems.push('"' + name + '" cannot be the name of ' + what +
+        '. A name is letters and digits, starting with a letter. Write ' +
+        SHAPE[key]);
       return;
     }
     if(Object.prototype.hasOwnProperty.call(RESERVED, name)){
-      out.problems.push('"' + name + '" is a reserved name and cannot be ' + what);
+      out.problems.push('"' + name + '" is reserved, so it cannot name ' +
+        what + '. Choose another name.');
       return;
     }
     if(Object.prototype.hasOwnProperty.call(claimed, name)){
-      out.problems.push('the name "' + name + '" is claimed twice');
+      out.problems.push('"' + name + '" names two things on this card. ' +
+        'Each name is claimed once, except the options of one pick-one group.');
       return;
     }
     claimed[name] = what;
+  }
+
+  /* Counted across the whole card and said once, not once per row and not
+     once per block: eleven boxes that all dropped the colon is one mistake,
+     and eleven identical bullets read as a broken card rather than a
+     fixable one. */
+  var missing = Object.create(null);
+  function separators(type, items){
+    var n = items.filter(separatorMissing).length;
+    if(!n) return false;
+    missing[type] = (missing[type] || 0) + n;
+    return true;
   }
 
   function checkFormula(raw, description, needsComparison){
     var info;
     try { info = expressionInfo(raw); }
     catch(e){
-      out.problems.push(description + ' has an invalid formula');
+      out.problems.push(description + ' has a formula this card cannot read. ' +
+        'Allowed: numbers, names on the card, + - * / ( ), comparisons, and ' +
+        'min max round abs sqrt pow floor ceil ln exp mod.');
       return;
     }
     if(needsComparison && !info.comparison)
-      out.problems.push(description + ' is not a comparison');
+      out.problems.push(description + ' has no comparison in it. The middle ' +
+        'field of ' + SHAPE.t + ' compares two things, like months>=target.');
   }
 
   out.blocks.forEach(function(b){
     var decisions = Object.create(null);
+    if(SHAPE[b.type] && separators(b.type, b.items)) return;
     b.items.forEach(function(item){
       if(b.type === 'i'){
         var f = fields(item, 3);
-        claim(f[0].trim(), 'an input', true);
+        claim(f[0].trim(), 'an input', 'i', true);
         var start = f[1].trim();
         if(!isNumberLiteral(start))
           out.problems.push('the input "' + f[2].trim() + '" starts at "' +
-                            start + '", which is not a number');
+            start + '", which is not a number. The middle field of ' +
+            SHAPE.i + ' is a plain number.');
       }
       if(b.type === 's'){
         var sf = fields(item, 3);
         var sn = sf[0].trim(), sv = sf[1].trim();
         if(!Object.prototype.hasOwnProperty.call(pickGroups, sn)){
           pickGroups[sn] = 1;
-          claim(sn, 'a pick-one', true);
+          claim(sn, 'a pick-one', 's', true);
         }
         if(!isNumberLiteral(sv))
           out.problems.push('the option "' + sf[2].trim() + '" has value "' +
-                            sv + '", which is not a number');
+            sv + '", which is not a number. The middle field of ' +
+            SHAPE.s + ' is a plain number.');
       }
-      if(b.type === 'c') claim(checkField(item).name, 'a box', false);
+      if(b.type === 'c') claim(checkField(item).name, 'a box', 'c', false);
       if(b.type === 'r'){
         var rf = fields(item, 3);
-        claim(rf[0].trim(), 'a result', false);
+        claim(rf[0].trim(), 'a result', 'r', false);
         checkFormula(rf[1], 'the result "' + (rf[2].trim() || rf[0].trim()) + '"', false);
       }
       if(b.type === 't'){
         var tf = fields(item, 3);
         var label = tf[0].trim(), cond = tf[1];
-        if(!label) out.problems.push('a decision has no label');
+        if(!label) out.problems.push('a decision has no label. Write ' + SHAPE.t);
         if(!Object.prototype.hasOwnProperty.call(decisions, label)) decisions[label] = [];
         decisions[label].push(cond);
         if(cond) checkFormula(cond, 'the decision "' + label + '"', true);
@@ -693,22 +737,34 @@ function audit(out){
       var rows = decisions[label];
       for(var j = 0; j < rows.length - 1; j++){
         if(!rows[j]){
-          out.problems.push('the fallback for decision "' + label + '" is not last');
+          out.problems.push('the fallback for "' + label + '" is not last. ' +
+            'The row with an empty condition, t=' + label + '::Wording, goes ' +
+            'after every other row of that decision.');
           break;
         }
       }
     }
   });
 
+  for(var mk in missing){
+    if(!Object.prototype.hasOwnProperty.call(missing, mk)) continue;
+    out.problems.push(missing[mk] + ' ' + mk + '= ' +
+      (missing[mk] === 1 ? 'row has' : 'rows have') + ' no colon in ' +
+      (missing[mk] === 1 ? 'it' : 'them') + ', so the wording was read as a ' +
+      'name. Write ' + SHAPE[mk]);
+  }
+
   // a unit for a name nothing declares is a typo, and a silent one
   for(var u in out.units){
     if(!Object.prototype.hasOwnProperty.call(out.units, u)) continue;
     if(!NAME.test(u)){
-      out.problems.push('the unit name "' + u + '" is not a valid identifier');
+      out.problems.push('"' + u + '" cannot be the name in a unit. Write ' +
+        SHAPE.u + ', where the name is one already on the card.');
       continue;
     }
     if(!Object.prototype.hasOwnProperty.call(claimed, u))
-      out.problems.push('a unit is declared for "' + u + '", which nothing on the card names');
+      out.problems.push('a unit is declared for "' + u + '", which nothing on ' +
+        'the card names. Either name something ' + u + ', or drop the unit.');
   }
 }
 
@@ -752,9 +808,9 @@ function parse(hash){
       // u=name:unit. Declared once; twice is a contradiction, not a rebinding.
       var uf = fields(v, 2);
       var un = uf[0].trim(), uu = uf[1].trim();
-      if(!un){ out.problems.push('a unit has no name'); return; }
+      if(!un){ out.problems.push('a unit has no name. Write ' + SHAPE.u); return; }
       if(Object.prototype.hasOwnProperty.call(out.units, un))
-        out.problems.push('the unit for "' + un + '" is declared twice');
+        out.problems.push('"' + un + '" is given a unit twice. One unit per name.');
       else out.units[un] = uu;
       return;
     }
@@ -769,13 +825,14 @@ function parse(hash){
       return;
     }
     if(FRAME_KEYS.indexOf(k) < 0){
-      out.problems.push('"' + k + '" is not a key this card has');
+      out.problems.push('"' + k + '" is not a key. The keys are ' +
+        'a h v m d g, and p o f c i s r t u inside a block.');
       return;
     }
     // an authored key written twice is a contradiction; a state key is the
     // renderer's own and the last write is the current one
     if(STATE_KEYS.indexOf(k) < 0 && Object.prototype.hasOwnProperty.call(out, k)){
-      out.problems.push('"' + k + '" is written twice');
+      out.problems.push('"' + k + '" is written twice. It is written once.');
       return;
     }
     out[k] = v;
@@ -841,9 +898,9 @@ function actionResult(btn, ok, said){
 }
 
 /* One sentence for the Copy button and for making a card of your own. */
-var CREDIT = '<footer><div class="how">Paste it into any AI to dig in. Or make ' +
-  'your own - tell yours to <span class="cmd">read https://upshot.fyi</span> and ' +
-  'export this</div></footer>';
+var CREDIT = '<footer><div class="how">Paste this link into any AI and it can ' +
+  'read the whole card. Or make your own - tell yours to ' +
+  '<span class="cmd">read https://upshot.fyi</span> and export this</div></footer>';
 
 /* ---- units ----
    A unit does one of two jobs. Most sit beside the number as free text. A
