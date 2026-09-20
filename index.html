@@ -25,7 +25,7 @@
   "url": "https://upshot.fyi/",
   "applicationCategory": "UtilitiesApplication",
   "isAccessibleForFree": true,
-  "description": "Tell any AI what you need - a calculator, a checklist, a decision. The link it hands back is the tool itself. Free, no account, nothing stored."
+  "description": "Tell any AI that can read a web page what you need - a calculator, a checklist, a decision. The link it hands back is the tool itself. Free, no account, nothing stored."
 }
 </script>
 <script>
@@ -92,11 +92,7 @@ body{
 .head:empty{padding-bottom:0}
 /* foot - the hairline and spacing live HERE, not on .meta, so the homepage
    (credit only) and a card (signature + credit) open the same way */
-.foot{
-  margin-top:28px;
-  padding-top:22px;
-  border-top:1px solid var(--hair);
-}
+.foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--hair)}
 .foot > :first-child{margin-top:0}
 
 /* the page scrolls, not this - ordinary flow */
@@ -153,6 +149,7 @@ footer .frow{display:none}
 a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--hair)}
 a:hover{color:var(--accent);border-bottom-color:var(--accent)}
 a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+footer .how + .how{margin-top:9px}
 footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;text-wrap:pretty}
 .cmd{color:var(--accent)}
 /* a conversation, not a list: what you type sits right, what came back sits
@@ -163,8 +160,7 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
    as a category label for nothing in particular - the two axes the demos
    actually vary, assistant and shape, are only legible once they are named. */
 .demos .lead{margin:0 0 24px}
-.demos .lead .us{color:var(--accent)}
-.demo{display:flex;flex-direction:column;gap:6px;margin:0 0 28px}
+.demo{display:flex;flex-direction:column;gap:10px;margin:0 0 30px}
 /* what shape this one is - the breadth is the point of the set, and nobody
    opens four cards to find it out */
 .demo .kind{
@@ -194,7 +190,7 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
    register the card uses for its own footer. */
 .demo a.reply{
   align-self:flex-start;max-width:92%;
-  margin-top:4px;
+  margin:0;
   padding:10px 13px;
   border:1px solid rgba(200,255,61,.42);
   border-radius:15px 15px 15px 5px;
@@ -228,6 +224,20 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;
 
 .demo a.reply:hover{color:var(--accent);background:rgba(200,255,61,.15);border-color:var(--accent)}
 .demo a.reply:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+.demo .back{
+  align-self:flex-start;max-width:92%;
+  margin:0;padding:10px 13px;
+  border:1px solid var(--hair);
+  border-radius:15px 15px 15px 5px;
+  background:rgba(247,247,244,.035);
+  font-size:13px;line-height:1.5;color:var(--dim);
+}
+.demo .back::before{
+  display:block;margin:0 0 5px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--faint);content:attr(data-who);
+}
 
 /* ---- the hero demo ----
    One exchange, then the thing it produced. The bubbles reuse the same shapes
@@ -393,52 +403,51 @@ pre{
         <button class="copybtn" type="button" aria-label="Copy this message">
           <svg class="icon" viewBox="0 0 12 12" aria-hidden="true"><g class="copy" fill="none" stroke="currentColor" stroke-width="1.1"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1"/><path d="M2 7.5V2.5A1 1 0 0 1 3 1.5H7.5"/></g><path class="check" d="M2 6.3l2.6 2.6L10 3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <p class="ask">drive or train? make me something I can put my own numbers
-          into.
+        <p class="ask">buying a flat, borrowing 250k at 4.5%. should I take the
+          25 year term or stretch it to 35?
           <span class="say">read https://upshot.fyi and export this</span></p>
       </div>
-      <a class="got" href="/v2/#a=A+tool+to+compare+driving+and+taking+the+train&amp;h=Compare+the+cost+for+everyone+travelling&amp;v=These+are+example+costs%3B+replace+them+with+your+own+return+journey+prices%2E&amp;m=GPT-6&amp;d=2026-09-16&amp;g=Drive&amp;i=fuel:80:Return+fuel&amp;i=park:30:Parking+and+tolls&amp;r=drive:fuel+park:Drive+total&amp;g=Train&amp;i=fare:30:Return+ticket+each&amp;i=n:2:People&amp;r=train:fare%2An:Train+total&amp;g=Compare&amp;r=gap:abs%28drive-train%29:Difference&amp;t=Cheaper:drive%3Ctrain:Drive&amp;t=Cheaper:drive==train:Same+cost&amp;t=Cheaper::Train&amp;u=fuel:%C2%A3&amp;u=park:%C2%A3&amp;u=drive:%C2%A3&amp;u=fare:%C2%A3&amp;u=train:%C2%A3&amp;u=gap:%C2%A3"><span class="got-label">ChatGPT</span><span class="got-text">upshot.fyi/v2/#a=Drive+or+train%3F&amp;h=Which+is+cheaper...</span></a>
+      <a class="got" href="/v2/#a=Which+mortgage+term+to+take&amp;h=Compare+payments+across+mortgage+terms&amp;v=Assumes+a+fixed+positive+rate+and+monthly+repayments+throughout+the+selected+term%2E&amp;m=GPT-6&amp;d=2026-09-16&amp;g=Your+term&amp;s=months:300:25+years&amp;s=months:360:30+years&amp;s=months:420:35+years&amp;g=Your+loan&amp;i=loan:250000:Amount+borrowed&amp;i=apr:4%2E5:Interest+rate&amp;r=rate:apr/100/12:&amp;r=pay:loan%2Arate/%281-pow%281+rate%2C0-months%29%29:Monthly+payment&amp;r=interest:pay%2Amonths-loan:Interest+over+the+term&amp;u=loan:%C2%A3&amp;u=apr:%25&amp;u=pay:%C2%A3&amp;u=interest:%C2%A3"><span class="got-label">ChatGPT</span><span class="got-text">upshot.fyi/v2/#a=Which+mortgage+term+to+take&amp;h=Compare+pa...</span></a>
       <div class="opened">
-        <iframe id="toy" title="A working upshot: drive or train, which is cheaper"
-          src="/v2/#a=A+tool+to+compare+driving+and+taking+the+train&amp;h=Compare+the+cost+for+everyone+travelling&amp;v=These+are+example+costs%3B+replace+them+with+your+own+return+journey+prices%2E&amp;m=GPT-6&amp;d=2026-09-16&amp;g=Drive&amp;i=fuel:80:Return+fuel&amp;i=park:30:Parking+and+tolls&amp;r=drive:fuel+park:Drive+total&amp;g=Train&amp;i=fare:30:Return+ticket+each&amp;i=n:2:People&amp;r=train:fare%2An:Train+total&amp;g=Compare&amp;r=gap:abs%28drive-train%29:Difference&amp;t=Cheaper:drive%3Ctrain:Drive&amp;t=Cheaper:drive==train:Same+cost&amp;t=Cheaper::Train&amp;u=fuel:%C2%A3&amp;u=park:%C2%A3&amp;u=drive:%C2%A3&amp;u=fare:%C2%A3&amp;u=train:%C2%A3&amp;u=gap:%C2%A3" loading="lazy" scrolling="no"></iframe>
+        <iframe id="toy" title="A working upshot: which mortgage term to take"
+          src="/v2/#a=Which+mortgage+term+to+take&amp;h=Compare+payments+across+mortgage+terms&amp;v=Assumes+a+fixed+positive+rate+and+monthly+repayments+throughout+the+selected+term%2E&amp;m=GPT-6&amp;d=2026-09-16&amp;g=Your+term&amp;s=months:300:25+years&amp;s=months:360:30+years&amp;s=months:420:35+years&amp;g=Your+loan&amp;i=loan:250000:Amount+borrowed&amp;i=apr:4%2E5:Interest+rate&amp;r=rate:apr/100/12:&amp;r=pay:loan%2Arate/%281-pow%281+rate%2C0-months%29%29:Monthly+payment&amp;r=interest:pay%2Amonths-loan:Interest+over+the+term&amp;u=loan:%C2%A3&amp;u=apr:%25&amp;u=pay:%C2%A3&amp;u=interest:%C2%A3" loading="lazy" scrolling="no"></iframe>
       </div>
-      <p class="flow">Put 4 in People. Watch it change its mind.</p>
+      <p class="flow">Try 35 years. £206 a month cheaper, £80,045 more.</p>
     </div>
 
-    <p class="after">That card is not stored anywhere. No account, no database,
-      nothing we can see - and you can send it to anyone.</p>
+    <p class="after">That card is not stored anywhere. All the data is in the
+      link itself. No account, no database, nothing we can see - and you can
+      send it to anyone.</p>
 
-    <!-- Four reasons to make one, not four shapes of the same reason: to
-         post, to decide, to plan, to face. The order climbs - read it,
-         tick it, work it out, let it reach a verdict. The label says which,
-         so the range is legible without opening four cards. -->
+    <!-- Three, and the point is that they are different shapes rather than
+         three of the same one: a conversation that turned into a tool, a
+         checklist that decides, and a calculation with a curve in it. The
+         label says which. Two assistants wrote them, and each card's m=
+         says which one, because the name is the claim. -->
     <div class="demos">
-    <p class="lead"><span class="us">upshot</span> is a tool that lives in a
-      link. Whatever assistant you already use can write you one, and what it
-      writes depends on what you asked for.</p>
-    <div class="demo">
-      <p class="kind">Something to post</p>
-      <p class="ask">work has me on a plane constantly - did 9 countries this year, 23 flights, 41 nights away, longest stretch 11 nights, about 31,400 miles. make me something I can post.
-        <span class="say">read https://upshot.fyi and export this</span></p>
-      <a class="reply" href="/v2/#a=My+year+of+travel&amp;h=Nine+countries%2C+forty+one+nights+away&amp;v=Forty+one+nights+away+and+not+one+of+them+at+home%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=The+year&amp;f=Countries:9&amp;f=Flights:23&amp;f=Nights+away:41&amp;f=Miles+flown:31%2C400&amp;f=Longest+trip:11+nights"><span class="reply-label">ChatGPT<span class="go">open</span></span><span class="reply-text">upshot.fyi/v2/#a=My+year+of+travel&amp;h=Nine+countries%2C+forty+one+nights+away&amp;v=Forty+one+nights+away+and+not+one+of+them+at+home%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-12&amp;g=The+year&amp;f=Countries:9&amp;f=Flights:23&amp;f=Nights+away:41&amp;f=Miles+flown:31%2C400&amp;f=Longest+trip:11+nights</span></a>
-    </div>
+    <p class="lead">Any assistant that can read a web page can write you one,
+      and what it writes depends on what you asked for.</p>
     <div class="demo">
       <p class="kind">Something to check</p>
-      <p class="ask">I compare measurements with predictions using a supplied one-sigma uncertainty. I use a five-sigma threshold. give me editable example values and check whether they meet it.
+      <p class="ask">planning a big hill walk in the lakes next month with a mate. roughly 22k with about 1200m of ascent, and neither of us are fast walkers. if we set off at 10, is that going to be tight for daylight?</p>
+      <p class="back" data-who="ChatGPT">10am is quite a late start for that walk in the Lakes in October ... I wouldn't plan around civil twilight as usable walking time on high ground.</p>
+      <p class="ask">make that something I can adjust then - sunset shifts so much through the month that I want to try different times, and keep that margin you mentioned rather than finishing bang on sunset.
         <span class="say">read https://upshot.fyi and export this</span></p>
-      <a class="reply" href="/v2/#a=Whether+a+measurement+crosses+my+chosen+threshold&amp;h=Compare+the+measurement+with+your+threshold&amp;v=Example+values+use+a+supplied+one-sigma+uncertainty%3B+the+threshold+is+yours+to+set%2E&amp;m=GPT-6&amp;d=2026-09-16&amp;g=Your+numbers&amp;i=measured:0:Measured+value&amp;i=predicted:0:Predicted+value&amp;i=sigma:1:One+sigma+uncertainty&amp;i=target:5:Threshold+in+sigma&amp;g=Result&amp;r=diff:abs%28measured-predicted%29:Difference&amp;r=z:diff/sigma:Sigma+away&amp;t=Threshold:z%3E=target:Threshold+met&amp;t=Threshold::Below+threshold"><span class="reply-label">ChatGPT<span class="go">open</span></span><span class="reply-text">upshot.fyi/v2/#a=Whether+a+measurement+crosses+my+chosen+threshold&amp;h=Compare+the+measurement+with+your+threshold&amp;v=Example+values+use+a+supplied+one-sigma+uncertainty%3B+the+threshold+is+yours+to+set%2E&amp;m=GPT-6&amp;d=2026-09-16&amp;g=Your+numbers&amp;i=measured:0:Measured+value&amp;i=predicted:0:Predicted+value&amp;i=sigma:1:One+sigma+uncertainty&amp;i=target:5:Threshold+in+sigma&amp;g=Result&amp;r=diff:abs%28measured-predicted%29:Difference&amp;r=z:diff/sigma:Sigma+away&amp;t=Threshold:z%3E=target:Threshold+met&amp;t=Threshold::Below+threshold</span></a>
+      <a class="reply" href="/v2/#a=Planning+a+22km+Lake+District+walk+with+1200m+of+ascent&amp;h=Check+your+daylight+margin&amp;v=Compares+your+estimated+finish+with+sunset+minus+your+safety+margin%2E+All+times+are+decimal+hours%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-20&amp;g=Walk&amp;f=Distance:22+km&amp;f=Ascent:1200+m&amp;i=start:8%2E5:Start+time&amp;i=hours:7:Walking+hours&amp;g=Daylight&amp;i=sunset:18%2E4:Sunset&amp;i=safety:1:Safety+margin&amp;g=Finish&amp;r=finish:start+hours:Estimated+finish&amp;r=target:sunset-safety:Target+finish&amp;r=margin:target-finish:Margin+remaining&amp;t=Verdict:margin%3C0:Too+tight&amp;t=Verdict::Within+safety+margin&amp;u=start:hr&amp;u=hours:hr&amp;u=sunset:hr&amp;u=safety:hr&amp;u=finish:hr&amp;u=target:hr&amp;u=margin:hr"><span class="reply-label">ChatGPT<span class="go">open</span></span><span class="reply-text">upshot.fyi/v2/#a=Planning+a+22km+Lake+District+walk+with+1200m+of+ascent&amp;h=Check+your+daylight+margin&amp;v=Compares+your+estimated+finish+with+sunset+minus+your+safety+margin%2E+All+times+are+decimal+hours%2E&amp;m=GPT-5%2E6+Sol&amp;d=2026-09-20&amp;g=Walk&amp;f=Distance:22+km&amp;f=Ascent:1200+m&amp;i=start:8%2E5:Start+time&amp;i=hours:7:Walking+hours&amp;g=Daylight&amp;i=sunset:18%2E4:Sunset&amp;i=safety:1:Safety+margin&amp;g=Finish&amp;r=finish:start+hours:Estimated+finish&amp;r=target:sunset-safety:Target+finish&amp;r=margin:target-finish:Margin+remaining&amp;t=Verdict:margin%3C0:Too+tight&amp;t=Verdict::Within+safety+margin&amp;u=start:hr&amp;u=hours:hr&amp;u=sunset:hr&amp;u=safety:hr&amp;u=finish:hr&amp;u=target:hr&amp;u=margin:hr</span></a>
     </div>
     <div class="demo">
-      <p class="kind">Something to plan</p>
-      <p class="ask">buying a flat, borrowing 250k at 4.5%. should I take the 25 year term or stretch it to 35?
-        <span class="say">read https://upshot.fyi and export this</span></p>
-      <a class="reply" href="/v2/#a=Which+mortgage+term+to+take&amp;h=Compare+payments+across+mortgage+terms&amp;v=Assumes+a+fixed+positive+rate+and+monthly+repayments+throughout+the+selected+term%2E&amp;m=GPT-6&amp;d=2026-09-16&amp;g=Your+term&amp;s=months:300:25+years&amp;s=months:360:30+years&amp;s=months:420:35+years&amp;g=Your+loan&amp;i=loan:250000:Amount+borrowed&amp;i=apr:4%2E5:Interest+rate&amp;r=rate:apr/100/12:&amp;r=pay:loan%2Arate/%281-pow%281+rate%2C0-months%29%29:Monthly+payment&amp;r=interest:pay%2Amonths-loan:Interest+over+the+term&amp;u=loan:%C2%A3&amp;u=apr:%25&amp;u=pay:%C2%A3&amp;u=interest:%C2%A3"><span class="reply-label">ChatGPT<span class="go">open</span></span><span class="reply-text">upshot.fyi/v2/#a=Which+mortgage+term+to+take&amp;h=Compare+payments+across+mortgage+terms&amp;v=Assumes+a+fixed+positive+rate+and+monthly+repayments+throughout+the+selected+term%2E&amp;m=GPT-6&amp;d=2026-09-16&amp;g=Your+term&amp;s=months:300:25+years&amp;s=months:360:30+years&amp;s=months:420:35+years&amp;g=Your+loan&amp;i=loan:250000:Amount+borrowed&amp;i=apr:4%2E5:Interest+rate&amp;r=rate:apr/100/12:&amp;r=pay:loan%2Arate/%281-pow%281+rate%2C0-months%29%29:Monthly+payment&amp;r=interest:pay%2Amonths-loan:Interest+over+the+term&amp;u=loan:%C2%A3&amp;u=apr:%25&amp;u=pay:%C2%A3&amp;u=interest:%C2%A3</span></a>
-      </div>
-    <div class="demo">
       <p class="kind">Something to prepare</p>
-      <p class="ask">review's coming up at work and I think I'm underpaid. do I actually have a case for a rise?
+      <p class="ask">a checklist of what I should have ready before I ask for a pay rise, that tells me when I've got enough.
         <span class="say">read https://upshot.fyi and export this</span></p>
-      <a class="reply" href="/v2/#a=Preparing+evidence+for+my+pay+review&amp;h=Gather+evidence+for+your+pay+review&amp;v=Use+this+checklist+to+organise+examples+for+the+conversation+with+your+manager%2E&amp;m=GPT-6&amp;d=2026-09-16&amp;g=Your+evidence&amp;c=:List+responsibilities+beyond+your+job+description&amp;c=:Collect+comparable+salary+figures&amp;c=:Record+examples+of+meeting+or+exceeding+targets&amp;c=:Note+when+your+pay+last+changed"><span class="reply-label">ChatGPT<span class="go">open</span></span><span class="reply-text">upshot.fyi/v2/#a=Preparing+evidence+for+my+pay+review&amp;h=Gather+evidence+for+your+pay+review&amp;v=Use+this+checklist+to+organise+examples+for+the+conversation+with+your+manager%2E&amp;m=GPT-6&amp;d=2026-09-16&amp;g=Your+evidence&amp;c=:List+responsibilities+beyond+your+job+description&amp;c=:Collect+comparable+salary+figures&amp;c=:Record+examples+of+meeting+or+exceeding+targets&amp;c=:Note+when+your+pay+last+changed</span></a>
+      <a class="reply" href="/v2/#a=Whether+I+have+enough+to+ask+for+a+pay+rise&amp;h=Get+ready+to+ask+for+a+rise&amp;v=Tick+off+what+you+have+ready%3B+the+card+tells+you+when+you%27ve+got+enough%2E&amp;m=Claude+Sonnet+5&amp;d=2026-09-20&amp;g=Checklist&amp;c=achieve:Documented+specific+wins+with+measurable+impact&amp;c=market:Collected+comparable+salary+data+for+your+role&amp;c=scope:Listed+responsibilities+beyond+your+job+description&amp;c=timing:Checked+the+timing+-+budget+cycle%2C+review+period&amp;c=number:Decided+the+figure+or+range+you%27ll+ask+for&amp;c=pitch:Practiced+how+you%27ll+open+the+conversation&amp;g=Readiness&amp;r=done:achieve+market+scope+timing+number+pitch:Items+ready&amp;r=pct:done/6%2A100:Completed&amp;u=pct:%25&amp;t=Verdict:done==6:You%27ve+got+enough+-+go+ask&amp;t=Verdict:done%3E=4:Almost+there+-+close+the+gaps&amp;t=Verdict::Keep+building+your+case"><span class="reply-label">Claude<span class="go">open</span></span><span class="reply-text">upshot.fyi/v2/#a=Whether+I+have+enough+to+ask+for+a+pay+rise&amp;h=Get+ready+to+ask+for+a+rise&amp;v=Tick+off+what+you+have+ready%3B+the+card+tells+you+when+you%27ve+got+enough%2E&amp;m=Claude+Sonnet+5&amp;d=2026-09-20&amp;g=Checklist&amp;c=achieve:Documented+specific+wins+with+measurable+impact&amp;c=market:Collected+comparable+salary+data+for+your+role&amp;c=scope:Listed+responsibilities+beyond+your+job+description&amp;c=timing:Checked+the+timing+-+budget+cycle%2C+review+period&amp;c=number:Decided+the+figure+or+range+you%27ll+ask+for&amp;c=pitch:Practiced+how+you%27ll+open+the+conversation&amp;g=Readiness&amp;r=done:achieve+market+scope+timing+number+pitch:Items+ready&amp;r=pct:done/6%2A100:Completed&amp;u=pct:%25&amp;t=Verdict:done==6:You%27ve+got+enough+-+go+ask&amp;t=Verdict:done%3E=4:Almost+there+-+close+the+gaps&amp;t=Verdict::Keep+building+your+case</span></a>
+    </div>
+    <div class="demo">
+      <p class="kind">Something to get right</p>
+      <p class="ask">I had a large coffee at 2pm, about 150mg, and I go to bed at 11. how much of it is still in me at bedtime, and is that going to wreck my sleep? let me change the dose and the times.
+        <span class="say">read https://upshot.fyi and export this</span></p>
+      <a class="reply" href="/v2/#a=How+much+caffeine+is+left+by+bedtime&amp;h=Caffeine+left+at+bedtime&amp;v=Assumes+a+five-hour+half-life+and+decays+the+dose+from+your+coffee+time+to+bedtime%2E&amp;m=Claude+Sonnet+5&amp;d=2026-09-20&amp;g=Your+coffee&amp;i=dose:150:Dose+%28mg%29&amp;i=intake:14:Coffee+time+%2824h%29&amp;i=half:5:Half-life+%28hours%29&amp;g=Bedtime&amp;i=bed:23:Bedtime+%2824h%29&amp;i=target:50:Your+comfort+threshold+%28mg%29&amp;g=Result&amp;r=hours:mod%28bed-intake%2C24%29:Hours+before+bed&amp;r=remain:dose%2Apow%280%2E5%2Chours/half%29:Still+in+you+at+bedtime&amp;r=pct:remain/dose%2A100:Percent+remaining&amp;u=dose:mg&amp;u=remain:mg&amp;u=target:mg&amp;u=hours:hr&amp;u=pct:%25&amp;t=Verdict:remain%3Etarget:Likely+to+affect+sleep&amp;t=Verdict:remain==target:Right+at+your+limit&amp;t=Verdict::Should+be+fine"><span class="reply-label">Claude<span class="go">open</span></span><span class="reply-text">upshot.fyi/v2/#a=How+much+caffeine+is+left+by+bedtime&amp;h=Caffeine+left+at+bedtime&amp;v=Assumes+a+five-hour+half-life+and+decays+the+dose+from+your+coffee+time+to+bedtime%2E&amp;m=Claude+Sonnet+5&amp;d=2026-09-20&amp;g=Your+coffee&amp;i=dose:150:Dose+%28mg%29&amp;i=intake:14:Coffee+time+%2824h%29&amp;i=half:5:Half-life+%28hours%29&amp;g=Bedtime&amp;i=bed:23:Bedtime+%2824h%29&amp;i=target:50:Your+comfort+threshold+%28mg%29&amp;g=Result&amp;r=hours:mod%28bed-intake%2C24%29:Hours+before+bed&amp;r=remain:dose%2Apow%280%2E5%2Chours/half%29:Still+in+you+at+bedtime&amp;r=pct:remain/dose%2A100:Percent+remaining&amp;u=dose:mg&amp;u=remain:mg&amp;u=target:mg&amp;u=hours:hr&amp;u=pct:%25&amp;t=Verdict:remain%3Etarget:Likely+to+affect+sleep&amp;t=Verdict:remain==target:Right+at+your+limit&amp;t=Verdict::Should+be+fine</span></a>
+      <p class="ask">the mg labels double up - it's showing "Dose (mg) mg". drop the (mg) from the labels, the unit already prints it.</p>
+      <a class="reply" href="/v2/#a=How+much+caffeine+is+left+by+bedtime&amp;h=Caffeine+left+at+bedtime&amp;v=Assumes+a+five-hour+half-life+and+decays+the+dose+from+your+coffee+time+to+bedtime%2E&amp;m=Claude+Sonnet+5&amp;d=2026-09-20&amp;g=Your+coffee&amp;i=dose:150:Dose&amp;i=intake:14:Coffee+time+%2824h%29&amp;i=half:5:Half-life+%28hours%29&amp;g=Bedtime&amp;i=bed:23:Bedtime+%2824h%29&amp;i=target:50:Your+comfort+threshold&amp;g=Result&amp;r=hours:mod%28bed-intake%2C24%29:Hours+before+bed&amp;r=remain:dose%2Apow%280%2E5%2Chours/half%29:Still+in+you+at+bedtime&amp;r=pct:remain/dose%2A100:Percent+remaining&amp;u=dose:mg&amp;u=remain:mg&amp;u=target:mg&amp;u=hours:hr&amp;u=pct:%25&amp;t=Verdict:remain%3Etarget:Likely+to+affect+sleep&amp;t=Verdict:remain==target:Right+at+your+limit&amp;t=Verdict::Should+be+fine"><span class="reply-label">Claude<span class="go">open</span></span><span class="reply-text">upshot.fyi/v2/#a=How+much+caffeine+is+left+by+bedtime&amp;h=Caffeine+left+at+bedtime&amp;v=Assumes+a+five-hour+half-life+and+decays+the+dose+from+your+coffee+time+to+bedtime%2E&amp;m=Claude+Sonnet+5&amp;d=2026-09-20&amp;g=Your+coffee&amp;i=dose:150:Dose&amp;i=intake:14:Coffee+time+%2824h%29&amp;i=half:5:Half-life+%28hours%29&amp;g=Bedtime&amp;i=bed:23:Bedtime+%2824h%29&amp;i=target:50:Your+comfort+threshold&amp;g=Result&amp;r=hours:mod%28bed-intake%2C24%29:Hours+before+bed&amp;r=remain:dose%2Apow%280%2E5%2Chours/half%29:Still+in+you+at+bedtime&amp;r=pct:remain/dose%2A100:Percent+remaining&amp;u=dose:mg&amp;u=remain:mg&amp;u=target:mg&amp;u=hours:hr&amp;u=pct:%25&amp;t=Verdict:remain%3Etarget:Likely+to+affect+sleep&amp;t=Verdict:remain==target:Right+at+your+limit&amp;t=Verdict::Should+be+fine</span></a>
     </div>
     </div>
 
@@ -714,8 +723,13 @@ explanation.</pre>
   </main>
 
   <div class="foot">
-    <footer><div class="how">Made by <a href="https://github.com/midnight-merge">Midnight
-      Merge</a></div></footer>
+    <footer>
+      <div class="how"><a href="/made/">Made with it</a> &middot;
+        <a href="/url-is-the-app/">How it works</a> &middot;
+        <a href="/roadmap/">Roadmap</a></div>
+      <div class="how">Made by <a href="https://github.com/midnight-merge">Midnight
+        Merge</a></div>
+    </footer>
   </div>
 
 </div>

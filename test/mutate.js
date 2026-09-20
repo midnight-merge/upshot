@@ -53,12 +53,13 @@ const MUTATIONS = [
   ['mod truncates instead of wrapping',
    'mod: function(a, b){ return ((a % b) + b) % b; }', 'mod: function(a, b){ return a % b; }'],
   ['duplicate names allowed',
-   'out.problems.push(\'the name "\' + name + \'" is claimed twice\');',
-   'claimed[name] = what;'],
+   'if(Object.prototype.hasOwnProperty.call(claimed, name)){',
+   'if(false){'],
   ['fallback-last check off by one',
    'for(var j = 0; j < rows.length - 1; j++){', 'for(var j = 0; j < rows.length - 2; j++){'],
   ['decision needs no label',
-   "if(!label) out.problems.push('a decision has no label');", "if(false) out.problems.push('x');"],
+   "if(!label) out.problems.push('a decision has no label. Write ' + SHAPE.t);",
+   "if(false) out.problems.push('x');"],
   ['decision need not be a comparison',
    'if(needsComparison && !info.comparison)', 'if(false && needsComparison && !info.comparison)'],
   ['unit for an undeclared name allowed',
@@ -105,8 +106,8 @@ const MUTATIONS = [
    '  var f = fields(item, 2);\n  return {name: f[0].trim(), label: f[1].trim()};',
    '  var f = fields(item, 2);\n  return {name: f[1].trim(), label: f[0].trim()};'],
   ['a result splits into two fields, not three',
-   "        var rf = fields(item, 3);\n        claim(rf[0].trim(), 'a result', false);",
-   "        var rf = fields(item, 2);\n        claim(rf[0].trim(), 'a result', false);"],
+   "        var rf = fields(item, 3);\n        claim(rf[0].trim(), 'a result', 'r', false);",
+   "        var rf = fields(item, 2);\n        claim(rf[0].trim(), 'a result', 'r', false);"],
 
   /* Expected to survive. A missing field padded with a space rather than an
      empty string changes nothing a reader can see: every consumer trims, and

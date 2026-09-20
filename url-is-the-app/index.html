@@ -150,7 +150,7 @@ figcaption{
    The homepage hero's bubbles, reused rule for rule: same shapes, same
    corner squared off on whichever side said it, same sender labels. The
    article and the page it describes should read as one thing. */
-.stage{margin:22px 0 26px}
+.stage{margin:24px 0}
 .stage .ask{
   max-width:80%;margin:0 0 10px auto;width:fit-content;
   padding:10px 13px;border-radius:15px 15px 5px 15px;
@@ -198,7 +198,7 @@ figcaption{
      would float in the middle of its frame, so the frame takes the card's
      width instead and the card fills it, exactly as on the homepage. */
   max-width:430px;
-  margin:18px auto 0;
+  margin:24px auto;
   border:1px solid var(--hair);
   border-radius:12px;
   overflow:hidden;
@@ -212,6 +212,7 @@ footer{
   font-family:var(--mono);
   font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
 }
+footer .how + .how{margin-top:9px}
 footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5}
 </style>
 </head>
@@ -233,22 +234,23 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5}
   <main>
     <h1>The application is the URL</h1>
 
-    <p>Here is a tool for working out whether you can afford to quit your
-      job:</p>
+    <p>Here is a tool for choosing a mortgage term:</p>
 
-    <pre><a href="/v2/#a=Whether+I+have+enough+runway+to+quit&amp;h=Nine+months+is+the+number+to+beat&amp;v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Runway&amp;i=cash:18000:Cash+saved&amp;i=burn:2200:Monthly+burn&amp;i=target:9:Months+you+want&amp;r=months:cash/burn:Runway&amp;t=Ready+to+walk:months%3E=target:Go+now&amp;t=Ready+to+walk::Not+yet&amp;u=cash:%C2%A3&amp;u=burn:%C2%A3&amp;u=target:months&amp;u=months:months">https://upshot.fyi/v2/#a=Whether+I+have+enough+runway+to+quit&amp;h=Nine+months+is+the+number+to+beat&amp;v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Runway&amp;i=cash:18000:Cash+saved&amp;i=burn:2200:Monthly+burn&amp;i=target:9:Months+you+want&amp;r=months:cash/burn:Runway&amp;t=Ready+to+walk:months%3E=target:Go+now&amp;t=Ready+to+walk::Not+yet&amp;u=cash:%C2%A3&amp;u=burn:%C2%A3&amp;u=target:months&amp;u=months:months</a></pre>
+    <pre><a href="/v2/#a=Which+mortgage+term+to+take&amp;h=Compare+payments+across+mortgage+terms&amp;v=Assumes+a+fixed+positive+rate+and+monthly+repayments+throughout+the+selected+term%2E&amp;m=GPT-6&amp;d=2026-09-16&amp;g=Your+term&amp;s=months:300:25+years&amp;s=months:360:30+years&amp;s=months:420:35+years&amp;g=Your+loan&amp;i=loan:250000:Amount+borrowed&amp;i=apr:4%2E5:Interest+rate&amp;r=rate:apr/100/12:&amp;r=pay:loan%2Arate/%281-pow%281+rate%2C0-months%29%29:Monthly+payment&amp;r=interest:pay%2Amonths-loan:Interest+over+the+term&amp;u=loan:%C2%A3&amp;u=apr:%25&amp;u=pay:%C2%A3&amp;u=interest:%C2%A3">https://upshot.fyi/v2/#a=Which+mortgage+term+to+take&amp;h=Compare+payments+across+mortgage+terms&amp;v=Assumes+a+fixed+positive+rate+and+monthly+repayments+throughout+the+selected+term%2E&amp;m=GPT-6&amp;d=2026-09-16&amp;g=Your+term&amp;s=months:300:25+years&amp;s=months:360:30+years&amp;s=months:420:35+years&amp;g=Your+loan&amp;i=loan:250000:Amount+borrowed&amp;i=apr:4%2E5:Interest+rate&amp;r=rate:apr/100/12:&amp;r=pay:loan%2Arate/%281-pow%281+rate%2C0-months%29%29:Monthly+payment&amp;r=interest:pay%2Amonths-loan:Interest+over+the+term&amp;u=loan:%C2%A3&amp;u=apr:%25&amp;u=pay:%C2%A3&amp;u=interest:%C2%A3</a></pre>
 
     <div class="opened">
-      <iframe title="A working upshot: have I got enough runway to quit"
-        src="/v2/#a=Whether+I+have+enough+runway+to+quit&amp;h=Nine+months+is+the+number+to+beat&amp;v=Anything+under+that+and+a+slow+job+market+decides+for+you%2E&amp;m=GPT-5&amp;d=2026-09-10&amp;g=Runway&amp;i=cash:18000:Cash+saved&amp;i=burn:2200:Monthly+burn&amp;i=target:9:Months+you+want&amp;r=months:cash/burn:Runway&amp;t=Ready+to+walk:months%3E=target:Go+now&amp;t=Ready+to+walk::Not+yet&amp;u=cash:%C2%A3&amp;u=burn:%C2%A3&amp;u=target:months&amp;u=months:months" loading="lazy" scrolling="no"></iframe>
+      <iframe title="A working upshot: which mortgage term to take"
+        src="/v2/#a=Which+mortgage+term+to+take&amp;h=Compare+payments+across+mortgage+terms&amp;v=Assumes+a+fixed+positive+rate+and+monthly+repayments+throughout+the+selected+term%2E&amp;m=GPT-6&amp;d=2026-09-16&amp;g=Your+term&amp;s=months:300:25+years&amp;s=months:360:30+years&amp;s=months:420:35+years&amp;g=Your+loan&amp;i=loan:250000:Amount+borrowed&amp;i=apr:4%2E5:Interest+rate&amp;r=rate:apr/100/12:&amp;r=pay:loan%2Arate/%281-pow%281+rate%2C0-months%29%29:Monthly+payment&amp;r=interest:pay%2Amonths-loan:Interest+over+the+term&amp;u=loan:%C2%A3&amp;u=apr:%25&amp;u=pay:%C2%A3&amp;u=interest:%C2%A3" loading="lazy" scrolling="no"></iframe>
     </div>
 
     <p>That is not a screenshot. It is the renderer, running the link above,
-      inside this page. Put 24000 in Cash saved and watch the bottom line
-      change its mind.</p>
+      inside this page. Click 35 years. The payment falls by £206 a month and
+      the interest rises by £80,045, which is the entire argument about
+      mortgage terms, in one click.</p>
 
-    <p>Change a number and the URL changes with it, so you can send it on and
-      the next person opens your version with your numbers in it.</p>
+    <p>Change anything on it and the URL changes with it, so you can send it on
+      and the next person opens your version, with your numbers in it. The
+      whole thing is 524 characters.</p>
 
     <p>There is nothing behind it. No server, no database, no account, no build
       step, no dependencies. The tool <em>is</em> the string.</p>
@@ -632,8 +634,13 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5}
   </main>
 
   <div class="foot">
-    <footer><div class="how">Made by <a href="https://github.com/midnight-merge">Midnight
-      Merge</a></div></footer>
+    <footer>
+      <div class="how"><a href="/made/">Made with it</a> &middot;
+        <a href="/url-is-the-app/">How it works</a> &middot;
+        <a href="/roadmap/">Roadmap</a></div>
+      <div class="how">Made by <a href="https://github.com/midnight-merge">Midnight
+        Merge</a></div>
+    </footer>
   </div>
 
 </div></div>

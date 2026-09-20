@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- How the link looks when it is pasted somewhere. -->
+<meta name="description" content="Links are permanent, so changes wait for a new version. What is queued for v3.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="upshot">
+<meta property="og:url" content="https://upshot.fyi/roadmap/">
+<meta property="og:title" content="Roadmap">
+<meta property="og:description" content="Links are permanent, so changes wait for a new version. What is queued for v3.">
+<meta property="og:image" content="https://upshot.fyi/roadmap/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="upshot.fyi - roadmap">
+<meta name="twitter:card" content="summary_large_image">
+<title>Roadmap</title>
+<style>
+/* the same palette as the card, because this is the same object explained */
+:root{
+  --card:#12131A;
+  --ink:#F7F7F4;
+  --dim:#B4B6C2;
+  --faint:#8E91A6;
+  --accent:#C8FF3D;
+  --hair:rgba(247,247,244,.12);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--card);
+  color:var(--ink);
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+  /* a card URL printed in full is one unbroken token the width of a paragraph */
+  overflow-wrap:anywhere;
+  /* Chrome on iOS parks the last of the page under its bottom toolbar */
+  padding-bottom:160px;
+}
+
+.wrap{display:flex;flex-direction:column;align-items:center;width:100%}
+
+/* 430px is the card's measure, because a card is an object you hold. This is
+   a document you read, so it takes a prose measure instead. */
+.sheet{
+  width:100%;
+  max-width:640px;
+  background:var(--card);
+  padding:40px 26px 30px;
+}
+
+.head{padding-bottom:22px}
+
+/* ONE header line, shared with every other page here */
+.brand{
+  font-family:var(--mono);
+  font-size:12.5px;
+  line-height:1.5;
+  letter-spacing:.01em;
+  color:var(--faint);
+}
+.brand::after{content:"";display:block;clear:both}
+a.brand{display:block;border-bottom:0;color:var(--faint)}
+a.brand:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+a.brand:hover{color:var(--accent)}
+a.brand:hover .logo{fill:var(--accent)}
+
+/* the mark: lines of text distilling down to a single point - the upshot */
+.logo{float:left;width:12px;height:10px;margin:4px 8px 0 0;fill:var(--accent)}
+
+h1{
+  font-weight:700;
+  font-size:38px;
+  line-height:1.06;
+  letter-spacing:-.032em;
+  text-wrap:balance;
+  margin:0 0 22px;
+}
+
+/* A version is a path, so it is set in the face every other path on the
+   site is set in, and lit like the live things are. */
+.ver{
+  font-family:var(--mono);
+  font-size:16px;
+  letter-spacing:.02em;
+  color:var(--accent);
+  margin:40px 0 4px;
+  padding-top:24px;
+  border-top:1px solid var(--hair);
+}
+.ver + .sub{
+  margin:0 0 14px;
+  font-size:13.5px;
+  color:var(--faint);
+}
+
+h2{
+  font-weight:600;
+  font-size:19px;
+  letter-spacing:-.012em;
+  color:var(--ink);
+  margin:40px 0 14px;
+  padding-top:24px;
+  border-top:1px solid var(--hair);
+  text-wrap:balance;
+}
+
+p{margin:0 0 16px;font-size:16px;line-height:1.62;color:var(--dim);text-wrap:pretty}
+main > p:last-child{margin-bottom:0}
+
+ul{margin:0 0 16px;padding-left:18px}
+li{font-size:16px;line-height:1.62;color:var(--dim);margin-bottom:9px;text-wrap:pretty}
+li:last-child{margin-bottom:0}
+
+strong{color:var(--ink);font-weight:600}
+code{font-family:var(--mono);font-size:13.5px;color:var(--ink)}
+
+a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--hair)}
+a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+.foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--hair)}
+footer{
+  font-family:var(--mono);
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+}
+footer .how + .how{margin-top:9px}
+footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5}
+</style>
+</head>
+<body>
+<!-- Static copy, start to finish. -->
+<div class="wrap"><div class="sheet">
+
+  <div class="head">
+    <a class="brand" href="/">
+      <svg class="logo" viewBox="0 0 12 10" aria-hidden="true">
+        <rect x="0" y="0" width="12" height="2" rx="1"/>
+        <rect x="0" y="4" width="7" height="2" rx="1"/>
+        <circle cx="1.5" cy="8.5" r="1.5"/>
+      </svg>
+      <span>upshot.fyi</span>
+    </a>
+  </div>
+
+  <main>
+    <h1>Roadmap</h1>
+
+    <p>A card lives in its link, and links are permanent. Nothing already sent
+      can be changed. So anything that changes how a card draws waits for a new
+      version at a new path, and the old path keeps serving the old cards.</p>
+
+    <p class="ver">/v3/</p>
+    <p class="sub">Candidates, not commitments. The list grows as real
+      generations hit real limits, and shrinks when one turns out not to
+      matter.</p>
+
+    <ul>
+      <li><strong>A clock type.</strong> Times are decimal hours, so
+        <code>18.45</code> means 18h 27m, not quarter to seven.</li>
+      <li><strong>Forgiving a missing colon.</strong> <code>c=Wording</code>
+        can only mean an unnamed box. It is refused anyway.</li>
+      <li><strong>Whole minutes.</strong> 125 minutes prints as
+        <code>125m 0s</code>.</li>
+      <li><strong>Four-field decisions.</strong> An older shape put the
+        fallback on the end of the row. The card draws it wrong rather than
+        refusing it.</li>
+      <li><strong>Underscores in names.</strong> The renderer takes them, the
+        contract does not offer them. One of the two should move.</li>
+    </ul>
+  </main>
+
+  <div class="foot">
+    <footer>
+      <div class="how"><a href="/made/">Made with it</a> &middot;
+        <a href="/url-is-the-app/">How it works</a> &middot;
+        <a href="/roadmap/">Roadmap</a></div>
+      <div class="how">Made by <a href="https://github.com/midnight-merge">Midnight
+        Merge</a></div>
+    </footer>
+  </div>
+
+</div></div>
+
+</body>
+</html>

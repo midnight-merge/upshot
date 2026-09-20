@@ -101,6 +101,11 @@ const PLATES = [
     out: path.join(ROOT, 'url-is-the-app', 'og.png'),
     html: PLATE('The application is the URL',
                 'A card, its formulas and the reader\'s state all live in the fragment.')
+  },
+  {
+    out: path.join(ROOT, 'roadmap', 'og.png'),
+    html: PLATE('Roadmap',
+                'Links are permanent, so changes wait for a new version.')
   }
 ];
 
