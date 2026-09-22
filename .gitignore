@@ -3,3 +3,6 @@ test/corpus/*.txt
 
 # macOS
 .DS_Store
+
+# Distribution working notes - drafts, not the product
+content/

@@ -379,6 +379,8 @@ function siblingChecks(){
      fs.readFileSync(path.join(ROOT, 'url-is-the-app', 'index.html'), 'utf8')],
     ['roadmap/index.html',
      fs.readFileSync(path.join(ROOT, 'roadmap', 'index.html'), 'utf8')],
+    ['legal/index.html',
+     fs.readFileSync(path.join(ROOT, 'legal', 'index.html'), 'utf8')],
     ['broken/index.html', brokenPage]
   ];
   const claimed = new Map();
