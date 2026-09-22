@@ -81,16 +81,6 @@ h1{
   margin:0 0 22px;
 }
 
-.verdict{
-  font-size:19.5px;
-  line-height:1.42;
-  letter-spacing:-.008em;
-  color:var(--dim);
-  margin:0 0 34px;
-  padding-left:15px;
-  border-left:2px solid var(--accent);
-}
-
 h2{
   font-weight:600;
   font-size:19px;
@@ -127,24 +117,25 @@ a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--hair)}
 a:hover{color:var(--accent);border-bottom-color:var(--accent)}
 a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 
-/* Diagrams sit at their drawn size and scale down on a phone, rather than
-   stretching to the prose measure - the type inside them is drawn, so
-   blowing them up to 640 would set it larger than the headings. */
+/* A diagram takes the prose measure, like every other block here. Its type is
+   drawn, so a 460-unit drawing at 588px sets d-lab at 14px and d-sub at 12.8px
+   - the same ladder the prose uses, one rung under the 16px body. The strokes
+   do not take the scale with them, so hairlines stay hairlines. */
 figure{margin:24px 0}
-figure svg{width:100%;max-width:460px;height:auto;display:block;margin:0 auto}
+figure svg{width:100%;height:auto;display:block;margin:0 auto}
 figcaption{
   margin-top:12px;font-size:13px;line-height:1.5;color:var(--faint);
   text-align:center;text-wrap:pretty;
 }
-.d-box{fill:none;stroke:var(--hair);stroke-width:1}
-.d-live{fill:none;stroke:var(--accent);stroke-width:1}
+.d-box{fill:none;stroke:var(--hair);stroke-width:1;vector-effect:non-scaling-stroke}
+.d-live{fill:none;stroke:var(--accent);stroke-width:1;vector-effect:non-scaling-stroke}
 .d-lab{font-family:var(--sans);font-size:11px;fill:var(--ink)}
 .d-sub{font-family:var(--sans);font-size:10px;fill:var(--faint)}
-.d-mono{font-family:var(--mono);font-size:11px;fill:var(--dim)}
-.d-accent{font-family:var(--mono);font-size:11px;fill:var(--accent)}
+.d-mono{font-family:var(--mono);font-size:10.5px;fill:var(--dim)}
+.d-accent{font-family:var(--mono);font-size:10.5px;fill:var(--accent)}
 .d-tag{font-family:var(--mono);font-size:8.5px;fill:var(--faint);letter-spacing:.09em}
-.d-line{stroke:var(--hair);stroke-width:1;fill:none}
-.d-arrow{stroke:var(--faint);stroke-width:1;fill:none}
+.d-line{stroke:var(--hair);stroke-width:1;fill:none;vector-effect:non-scaling-stroke}
+.d-arrow{stroke:var(--faint);stroke-width:1;fill:none;vector-effect:non-scaling-stroke}
 
 /* ---- the exchange ----
    The homepage hero's bubbles, reused rule for rule: same shapes, same
@@ -270,43 +261,36 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5}
     <p>The model fetches the page, writes a URL and hands it back. You click it.
       That is the product. The rest of this is how it stays that simple.</p>
 
-    <p>There is nothing to install. No extension, no plugin, no agent skill, no
-      MCP server, no API key, no account, no signup. It works in chat apps I
+    <p>No extension, no plugin, no agent skill, no MCP server, no API key, no
+      account, no signup. It works in chat apps I
       have never tested and in models that did not exist when I wrote it,
       because the only thing being integrated is a page.</p>
-
-    <p>The contract lives at <a href="/llms.txt">llms.txt</a>, and the homepage
-      carries the same text in full, as static copy rather than something drawn
-      by script. That duplication earns its keep. A model that lands on the
-      homepage instead of the spec gets the whole contract rather than a
-      summary, and the cards come back noticeably better for it. The suite
-      checks the two copies still match, down to every worked example, because
-      a spec that has drifted from its examples is worse than no spec.</p>
 
     <p>Upshot never calls a model. You do, in a window you already had open.</p>
 
     <h2>Nothing you type leaves the browser</h2>
 
     <p>Everything after the <code>#</code> stays on your machine. That is not a
-      trick. It is just how URLs work. The browser asks the host for
-      <code>/v2/index.html</code> and stops there. The rest of the link never
-      goes near the wire.</p>
+      trick, it is just how URLs work.</p>
 
     <figure>
-      <svg viewBox="0 0 460 236" role="img" aria-label="The path part of the link is sent to the host. The fragment after the hash stays in the browser.">
+      <svg viewBox="0 0 460 214" role="img" aria-label="The path part of the link is sent to the host. The fragment after the hash stays in the browser.">
         <text class="d-tag" x="20" y="16">THE LINK YOU PASTE</text>
         <text class="d-mono" x="20" y="42">upshot.fyi/v2/<tspan class="d-accent">#i=bill:80:Bill&amp;r=each:bill/n</tspan></text>
 
-        <path class="d-line" d="M20 54 V62 H119 V54"/>
-        <path class="d-live" d="M119 54 V62 H336 V54"/>
+        <!-- the brackets end where the type ends: the path part runs to 108,
+             the fragment to 292 -->
+        <path class="d-line" d="M20 54 V62 H108 V54"/>
+        <path class="d-live" d="M108 54 V62 H292 V54"/>
 
         <text class="d-sub" x="20" y="78">sent</text>
-        <text class="d-sub" x="128" y="78" fill="#C8FF3D">never sent</text>
+        <text class="d-sub" x="108" y="78" fill="#C8FF3D">never sent</text>
 
-        <path class="d-arrow" d="M70 88 V116"/>
-        <path class="d-arrow" d="M66 110 l4 6 l4 -6"/>
-        <path class="d-arrow" d="M340 88 V116"/>
-        <path class="d-arrow" d="M336 110 l4 6 l4 -6"/>
+        <!-- each span elbows across to the middle of the box that handles it -->
+        <path class="d-arrow" d="M64 88 V102 H115 V116"/>
+        <path class="d-arrow" d="M111 110 l4 6 l4 -6"/>
+        <path class="d-arrow" d="M200 88 V102 H345 V116"/>
+        <path class="d-arrow" d="M341 110 l4 6 l4 -6"/>
 
         <rect class="d-box" x="20" y="120" width="190" height="86" rx="3"/>
         <text class="d-lab" x="36" y="144">Static host</text>
@@ -336,16 +320,15 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5}
       stats, no hotfix. If someone pasted a card into a group chat in March,
       that chat is the only copy and I will never know it exists.</p>
 
-    <p>The same product built the ordinary way needs somewhere to put the card,
-      which needs an id, which needs a row, which needs an account to own the
-      row, which needs a bill. Each of those is reasonable on its own. Together
-      they are the whole company.</p>
+    <p>The same product built the ordinary way needs somewhere to put the card.
+      Each step from there is reasonable on its own. Together they are the
+      whole company.</p>
 
     <figure>
       <svg viewBox="0 0 460 250" role="img" aria-label="The usual architecture is a browser talking to a server talking to a database, plus an account and a bill. Upshot is a browser.">
         <text class="d-tag" x="14" y="14">THE ORDINARY WAY</text>
         <text class="d-tag" x="266" y="14">THIS</text>
-        <path class="d-line" d="M240 6 V244"/>
+        <path class="d-line" d="M238 6 V244"/>
 
         <rect class="d-box" x="14" y="26" width="196" height="34" rx="3"/>
         <text class="d-lab" x="30" y="47">Browser</text>
@@ -357,7 +340,7 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5}
 
         <rect class="d-box" x="14" y="130" width="196" height="34" rx="3"/>
         <text class="d-lab" x="30" y="151">Database</text>
-        <text class="d-mono" x="150" y="151" font-size="10">id: a7f3c2</text>
+        <text class="d-mono" x="194" y="151" text-anchor="end">id: a7f3c2</text>
 
         <text class="d-sub" x="14" y="186">An account to own the row.</text>
         <text class="d-sub" x="14" y="204">A migration when it changes.</text>
@@ -374,6 +357,28 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5}
         empty half of this picture is the product.</figcaption>
     </figure>
 
+    <h2>The real spec is WhatsApp</h2>
+
+    <p>Every card gets sent to somebody, and a link carrying arithmetic gives a
+      chat app plenty to chew on.</p>
+
+    <ul>
+      <li>A matching pair of <code>_</code> is eaten as italic before anyone
+        clicks. So is <code>*</code>, so is <code>~</code>. The formula
+        <code>j*45</code> arrives as <code>j45</code>, meaning something else
+        entirely.</li>
+      <li>Autolinkers cut the link at the first character that is not legal in a
+        URL, and <code>&lt;</code> and <code>&gt;</code> do it. You get half a
+        card, and half a card still draws, which is why nobody notices.</li>
+      <li>A full stop on the end reads as punctuation and gets trimmed off.</li>
+    </ul>
+
+    <p>So everything is percent encoded except letters, digits, a hyphen and the
+      <code>+ - / =</code> doing the arithmetic. The one that stung: the
+      renderer writes your edits into the URL with <code>~</code> between them,
+      so the card you had just changed was the one that broke. You only find
+      that by sending yourself a few hundred messages.</p>
+
     <h2>It stopped being a format and became a language</h2>
 
     <p>The first version drew a fixed layout. Then it needed a checkbox. Then a
@@ -383,86 +388,100 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5}
 
     <figure>
       <svg viewBox="0 0 460 186" role="img" aria-label="A card URL taken apart line by line: the frame, a block heading, two numbers, a result worked out from them, and how to print it.">
-        <text class="d-tag" x="20" y="16">ONE CARD, TAKEN APART</text>
+        <text class="d-tag" x="51" y="16">ONE CARD, TAKEN APART</text>
 
-        <text class="d-mono" x="20" y="44" font-size="10.5">#h=Split+the+bill</text>
-        <text class="d-sub" x="250" y="44">what the card says</text>
+        <text class="d-mono" x="51" y="44">#h=Split+the+bill</text>
+        <text class="d-sub" x="281" y="44">what the card says</text>
 
-        <text class="d-accent" x="20" y="70" font-size="10.5">&amp;g=Split+it</text>
-        <text class="d-sub" x="250" y="70">a block, and its heading</text>
+        <text class="d-accent" x="51" y="70">&amp;g=Split+it</text>
+        <text class="d-sub" x="281" y="70">a block, and its heading</text>
 
-        <text class="d-mono" x="20" y="96" font-size="10.5">&amp;i=bill:80:Bill</text>
-        <text class="d-sub" x="250" y="96">a number you can change</text>
+        <text class="d-mono" x="51" y="96">&amp;i=bill:80:Bill</text>
+        <text class="d-sub" x="281" y="96">a number you can change</text>
 
-        <text class="d-mono" x="20" y="122" font-size="10.5">&amp;i=n:3:People</text>
-        <text class="d-sub" x="250" y="122">and another</text>
+        <text class="d-mono" x="51" y="122">&amp;i=n:3:People</text>
+        <text class="d-sub" x="281" y="122">and another</text>
 
-        <text class="d-mono" x="20" y="148" font-size="10.5">&amp;r=each:bill/n:Each+pays</text>
-        <text class="d-sub" x="250" y="148">one worked out from them</text>
+        <text class="d-mono" x="51" y="148">&amp;r=each:bill/n:Each+pays</text>
+        <text class="d-sub" x="281" y="148">one worked out from them</text>
 
-        <text class="d-mono" x="20" y="174" font-size="10.5">&amp;u=each:%C2%A3</text>
-        <text class="d-sub" x="250" y="174">how to print it</text>
+        <text class="d-mono" x="51" y="174">&amp;u=each:%C2%A3</text>
+        <text class="d-sub" x="281" y="174">how to print it</text>
       </svg>
       <figcaption>No nesting, no numbering, no closing tags. Order on the card
         is order in the link.</figcaption>
     </figure>
 
-
     <p>The whole vocabulary is nine keys.</p>
 
     <figure>
-      <svg viewBox="0 0 460 266" role="img" aria-label="The nine keys and the row each one draws: bullet, step, fact, checkbox, number, choice, result, decision, unit.">
-        <text class="d-tag" x="20" y="14">KEY</text>
-        <text class="d-tag" x="64" y="14">DRAWS</text>
-        <path class="d-line" d="M20 22 H440"/>
+      <svg viewBox="0 0 460 261" role="img" aria-label="The nine keys, the row each one draws on a card, and what that row is called: bullet, step, fact, checkbox, input, option, result, decision, unit.">
+        <!-- A legend, three columns: the letter, the row exactly as a card
+             draws it, and what that row is called. The card prints a worked
+             out row as label, value, then the sum it came from, so r and t
+             carry three parts where the reader-facing rows carry two. -->
+        <text class="d-tag" x="79" y="14">KEY</text>
+        <text class="d-tag" x="123" y="14">DRAWS</text>
+        <text class="d-tag" x="327" y="14">WHICH IS</text>
+        <path class="d-line" d="M79 22 H382"/>
 
-        <text class="d-accent" x="20" y="44">p</text>
-        <circle cx="66" cy="40" r="2" fill="#B4B6C2"/>
-        <text class="d-lab" x="78" y="44">Cheaper on weekdays</text>
+        <text class="d-accent" x="79" y="44">p</text>
+        <circle cx="125" cy="40" r="2" fill="#B4B6C2"/>
+        <text class="d-lab" x="141" y="44">Cheaper on weekdays</text>
+        <text class="d-sub" x="327" y="44">a bullet</text>
 
-        <text class="d-accent" x="20" y="70">o</text>
-        <text class="d-sub" x="62" y="70">1</text>
-        <text class="d-lab" x="78" y="70">Take a meter reading</text>
+        <text class="d-accent" x="79" y="70">o</text>
+        <text class="d-sub" x="123" y="70">1</text>
+        <text class="d-lab" x="141" y="70">Take a meter reading</text>
+        <text class="d-sub" x="327" y="70">a step</text>
 
-        <text class="d-accent" x="20" y="96">f</text>
-        <text class="d-lab" x="64" y="96">180ms</text>
-        <text class="d-sub" x="110" y="96">Cold start</text>
+        <text class="d-accent" x="79" y="96">f</text>
+        <text class="d-sub" x="123" y="96">Cold start</text>
+        <text class="d-lab" x="181" y="96">180ms</text>
+        <text class="d-sub" x="327" y="96">a fact</text>
 
-        <text class="d-accent" x="20" y="122">c</text>
-        <rect class="d-box" x="62" y="112" width="11" height="11" rx="2"/>
-        <text class="d-lab" x="82" y="122">Notes written up</text>
+        <text class="d-accent" x="79" y="122">c</text>
+        <rect class="d-box" x="123" y="112" width="11" height="11" rx="2"/>
+        <text class="d-lab" x="141" y="122">Notes written up</text>
+        <text class="d-sub" x="327" y="122">a checkbox</text>
 
-        <text class="d-accent" x="20" y="148">i</text>
-        <rect class="d-live" x="62" y="136" width="40" height="17" rx="2"/>
-        <text class="d-mono" x="72" y="148" fill="#F7F7F4">80</text>
-        <text class="d-lab" x="112" y="148">Bill</text>
+        <text class="d-accent" x="79" y="148">i</text>
+        <rect class="d-live" x="123" y="136" width="40" height="17" rx="2"/>
+        <text class="d-mono" x="143" y="148" text-anchor="middle" fill="#F7F7F4">80</text>
+        <text class="d-lab" x="173" y="148">Bill</text>
+        <text class="d-sub" x="327" y="148">an input</text>
 
-        <text class="d-accent" x="20" y="174">s</text>
-        <circle class="d-live" cx="68" cy="170" r="5"/>
-        <circle cx="68" cy="170" r="2" fill="#C8FF3D"/>
-        <text class="d-lab" x="82" y="174">Plan 2</text>
+        <text class="d-accent" x="79" y="174">s</text>
+        <circle class="d-live" cx="128" cy="170" r="5"/>
+        <circle cx="128" cy="170" r="2" fill="#C8FF3D"/>
+        <text class="d-lab" x="141" y="174">Plan 2</text>
+        <text class="d-sub" x="327" y="174">an option</text>
 
-        <text class="d-accent" x="20" y="200">r</text>
-        <text class="d-lab" x="64" y="200">Each pays</text>
-        <text class="d-accent" x="140" y="200" font-size="12">£26.67</text>
-        <text class="d-sub" x="196" y="200">bill/n</text>
+        <text class="d-accent" x="79" y="200">r</text>
+        <text class="d-sub" x="123" y="200">Each pays</text>
+        <text class="d-accent" x="182" y="200" font-size="12">£26.67</text>
+        <text class="d-sub" x="230" y="200">80/3</text>
+        <text class="d-sub" x="327" y="200">a result</text>
 
-        <text class="d-accent" x="20" y="226">t</text>
-        <text class="d-lab" x="64" y="226">Ready to walk</text>
-        <text class="d-accent" x="152" y="226" font-size="12">Not yet</text>
-        <text class="d-sub" x="204" y="226">8.18&gt;=9</text>
+        <text class="d-accent" x="79" y="226">t</text>
+        <text class="d-sub" x="123" y="226">Verdict</text>
+        <text class="d-accent" x="169" y="226" font-size="12">Too much</text>
+        <text class="d-sub" x="237" y="226">26.67&gt;20</text>
+        <text class="d-sub" x="327" y="226">a decision</text>
 
-        <text class="d-accent" x="20" y="252">u</text>
-        <text class="d-lab" x="64" y="252">£26.67</text>
-        <text class="d-sub" x="140" y="252">prints the 26.67 above it</text>
+        <text class="d-accent" x="79" y="252">u</text>
+        <text class="d-sub" x="123" y="252">26.67</text>
+        <path class="d-arrow" d="M162 248 H176"/>
+        <path class="d-arrow" d="M172 244 l4 4 l-4 4"/>
+        <text class="d-accent" x="182" y="252">£26.67</text>
+        <text class="d-sub" x="327" y="252">a unit</text>
       </svg>
       <figcaption>That is the entire language. There is no key for a colour, a
         size or a layout.</figcaption>
     </figure>
 
     <p>Formulas can use any name on the card, so a card is a tiny spreadsheet
-      that knows how to lay itself out. The card decides how it looks and the
-      language only says what is on it, which is why two cards written by two
+      that knows how to lay itself out. That is why two cards written by two
       different models, months apart, still look like they came from the same
       place.</p>
 
@@ -470,6 +489,66 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5}
       result can use another result. A checkbox counts as 1 or 0. A choice group
       carries whichever number you picked. That covers tax bands, loan
       repayments, unit conversion and most of what people ask for.</p>
+
+    <h2>The prompt is the product surface</h2>
+
+    <p>All of that ease rests on one file of English. The contract does the job
+      an API would normally do, with no runtime anywhere to catch a mistake.</p>
+
+    <p>The contract lives at <a href="/llms.txt">llms.txt</a>, and the homepage
+      carries the same text in full, as static copy rather than something drawn
+      by script. That duplication earns its keep. A model that lands on the
+      homepage instead of the spec gets the whole contract rather than a
+      summary, and the cards come back noticeably better for it. The suite
+      checks the two copies still match, down to every worked example, because
+      a spec that has drifted from its examples is worse than no spec.</p>
+
+    <p>I expected this to be the easy half. It was not.</p>
+
+    <figure>
+      <svg viewBox="0 0 460 212" role="img" aria-label="A loop: write the contract, generate a few hundred cards, read every one, then go again.">
+        <rect class="d-box" x="84" y="14" width="348" height="50" rx="3"/>
+        <text class="d-lab" x="102" y="36">Write the contract</text>
+        <text class="d-sub" x="102" y="53">llms.txt, in plain English</text>
+
+        <rect class="d-box" x="84" y="82" width="348" height="50" rx="3"/>
+        <text class="d-lab" x="102" y="104">Generate a few hundred real cards</text>
+        <text class="d-sub" x="102" y="121">with the models people actually use</text>
+
+        <rect class="d-box" x="84" y="150" width="348" height="50" rx="3"/>
+        <text class="d-lab" x="102" y="172">Open every one and read it</text>
+        <text class="d-sub" x="102" y="189">by eye, one card at a time</text>
+
+        <path class="d-arrow" d="M258 64 V78"/><path class="d-arrow" d="M254 72 l4 6 l4 -6"/>
+        <path class="d-arrow" d="M258 132 V146"/><path class="d-arrow" d="M254 140 l4 6 l4 -6"/>
+
+        <path class="d-arrow" d="M84 175 H28 V39 H78"/>
+        <path class="d-arrow" d="M72 35 l6 4 l-6 4"/>
+      </svg>
+      <figcaption>Round and round. The renderer never moves in this loop, only
+        the English does.</figcaption>
+    </figure>
+
+    <p>Three things I would not have guessed:</p>
+
+    <p><strong>Examples teach louder than rules.</strong> A model copies the
+      worked example and skims the paragraph above it. For a day the spec said
+      one thing about encoding and an example did another, and every generation
+      followed the example. The tests now check each shipped example against the
+      rule it is meant to show. A stale example is worse than no example.</p>
+
+    <p><strong>You cannot reason about what a model will write.</strong> Every
+      confident guess I made about phrasing was wrong, and generating a hundred
+      cards and reading them settled it every time. Which wording a model takes
+      literally, what it invents when the language has no word for what it
+      wants, whether a rule is teachable at all: all cheap to measure, all
+      pointless to argue about.</p>
+
+    <p><strong>A passing test suite cannot see a wrong number.</strong> A card
+      can parse cleanly, draw beautifully and be completely wrong. The tests
+      prove the renderer drew what the URL said. They say nothing about whether
+      the model should have said it. Treating those as one problem wasted a
+      week.</p>
 
     <h2>The version is in the path</h2>
 
@@ -521,84 +600,6 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5}
       facts right belongs to whatever wrote the card, and writing that line into
       the contract stopped a lot of scope creep.</p>
 
-    <h2>The links have to survive chat</h2>
-
-    <p>Every card gets sent to somebody, so the real spec is not what is legal
-      in a URL. It is what survives WhatsApp.</p>
-
-    <ul>
-      <li>A matching pair of <code>_</code> anywhere in the link is eaten as
-        italic before anyone clicks it. So is <code>*</code>, so is
-        <code>~</code>. The formula <code>j*45</code> arrives as <code>j45</code>
-        and quietly means something else.</li>
-      <li>Autolinkers cut the link at the first character that is not legal in a
-        URL, and <code>&lt;</code> and <code>&gt;</code> do it. You get half a
-        card. The half that survives still draws, which is why nobody
-        notices.</li>
-      <li>A full stop at the end reads as punctuation and gets trimmed off.</li>
-    </ul>
-
-    <p>So everything is percent encoded except letters, digits and a hyphen.
-      Formulas also keep <code>+ - / =</code>, because there they are
-      arithmetic.</p>
-
-    <p>The one that stung: the renderer writes your edits into the URL too, and
-      it was using <code>~</code> to separate them. It was generating links that
-      chat apps broke. You only find that by sending yourself a few hundred
-      messages.</p>
-
-    <h2>The prompt is the product surface</h2>
-
-    <p>All of that ease rests on one file of English. The contract does the job
-      an API would normally do, with no runtime anywhere to catch a mistake.</p>
-
-    <p>I expected this to be the easy half. It was not.</p>
-
-    <figure>
-      <svg viewBox="0 0 460 212" role="img" aria-label="A loop: write the contract, generate a few hundred cards, read every one, then go again.">
-        <rect class="d-box" x="96" y="14" width="348" height="50" rx="3"/>
-        <text class="d-lab" x="114" y="36">Write the contract</text>
-        <text class="d-sub" x="114" y="53">llms.txt, in plain English</text>
-
-        <rect class="d-box" x="96" y="82" width="348" height="50" rx="3"/>
-        <text class="d-lab" x="114" y="104">Generate a few hundred real cards</text>
-        <text class="d-sub" x="114" y="121">with the models people actually use</text>
-
-        <rect class="d-box" x="96" y="150" width="348" height="50" rx="3"/>
-        <text class="d-lab" x="114" y="172">Open every one and read it</text>
-        <text class="d-sub" x="114" y="189">the pass rate cannot see a wrong number</text>
-
-        <path class="d-arrow" d="M270 64 V78"/><path class="d-arrow" d="M266 72 l4 6 l4 -6"/>
-        <path class="d-arrow" d="M270 132 V146"/><path class="d-arrow" d="M266 140 l4 6 l4 -6"/>
-
-        <path class="d-arrow" d="M96 175 H40 V39 H90"/>
-        <path class="d-arrow" d="M84 35 l6 4 l-6 4"/>
-      </svg>
-      <figcaption>Round and round. The renderer never moves in this loop, only
-        the English does.</figcaption>
-    </figure>
-
-    <p>Three things I would not have guessed:</p>
-
-    <p><strong>Examples teach louder than rules.</strong> A model copies the
-      worked example and skims the paragraph above it. For a day the spec said
-      one thing about encoding and an example did another, and every generation
-      followed the example. The tests now check each shipped example against the
-      rule it is meant to show. A stale example is worse than no example.</p>
-
-    <p><strong>You cannot reason about what a model will write.</strong> Every
-      confident guess I made about phrasing was wrong, and generating a hundred
-      cards and reading them settled it every time. Which wording a model takes
-      literally, what it invents when the language has no word for what it
-      wants, whether a rule is teachable at all: all cheap to measure, all
-      pointless to argue about.</p>
-
-    <p><strong>A passing test suite cannot see a wrong number.</strong> A card
-      can parse cleanly, draw beautifully and be completely wrong. The tests
-      prove the renderer drew what the URL said. They say nothing about whether
-      the model should have said it. Treating those as one problem wasted a
-      week.</p>
-
     <h2>What it costs</h2>
 
     <ul>
@@ -637,7 +638,8 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5}
     <footer>
       <div class="how"><a href="/made/">Made with it</a> &middot;
         <a href="/url-is-the-app/">How it works</a> &middot;
-        <a href="/roadmap/">Roadmap</a></div>
+        <a href="/roadmap/">Roadmap</a> &middot;
+        <a href="/legal/">Legal</a></div>
       <div class="how">Made by <a href="https://github.com/midnight-merge">Midnight
         Merge</a></div>
     </footer>
