@@ -3,19 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- How the link looks when it is pasted somewhere. -->
-<meta name="description" content="Links are permanent, so changes wait for a new version. What is queued for v3.">
+<!-- No picture, the way /broken/ has none: this page is linked, not pasted,
+     and a plate here would sell something nobody came for. summary is the
+     card type for an unfurl with no image. -->
+<meta name="description" content="A card rides inside its link, so this site receives no part of one. What that means, and what a card is worth.">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="upshot">
-<meta property="og:url" content="https://upshot.fyi/roadmap/">
-<meta property="og:title" content="Roadmap">
-<meta property="og:description" content="Links are permanent, so changes wait for a new version. What is queued for v3.">
-<meta property="og:image" content="https://upshot.fyi/roadmap/og.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="upshot.fyi - roadmap">
-<meta name="twitter:card" content="summary_large_image">
-<title>Roadmap</title>
+<meta property="og:url" content="https://upshot.fyi/legal/">
+<meta property="og:title" content="Privacy and terms">
+<meta property="og:description" content="A card rides inside its link, so this site receives no part of one. What that means, and what a card is worth.">
+<meta name="twitter:card" content="summary">
+<title>Privacy and terms</title>
 <style>
 /* the same palette as the card, because this is the same object explained */
 :root{
@@ -81,32 +79,24 @@ h1{
   margin:0 0 22px;
 }
 
-/* A version is a path, so it is set in the face every other path on the
-   site is set in, and lit like the live things are. */
-.ver{
-  font-family:var(--mono);
-  font-size:16px;
-  letter-spacing:.02em;
-  color:var(--accent);
+h2{
+  font-weight:600;
+  font-size:13px;
+  color:var(--ink);
   margin:28px 0 4px;
   padding-top:22px;
   border-top:1px solid var(--hair);
-}
-.ver + .sub{
-  margin:0 0 14px;
-  font-size:12px;
-  color:var(--faint);
+  /* linked as /legal/#privacy, so the rule above the heading stays visible */
+  scroll-margin-top:22px;
 }
 
 p{margin:0 0 14px;font-size:15px;line-height:1.6;color:var(--dim);text-wrap:pretty}
 main > p:last-child{margin-bottom:0}
+h2 + p{margin-top:10px}
 
-ul{margin:0 0 14px;padding-left:17px}
-li{font-size:15px;line-height:1.6;color:var(--dim);margin-bottom:9px;text-wrap:pretty}
-li:last-child{margin-bottom:0}
-
-strong{color:var(--ink);font-weight:600}
-code{font-family:var(--mono);font-size:13px;color:var(--ink)}
+/* one character out of a URL, quoted inside a sentence: the face the rest of
+   the link is set in, lit the way a thing you type is lit on the homepage */
+.hash{font-family:var(--mono);font-size:14.5px;color:var(--accent)}
 
 a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--hair)}
 a:hover{color:var(--accent);border-bottom-color:var(--accent)}
@@ -137,30 +127,31 @@ footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5}
   </div>
 
   <main>
-    <h1>Roadmap</h1>
+    <h1>Privacy and terms</h1>
 
-    <p>A card lives in its link, and links are permanent. Nothing already sent
-      can be changed. So anything that changes how a card draws waits for a new
-      version at a new path, and the old path keeps serving the old cards.</p>
+    <h2 id="privacy">Privacy</h2>
+    <p>Everything after the <span class="hash">#</span> stays in your browser.
+      Browsers never send it to a server, so this site receives no part of a
+      card, and everything the page does, it does on your own device. Numbers
+      you type into one are no exception: they are worked out there and written
+      back into your own link, and never sent anywhere. Nothing to store,
+      nothing to delete.</p>
+    <p>GitHub Pages logs IPs to serve the page - a legitimate interest, and the
+      only personal data involved. GitHub holds those logs; Midnight Merge
+      holds nothing. Nothing is kept on your device and nothing is fetched from
+      anywhere: no cookies, no third-party scripts, no fonts, no analytics.</p>
+    <p>The card rides inside the link, so anyone holding the link can read it,
+      as can your chat history. Private from us is not private in general.</p>
 
-    <p class="ver">/v3/</p>
-    <p class="sub">Candidates, not commitments. The list grows as real
-      generations hit real limits, and shrinks when one turns out not to
-      matter.</p>
-
-    <ul>
-      <li><strong>A clock type.</strong> Times are decimal hours, so
-        <code>18.45</code> means 18h 27m, not quarter to seven.</li>
-      <li><strong>Forgiving a missing colon.</strong> <code>c=Wording</code>
-        can only mean an unnamed box. It is refused anyway.</li>
-      <li><strong>Whole minutes.</strong> 125 minutes prints as
-        <code>125m 0s</code>.</li>
-      <li><strong>Four-field decisions.</strong> An older shape put the
-        fallback on the end of the row. The card draws it wrong rather than
-        refusing it.</li>
-      <li><strong>Underscores in names.</strong> The renderer takes them, the
-        contract does not offer them. One of the two should move.</li>
-    </ul>
+    <h2 id="terms">Terms</h2>
+    <p>Cards are written by whichever AI you asked. They can be wrong, and a
+      formula is no safer than a sentence - a card shows its working, which
+      proves the sum and not the reasoning behind it. Check anything that
+      matters.</p>
+    <p>Anyone can put any text in a link, so text on this domain is not
+      published or endorsed by Midnight Merge, and never reaches us to moderate
+      or remove.</p>
+    <p>Provided as is, without warranty.</p>
   </main>
 
   <div class="foot">

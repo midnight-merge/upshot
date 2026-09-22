@@ -152,6 +152,9 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 footer .how + .how{margin-top:9px}
 footer .how{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.5;text-wrap:pretty}
 .cmd{color:var(--accent)}
+/* one character out of a URL, quoted inside a sentence: the face the rest of
+   the link is set in, lit like the other thing on the page you have to type */
+.hash{font-family:var(--mono);font-size:14.5px;color:var(--accent)}
 /* a conversation, not a list: what you type sits right, what came back sits
    left, and the corner each bubble squares off is which side said it */
 .demos{margin:28px 0 0;padding-top:22px;border-top:1px solid var(--hair)}
@@ -416,8 +419,9 @@ pre{
     </div>
 
     <p class="after">That card is not stored anywhere. All the data is in the
-      link itself. No account, no database, nothing we can see - and you can
-      send it to anyone.</p>
+      link itself, after the <span class="hash">#</span>, and a browser never
+      sends that part to a server. No account, no database, nothing we can
+      see. You can send it to anyone.</p>
 
     <!-- Three, and the point is that they are different shapes rather than
          three of the same one: a conversation that turned into a tool, a
@@ -460,8 +464,6 @@ pre{
       charts, no notifications, and nothing it can go and look up - it only
       knows what your chat already worked out. That is the same reason the
       whole thing fits in a link.</p>
-    <p class="fine">A browser never sends the part of a link after the # - so
-      your answer stays between you and whoever you send it to.</p>
 
     <h2>Format</h2>
     <p class="note">For any AI reading this page.</p>
@@ -695,38 +697,14 @@ anywhere, because each of those is always written encoded.
 Reply with the URL and nothing else. No preamble, no code fence, no
 explanation.</pre>
 
-    <h2>Privacy</h2>
-    <p class="fine">Everything after the <span class="cmd">#</span> stays in
-      your browser. Browsers never send it to a server, so this site receives no
-      part of a card, and everything this page does, it does on your own device.
-      Numbers you type into one are no exception: they are worked out here and
-      written back into your own link, and never sent anywhere. Nothing to
-      store, nothing to delete.</p>
-    <p class="fine">GitHub Pages logs IPs to serve the page - a legitimate
-      interest, and the only personal data involved. GitHub holds those logs;
-      Midnight Merge holds nothing. Nothing is kept on your device and nothing
-      is fetched from anywhere: no cookies, no third-party scripts, no fonts,
-      no analytics.</p>
-    <p class="fine">The card rides inside the link, so anyone holding the link
-      can read it, as can your chat history. Private from us is not private in
-      general.</p>
-
-    <h2>Terms</h2>
-    <p class="fine">Cards are written by whichever AI you asked. They can be
-      wrong, and a formula is no safer than a sentence - a card shows its
-      working, which proves the sum and not the reasoning behind it. Check
-      anything that matters.</p>
-    <p class="fine">Anyone can put any text in a link, so text on this domain is
-      not published or endorsed by Midnight Merge, and never reaches us to
-      moderate or remove.</p>
-    <p class="fine">Provided as is, without warranty.</p>
   </main>
 
   <div class="foot">
     <footer>
       <div class="how"><a href="/made/">Made with it</a> &middot;
         <a href="/url-is-the-app/">How it works</a> &middot;
-        <a href="/roadmap/">Roadmap</a></div>
+        <a href="/roadmap/">Roadmap</a> &middot;
+        <a href="/legal/">Legal</a></div>
       <div class="how">Made by <a href="https://github.com/midnight-merge">Midnight
         Merge</a></div>
     </footer>
